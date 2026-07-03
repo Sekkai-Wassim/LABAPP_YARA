@@ -1510,7 +1510,7 @@
     }
 
     .lmt colgroup .c-calc {
-      width: 150px;
+      width: 200px;
     }
 
     .lmt colgroup .c-ind {
@@ -1581,10 +1581,8 @@
     }
 
     .lmt td {
-      padding: 15px;
-    padding-top: 25px;
-    padding-bottom: 25px;
-    vertical-align: middle;
+      padding: 10px;
+      vertical-align: middle;
     }
 
     .lmt-prop {
@@ -2792,588 +2790,150 @@
       align-items: center;
     }
 
-    .Field-UOM span {
-      position: absolute;
-      right: 0;
-      top: 0;
-      bottom: 0;
-      display: flex;
-      align-items: center;
-      padding: 0 7px;
-      font-size: 9px;
-      color: var(--cyan);
-      font-weight: 700;
-      border-left: 1px solid var(--border);
-      background: rgba(8, 145, 178, .06);
-      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-      pointer-events: none;
-      padding-left: 6px;
+    .Field-UOM span{
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 7px;
+    font-size: 9px;
+    color: var(--cyan);
+    font-weight: 700;
+    border-left: 1px solid var(--border);
+    background: rgba(8, 145, 178, .06);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    pointer-events: none;
+    padding-left:6px;
     }
 
 
     /* ── Config page ── */
-    .cfg-tabs {
-      display: flex;
-      gap: 2px;
-      margin-bottom: 18px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 4px;
-      width: fit-content;
-      flex-wrap: wrap;
-    }
-
-    .cfg-tab {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 7px 14px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-muted);
-      cursor: pointer;
-      background: none;
-      border: none;
-      transition: all .15s;
-    }
-
-    .cfg-tab:hover {
-      background: var(--bg-root);
-    }
-
-    .cfg-tab.active {
-      background: var(--blue);
-      color: #fff;
-    }
-
-    .cfg-panel {
-      display: none;
-    }
-
-    .cfg-panel.active {
-      display: block;
-    }
-
-    .cfg-btn-sm {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 5px 12px;
-      border-radius: var(--radius-sm);
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      background: var(--bg-root);
-      border: 1px solid var(--border);
-      color: var(--text-body);
-    }
-
-    .cfg-af-layout {
-      display: grid;
-      grid-template-columns: 280px 1fr;
-      gap: 16px;
-      min-height: 400px;
-    }
-
-    .cfg-tree-panel {
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      display: flex;
-      flex-direction: column;
-      background: var(--bg-card-alt);
-      overflow: hidden;
-    }
-
-    .cfg-tree-search {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg-card);
-    }
-
-    .cfg-tree-search input {
-      flex: 1;
-      background: none;
-      border: none;
-      outline: none;
-      font-size: 11px;
-      color: var(--text-body);
-    }
-
-    .cfg-tree {
-      flex: 1;
-      overflow-y: auto;
-      padding: 8px 0;
-      font-size: 11px;
-    }
-
-    .cfg-tree-node {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 12px;
-      cursor: pointer;
-      color: var(--text-body);
-      border-left: 2px solid transparent;
-      user-select: none;
-    }
-
-    .cfg-tree-node:hover {
-      background: var(--bg-row-hover);
-    }
-
-    .cfg-tree-node.selected {
-      background: var(--blue-soft);
-      color: var(--blue);
-      border-left-color: var(--blue);
-      font-weight: 600;
-    }
-
-    .cfg-tree-node.lv0 {
-      font-weight: 700;
-      color: var(--text-h);
-    }
-
-    .cfg-tree-node.lv1 {
-      padding-left: 24px;
-    }
-
-    .cfg-tree-node.lv2 {
-      padding-left: 36px;
-      color: var(--text-muted);
-    }
-
-    .cfg-tree-node.lv3 {
-      padding-left: 48px;
-      color: var(--text-faint);
-      font-size: 10px;
-    }
-
-    .cfg-tree-toggle {
-      width: 14px;
-      height: 14px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-faint);
-      font-size: 9px;
-      flex-shrink: 0;
-      transition: transform .15s;
-    }
-
-    .cfg-tree-toggle.open {
-      transform: rotate(90deg);
-    }
-
-    .cfg-tree-badge {
-      font-size: 8px;
-      padding: 1px 5px;
-      border-radius: 3px;
-      font-weight: 700;
-      margin-left: auto;
-      flex-shrink: 0;
-    }
-
-    .tb-element {
-      background: #dbeafe;
-      color: #1e40af;
-    }
-
-    .tb-attr {
-      background: #dcfce7;
-      color: #166534;
-    }
-
-    .tb-analysis {
-      background: #fef9c3;
-      color: #854d0e;
-    }
-
-    .tb-calc {
-      background: #fdf4ff;
-      color: #6b21a8;
-    }
-
-    .cfg-detail-panel {
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px;
-      background: var(--bg-card);
-      overflow-y: auto;
-    }
-
-    .cfg-detail-empty {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-faint);
-      font-size: 11px;
-    }
-
-    .cfg-detail-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text-h);
-      margin-bottom: 14px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .cfg-kv-list {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .cfg-kv {
-      display: flex;
-      gap: 12px;
-      padding: 9px 0;
-      border-bottom: 1px solid var(--bg-row-alt);
-    }
-
-    .cfg-kv:last-child {
-      border-bottom: none;
-    }
-
-    .cfg-kv-key {
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .8px;
-      color: var(--text-muted);
-      min-width: 140px;
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
-
-    .cfg-kv-val {
-      font-size: 12px;
-      color: var(--text-body);
-      word-break: break-all;
-    }
-
-    .cfg-code {
-      background: #1e293b;
-      color: #e2e8f0;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      padding: 12px 16px;
-      border-radius: var(--radius-sm);
-      line-height: 1.8;
-      white-space: pre-wrap;
-      border-left: 3px solid var(--blue);
-    }
-
-    .cfg-map-tbl td,
-    .cfg-map-tbl th {
-      font-size: 11px !important;
-      padding: 8px 10px !important;
-    }
-
-    .cfg-tag {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      color: #0891b2;
-      background: #f0fdfa;
-      border-radius: 3px;
-      padding: 2px 6px;
-      display: inline-block;
-    }
-
-    .cfg-ti {
-      color: var(--blue);
-      font-weight: 700;
-    }
-
-    .cfg-tc {
-      color: #7c3aed;
-      font-weight: 700;
-    }
-
-    .cfg-y {
-      color: var(--ok);
-      font-weight: 700;
-      text-align: center !important;
-    }
-
-    .cfg-n {
-      color: var(--crit);
-      font-weight: 700;
-      text-align: center !important;
-    }
-
-    .cfg-diag-card {
-      text-align: center;
-      padding: 20px 16px !important;
-      transition: border-color .3s;
-    }
-
-    .cfg-diag-card.ok {
-      border-color: #bbf7d0;
-    }
-
-    .cfg-diag-card.err {
-      border-color: #fecaca;
-    }
-
-    .cfg-diag-ico {
-      font-size: 28px;
-      margin-bottom: 8px;
-    }
-
-    .cfg-diag-lbl {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: .8px;
-    }
-
-    .cfg-diag-st {
-      font-size: 13px;
-      font-weight: 700;
-      margin-top: 4px;
-      color: var(--text-h);
-    }
-
-    .cfg-diag-dt {
-      font-size: 10px;
-      color: var(--text-faint);
-      margin-top: 2px;
-      font-family: var(--font-mono);
-    }
-
-    .cfg-metric {
-      font-size: 26px;
-      font-weight: 800;
-      color: var(--blue);
-    }
-
-    .cfg-metric-lbl {
-      font-size: 10px;
-      color: var(--text-muted);
-      margin-top: 4px;
-    }
-
-    .cfg-diag-log {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      max-height: 280px;
-      overflow-y: auto;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      background: var(--bg-card-alt);
-    }
-
-    .cfg-log-entry {
-      display: flex;
-      gap: 12px;
-      padding: 6px 10px;
-      border-bottom: 1px solid var(--bg-row-alt);
-    }
-
-    .cfg-log-ts {
-      color: var(--text-faint);
-      font-size: 10px;
-      flex-shrink: 0;
-    }
-
-    .cfg-log-lv {
-      font-weight: 700;
-      font-size: 10px;
-      text-transform: uppercase;
-      min-width: 36px;
-      flex-shrink: 0;
-    }
-
-    .cfg-log-lv.ok {
-      color: var(--ok);
-    }
-
-    .cfg-log-lv.err {
-      color: var(--crit);
-    }
-
-    .cfg-log-lv.info {
-      color: #3b82f6;
-    }
-
-    .cfg-log-msg {
-      color: var(--text-body);
-    }
-
-    .cfg-loading {
-      padding: 24px;
-      text-align: center;
-      color: var(--text-faint);
-      font-size: 11px;
-    }
-
-    .role-admin {
-      background: rgba(124, 58, 237, .2);
-      color: #c4b5fd;
-    }
-
-    .dot-admin {
-      background: #c4b5fd;
-    }
-
-    /* Formula config */
-    .fml-card {
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      margin-bottom: 12px;
-      background: var(--bg-card);
-    }
-
-    .fml-card-hdr {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 16px;
-      background: var(--bg-card-alt);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .fml-drag-handle {
-      color: var(--text-faint);
-      font-size: 14px;
-    }
-
-    .fml-card-title {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-h);
-      flex: 1;
-    }
-
-    .fml-card-body {
-      padding: 16px;
-    }
-
-    .fml-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin-bottom: 14px;
-    }
-
-    .fml-field {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    .fml-label {
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .8px;
-      color: var(--text-muted);
-    }
-
-    .fml-input,
-    .fml-select {
-      background: var(--bg-input);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 0 12px;
-      height: 36px;
-      font-size: 12px;
-      color: var(--text-body);
-      outline: none;
-    }
-
-    .fml-input:focus,
-    .fml-select:focus {
-      border-color: var(--border-focus);
-    }
-
-    .fml-textarea {
-      width: 100%;
-      background: #1e293b;
-      color: #e2e8f0;
-      border: 1px solid var(--blue);
-      border-radius: var(--radius-sm);
-      padding: 10px 14px;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      min-height: 80px;
-      resize: vertical;
-      outline: none;
-      box-sizing: border-box;
-    }
-
-    .fml-preview {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      background: var(--bg-card-alt);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      font-size: 11px;
-      color: var(--text-muted);
-      min-height: 36px;
-    }
-
-    .fml-preview-ok {
-      border-color: #bbf7d0;
-      background: #f0fdf4;
-      color: #166534;
-    }
-
-    .fml-attrs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 8px;
-    }
-
-    .fml-attr-token {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 3px 8px;
-      background: #dbeafe;
-      color: #1e40af;
-      border: 1px solid #bfdbfe;
-      border-radius: 4px;
-      font-size: 10px;
-      font-family: var(--font-mono);
-      cursor: pointer;
-    }
-
-    .fml-attr-token:hover {
-      background: #1e40af;
-      color: #fff;
-    }
-
-    td{
-      position:relative;
-    }
-    td div span.formulaexp{
-      position:absolute;
-      font-size:9px;
-      color:var(--text-faint);
-      margin-left:4px;
-    }
-
-     td div span.lmt-range{
-      font-size:9px;
-      color:var(--text-faint);
-      
-     }
+.cfg-tabs { display:flex;gap:2px;margin-bottom:18px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:4px;width:fit-content;flex-wrap:wrap; }
+.cfg-tab { display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:6px;font-size:11px;font-weight:600;color:var(--text-muted);cursor:pointer;background:none;border:none;transition:all .15s; }
+.cfg-tab:hover { background:var(--bg-root); }
+.cfg-tab.active { background:var(--blue);color:#fff; }
+.cfg-panel { display:none; }
+.cfg-panel.active { display:block; }
+.cfg-panel.active { overflow-x: hidden; }
+.cfg-btn-sm { display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:var(--radius-sm);font-size:11px;font-weight:600;cursor:pointer;background:var(--bg-root);border:1px solid var(--border);color:var(--text-body); }
+.cfg-af-layout { display:grid;grid-template-columns:280px 1fr;gap:16px;min-height:400px; }
+.cfg-tree-panel { border:1px solid var(--border);border-radius:var(--radius);display:flex;flex-direction:column;background:var(--bg-card-alt);overflow:hidden; }
+.cfg-tree-search { display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg-card); }
+.cfg-tree-search input { flex:1;background:none;border:none;outline:none;font-size:11px;color:var(--text-body); }
+.cfg-tree { flex:1;overflow-y:auto;padding:8px 0;font-size:11px; }
+.cfg-tree-node { display:flex;align-items:center;gap:6px;padding:5px 12px;cursor:pointer;color:var(--text-body);border-left:2px solid transparent;user-select:none; }
+.cfg-tree-node:hover { background:var(--bg-row-hover); }
+.cfg-tree-node.selected { background:var(--blue-soft);color:var(--blue);border-left-color:var(--blue);font-weight:600; }
+.cfg-tree-node.lv0 { font-weight:700;color:var(--text-h); }
+.cfg-tree-node.lv1 { padding-left:24px; }
+.cfg-tree-node.lv2 { padding-left:36px;color:var(--text-muted); }
+.cfg-tree-node.lv3 { padding-left:48px;color:var(--text-faint);font-size:10px; }
+.cfg-tree-toggle { width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;color:var(--text-faint);font-size:9px;flex-shrink:0;transition:transform .15s; }
+.cfg-tree-toggle.open { transform:rotate(90deg); }
+.cfg-tree-badge { font-size:8px;padding:1px 5px;border-radius:3px;font-weight:700;margin-left:auto;flex-shrink:0; }
+.tb-element { background:#dbeafe;color:#1e40af; }
+.tb-attr    { background:#dcfce7;color:#166534; }
+.tb-analysis{ background:#fef9c3;color:#854d0e; }
+.tb-calc    { background:#fdf4ff;color:#6b21a8; }
+.cfg-detail-panel { border:1px solid var(--border);border-radius:var(--radius);padding:18px;background:var(--bg-card);overflow-y:auto; }
+.cfg-detail-empty { height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-faint);font-size:11px; }
+.cfg-detail-title { font-size:14px;font-weight:700;color:var(--text-h);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px; }
+.cfg-kv-list { display:flex;flex-direction:column; }
+.cfg-kv { display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--bg-row-alt); }
+.cfg-kv:last-child { border-bottom:none; }
+.cfg-kv-key { font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);min-width:140px;flex-shrink:0;margin-top:1px; }
+.cfg-kv-val { font-size:12px;color:var(--text-body);word-break:break-all; }
+.cfg-code { background:#1e293b;color:#e2e8f0;font-family:var(--font-mono);font-size:12px;padding:12px 16px;border-radius:var(--radius-sm);line-height:1.8;white-space:pre-wrap;border-left:3px solid var(--blue); }
+.cfg-map-tbl td,.cfg-map-tbl th { font-size:11px !important;padding:8px 10px !important; }
+.cfg-tag { font-family:var(--font-mono);font-size:10px;color:#0891b2;background:#f0fdfa;border-radius:3px;padding:2px 6px;display:inline-block; }
+.cfg-ti { color:var(--blue);font-weight:700; }
+.cfg-tc { color:#7c3aed;font-weight:700; }
+.cfg-y  { color:var(--ok);font-weight:700;text-align:center !important; }
+.cfg-n  { color:var(--crit);font-weight:700;text-align:center !important; }
+.cfg-diag-card { text-align:center;padding:20px 16px !important;transition:border-color .3s; }
+.cfg-diag-card.ok  { border-color:#bbf7d0; }
+.cfg-diag-card.err { border-color:#fecaca; }
+.cfg-diag-ico { font-size:28px;margin-bottom:8px; }
+.cfg-diag-lbl { font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px; }
+.cfg-diag-st  { font-size:13px;font-weight:700;margin-top:4px;color:var(--text-h); }
+.cfg-diag-dt  { font-size:10px;color:var(--text-faint);margin-top:2px;font-family:var(--font-mono); }
+.cfg-metric   { font-size:26px;font-weight:800;color:var(--blue); }
+.cfg-metric-lbl { font-size:10px;color:var(--text-muted);margin-top:4px; }
+.cfg-diag-log { font-family:var(--font-mono);font-size:11px;max-height:280px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-card-alt); }
+.cfg-log-entry { display:flex;gap:12px;padding:6px 10px;border-bottom:1px solid var(--bg-row-alt); }
+.cfg-log-ts { color:var(--text-faint);font-size:10px;flex-shrink:0; }
+.cfg-log-lv { font-weight:700;font-size:10px;text-transform:uppercase;min-width:36px;flex-shrink:0; }
+.cfg-log-lv.ok { color:var(--ok); } .cfg-log-lv.err { color:var(--crit); } .cfg-log-lv.info { color:#3b82f6; }
+.cfg-log-msg { color:var(--text-body); }
+.cfg-loading { padding:24px;text-align:center;color:var(--text-faint);font-size:11px; }
+.role-admin { background:rgba(124,58,237,.2);color:#c4b5fd; }
+.dot-admin  { background:#c4b5fd; }
+
+    /* Wassim: AF tree table badges */
+    .tb-attr     { background:#dcfce7; color:#166534; }
+    .tb-analysis { background:#fef9c3; color:#854d0e; }
+    .tb-calc     { background:#fdf4ff; color:#6b21a8; }
+
+    /* Wassim: Diagnostics extra */
+    .cfg-diag-st  { font-size:13px; font-weight:700; margin-top:4px; color:var(--text-h); }
+    .cfg-diag-dt  { font-size:10px; color:var(--text-faint); margin-top:2px; font-family:var(--font-mono); }
+    .cfg-metric   { font-size:26px; font-weight:800; color:var(--blue); }
+    .cfg-metric-lbl { font-size:10px; color:var(--text-muted); margin-top:4px; }
+    .cfg-y { color:var(--ok);   font-weight:700; text-align:center !important; }
+    .cfg-n { color:var(--crit); font-weight:700; text-align:center !important; }
+
+/* UOM two-column dropdown — PI-style */
+.uom-wrapper        { position:relative; display:inline-block; width:100%; }
+.uom-trigger        { display:flex; align-items:center; justify-content:space-between;
+                      height:36px; padding:0 12px; font-size:12px; cursor:pointer;
+                      background:var(--bg-input); border:1px solid var(--border);
+                      border-radius:var(--radius-sm); color:var(--text-body);
+                      user-select:none; transition:border-color .15s; }
+.uom-trigger:hover  { border-color:var(--border-focus); }
+.uom-trigger .uom-arrow { font-size:10px; color:var(--text-faint); margin-left:8px; }
+.uom-dropdown       { display:none; position:absolute; top:calc(100% + 4px); left:0;
+                      width:100%; min-width:220px; z-index:9999;
+                      background:var(--bg-card); border:1px solid var(--border);
+                      border-radius:var(--radius-sm); box-shadow:var(--shadow-lg);
+                      overflow:hidden; }
+.uom-wrapper.open .uom-dropdown { display:flex; }
+.uom-col-classes    { width:200px; min-width:200px; max-height:320px; overflow-y:auto;
+                      border-right:1px solid var(--border); flex-shrink:0; }
+.uom-col-units      { flex:1; max-height:320px; overflow-y:auto; }
+.uom-class-item     { padding:7px 12px; font-size:12px; cursor:pointer;
+                      color:var(--text-body); display:flex; align-items:center;
+                      justify-content:space-between; white-space:nowrap; }
+.uom-class-item:hover,
+.uom-class-item.active { background:var(--blue-soft); color:var(--blue); }
+.uom-class-item .uom-arrow-r { font-size:10px; color:var(--text-faint); }
+.uom-unit-item      { padding:7px 14px; font-size:12px; cursor:pointer; color:var(--text-body); }
+.uom-unit-item:hover { background:var(--blue-soft); color:var(--blue); }
+.uom-unit-item.selected { font-weight:700; color:var(--ok); }
+.uom-empty          { padding:14px; font-size:11px; color:var(--text-faint); text-align:center; }
+.uom-search         { padding:6px 10px; border-bottom:1px solid var(--border); }
+.uom-search input   { width:100%; border:1px solid var(--border); border-radius:4px;
+                      padding:4px 8px; font-size:11px; outline:none;
+                      background:var(--bg-input); color:var(--text-body); }    
     
+    /* Formula config */
+.fml-card { border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;background:var(--bg-card); }
+.fml-card-hdr { display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--bg-card-alt);border-bottom:1px solid var(--border); }
+.fml-drag-handle { color:var(--text-faint);font-size:14px; }
+.fml-card-title { font-size:12px;font-weight:700;color:var(--text-h);flex:1; }
+.fml-card-body { padding:16px; }
+.fml-row { display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px; }
+.fml-field { display:flex;flex-direction:column;gap:5px; }
+.fml-label { font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted); }
+.fml-input,.fml-select { background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0 12px;height:36px;font-size:12px;color:var(--text-body);outline:none;width:100%;min-width:0;box-sizing:border-box;}
+.fml-input:focus,.fml-select:focus { border-color:var(--border-focus); }
+.fml-textarea { width:100%;background:#1e293b;color:#e2e8f0;border:1px solid var(--blue);border-radius:var(--radius-sm);padding:10px 14px;font-family:var(--font-mono);font-size:12px;min-height:80px;resize:vertical;outline:none;box-sizing:border-box; }
+.fml-preview { display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-card-alt);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:11px;color:var(--text-muted);min-height:36px; }
+.fml-preview-ok { border-color:#bbf7d0;background:#f0fdf4;color:#166534; }
+.fml-attrs { display:flex;flex-wrap:wrap;gap:6px;margin-top:8px; }
+.fml-attr-token { display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe;border-radius:4px;font-size:10px;font-family:var(--font-mono);cursor:pointer; }
+.fml-attr-token:hover { background:#1e40af;color:#fff; }
   </style>
 </head>
 
@@ -3664,8 +3224,7 @@
               <div class="card">
                 <div class="card-hdr"><span class="card-title">§1 — Identification de l'enregistrement</span><span
                     style="font-size:9px;color:var(--text-faint)">Champs <span style="color:var(--crit)">*</span>
-                    obligatoires</span>
-                </div>
+                    obligatoires</span></div>
                 <div class="fg2">
                   <div class="fg">
                     <div class="fg-row"><label class="fg-lbl">Date <span class="fg-req">*</span></label><span
@@ -4478,7 +4037,7 @@
               <th>Paramètre</th>
               <th style="width:150px">LoLo</th>
               <th style="width:150px">HiHi</th>
-              <th style="width:70px">UOM</th>
+              <th style="width:160px">Cible des limites</th>
             </tr></thead>
             <tbody id="cfg-limits-body"></tbody>
           </table>
@@ -4521,7 +4080,7 @@
     const APP = {
       role: 'operator',
       records: [],
-      username: '',
+      username: 'Jean Martin',
       domain: 'CORP\\jmartin',
       refreshSec: 10,
       refreshRem: 10,
@@ -4529,7 +4088,7 @@
       sessionStart: new Date(),
     };
 
-    APP.alertConfigs = []
+    APP.alertConfigs = []; // Wassim: alert configurations per parameter
 
     const PAGE_LABELS = { dashboard: 'Tableau de bord', entry: 'Saisie de données', history: 'Historique & Analyse', config: 'Configuration' };
 
@@ -4798,7 +4357,6 @@
 
     `).join('');
     }
-
     async function renderEntryPages() {
 
       // Parent container
@@ -4933,6 +4491,67 @@
         PAGE_LABELS
       );
     }
+    /*async function renderEntryPages() {
+      // Get the parent container of content
+      // const Topparent = document.getElementById('content');
+      // const parent = Topparent.querySelector('#page-entry');
+      // const pagehdr = parent.querySelector('.pg-hdr');
+      // const card = parent.querySelector('.card');
+      // Parent container
+      const topParent =
+        document.getElementById('content');
+
+      // Template page
+      const templatePage =
+        topParent.querySelector('#page-entry');
+
+      const pagehdr =
+        templatePage.querySelector('.pg-hdr');
+
+      const card =
+        templatePage.querySelector('.card');
+
+      if (APP.entryPages) {
+        //   APP.entryPages.forEach(el => 
+        //   PAGE_LABELS[`entry-${el.Name}`] = `Saisie de données ${el.Name}`
+        // )
+
+        APP.entryPages.forEach(el => {
+
+          // Create new page
+          const newPage =
+            document.createElement('div');
+
+          // Add class
+          newPage.classList.add('page');
+
+          // Add dynamic ID
+          newPage.id = `page-${el.Name}`;
+
+          // Clone header
+          const hdrClone =
+            pagehdr.cloneNode(true);
+
+          // Clone card
+          const cardClone =
+            card.cloneNode(true);
+
+          // Append in order
+          newPage.appendChild(hdrClone);
+
+          newPage.appendChild(cardClone);
+
+          // Append to content
+          topParent.appendChild(newPage);
+
+          // Optional label
+          PAGE_LABELS[`${el.Name}`] =
+            `Saisie de données ${el.Name}`;
+        });
+      }
+
+      console.log("those are the pages", PAGE_LABELS);
+    }*/
 
 
 
@@ -5002,20 +4621,16 @@
       }
     }
 
-
     async function getAttributesofSectionparent(formwebId) {
 
       const response = await fetch(
         `https://sekkai-consulting-pivision.com/PIWEBAPI/elements/${formwebId}/attributes?selectedFields=Items.Name;Items.WebId;Items.Type;Items.Links&searchFullHierarchy=true`,
-        {
-          credentials: "include"
-        }
+        { credentials: "include" }
       );
-
       const data = await response.json();
-
       return data.Items
     }
+
     async function getSections(formWebId) {
 
       const response = await fetch(
@@ -5034,7 +4649,8 @@
       );
     }
 
-async function loadFormStructure(formWebId) {
+    async function loadFormStructure(formWebId) {
+
 
 
       const SectionparentAttributes = await getAttributesofSectionparent(formWebId);
@@ -5044,7 +4660,6 @@ async function loadFormStructure(formWebId) {
       console.log("Validation Attribute:", validationAttr);
 
       const ValidationpointUrl = validationAttr.Links?.Point;
-
       const ValidationpointWebId = ValidationpointUrl?.split("/points/")[1];
 
       const sections = await getSections(formWebId);
@@ -5059,12 +4674,13 @@ async function loadFormStructure(formWebId) {
 
       const sectionMap = {};
       const sectionBatch = {};
+
       sections.forEach(section => {
 
         sectionMap[index] = {
-          sectionName: section.Name,
+          sectionName:  section.Name,
           sectionWebId: section.WebId,
-          sectionOrdre:""
+          sectionOrdre: ""
         };
 
         sectionBatch[index] = {
@@ -5089,15 +4705,12 @@ async function loadFormStructure(formWebId) {
         {
           method: "POST",
           credentials: "include",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(sectionBatch)
         }
       );
 
       const sectionattributeData = await sectionattributeResponse.json();
-      
 
       console.log("Section Attribute Response:", sectionattributeData);
 
@@ -5108,20 +4721,14 @@ async function loadFormStructure(formWebId) {
 
         const attrs = result.Content?.Items || [];
 
-        const ordreAttr = attrs.find(a =>
-          a.Name.toLowerCase() === 'ordre'
-        );
+        const ordreAttr = attrs.find(a => a.Name.toLowerCase() === 'ordre');
 
         if (ordreAttr) {
-
           orderBatch[orderIndex] = {
             Method: "GET",
             Resource: ordreAttr.Links.Value
           };
-
-          sectionMap[orderIndex].sectionOrdreAttr =
-            ordreAttr.WebId;
-
+          sectionMap[orderIndex].sectionOrdreAttr = ordreAttr.WebId;
           orderIndex++;
         }
       });
@@ -5131,9 +4738,7 @@ async function loadFormStructure(formWebId) {
         {
           method: "POST",
           credentials: "include",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(orderBatch)
         }
       );
@@ -5141,22 +4746,13 @@ async function loadFormStructure(formWebId) {
       const orderData = await orderResponse.json();
 
       Object.entries(orderData).forEach(([key, result]) => {
-
         const value = result.Content?.Value;
-
         if (sectionMap[key]) {
           sectionMap[key].sectionOrdre = value;
         }
-
       });
 
-      /* const sortedSections = Object.values(sectionMap)
-        .sort((a, b) =>
-          Number(a.sectionOrdre || 0) -
-          Number(b.sectionOrdre || 0)
-        ); */
 
-      //console.log(sortedSections);
 
       const parameterResponse = await fetch(
         "https://sekkai-consulting-pivision.com/PIWEBAPI/batch",
@@ -5192,14 +4788,14 @@ async function loadFormStructure(formWebId) {
         const sectionInfo = sectionMap[key];
 
         const sectionObj = {
-          name: sectionInfo.sectionName,
+          name:         sectionInfo.sectionName,
           sectionOrdre: sectionInfo.sectionOrdre,
-          parameters: []
+          parameters:   []
         };
 
         const parameters = result.Content.Items.filter(
           item => item.TemplateName === "ParameterTemplate" || item.TemplateName === "MetadataParameterTemplate"
-        );
+      );
 
         parameters.forEach(parameter => {
 
@@ -5227,7 +4823,6 @@ async function loadFormStructure(formWebId) {
         });
 
         formModel.sections.push(sectionObj);
-
       });
 
       const sortSections = Object.values(formModel.sections)
@@ -5304,16 +4899,16 @@ async function loadFormStructure(formWebId) {
             value: undefined
           };
 
-          if (/^CalcFormula\d+$/i.test(attr.Name) || attr.Name === 'HiHi' || attr.Name === 'LoLo' || attr.Name === 'UOM' || attr.Name === 'ordre') {
+          if (/^CalcFormula\d+$/i.test(attr.Name) || attr.Name === 'HiHi' || attr.Name === 'LoLo' || attr.Name === 'UOM' || attr.Name === 'AlertField') {
             parameterObj.formulas[attr.Name] = attributeObj;
           }
 
-          parameterObj.attributes.push(attributeObj);
+        parameterObj.attributes.push(attributeObj);
 
         });
       });
 
-
+      
 
 
       // -----------------------------------
@@ -5332,7 +4927,7 @@ async function loadFormStructure(formWebId) {
           parameter.attributes.forEach(attr => {
 
             if (
-              attr.name === "HiHi" || attr.name === "LoLo" || /^CalcFormula\d+$/i.test(attr.name) || attr.name === "UOM" || attr.name === "UOM1" || attr.name === "UOM2" || attr.name === "AlertField" || attr.name === "ordre"
+              attr.name === "HiHi" || attr.name === "LoLo" || /^CalcFormula\d+$/i.test(attr.name) || attr.name === "UOM" || attr.name === "UOM1" || attr.name === "UOM2" || attr.name === "AlertField"
             ) {
 
               limitBatch[batchIndex] = {
@@ -5353,129 +4948,121 @@ async function loadFormStructure(formWebId) {
 
       if (Object.keys(limitBatch).length) {
 
-        const response = await fetch(
-          "https://sekkai-consulting-pivision.com/PIWEBAPI/batch",
-          {
-            method: "POST",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify(limitBatch)
-          }
-        );
+      const response = await fetch(
+        "https://sekkai-consulting-pivision.com/PIWEBAPI/batch",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(limitBatch)
+        }
+      );
 
-        const result = await response.json();
+      const result = await response.json();
 
-        console.log("Limit batch result", result);
+      console.log("Limit batch result", result);
 
-        Object.entries(result).forEach(([key, item]) => {
+      Object.entries(result).forEach(([key, item]) => {
 
-          const attr = limitMap[key];
+        const attr = limitMap[key];
 
-          if (
-            item.Content &&
-            item.Content.Value !== undefined
-          ) {
+        if (
+          item.Content &&
+          item.Content.Value !== undefined
+        ) {
 
-            attr.value = item.Content.Value;
-            if (/^CalcFormula\d+$/i.test(attr.name) || attr.name === 'HiHi' || attr.name === 'LoLo' || attr.name === 'UOM' || attr.name === 'UOM1' || attr.name === 'UOM2' || attr.name === 'ordre') {
-              const parentParam = formModel.sections
-                .flatMap(s => s.parameters)
-                .find(p => p.attributes.includes(attr));
-              if (parentParam) {
-                parentParam.formulas[attr.name] = attr;
-              }
+          attr.value = item.Content.Value;
+          if (/^CalcFormula\d+$/i.test(attr.name) || attr.name === 'HiHi' || attr.name === 'LoLo' || attr.name === 'UOM' || attr.name === 'UOM1' || attr.name === 'UOM2') {
+            const parentParam = formModel.sections
+              .flatMap(s => s.parameters)
+              .find(p => p.attributes.includes(attr));
+            if (parentParam) {
+              parentParam.formulas[attr.name] = attr;
             }
           }
+        }
 
-        });
+      });
 
-      }
+    }
 
-      const metadataBatch = {};
-      const metadataMap = {};
+    const metadataBatch = {};
+    const metadataMap = {};
 
-      let metadataIndex = 1;
+    let metadataIndex = 1;
 
-      formModel.sections.forEach(section => {
+    formModel.sections.forEach(section => {
 
-        section.parameters.forEach(parameter => {
+      section.parameters.forEach(parameter => {
 
-          if (
-            parameter.template !==
-            "MetadataParameterTemplate"
-          ) {
-            return;
-          }
+        if (
+          parameter.template !==
+          "MetadataParameterTemplate"
+        ) {
+          return;
+        }
 
-          parameter.attributes.forEach(attr => {
+        parameter.attributes.forEach(attr => {
 
-            // Don't retrieve the actual PI Point value here
-            if (attr.name === "tag") return;
+          // Don't retrieve the actual PI Point value here
+          if (attr.name === "tag") return;
 
-            metadataBatch[metadataIndex] = {
-              Method: "GET",
-              Resource: attr.valueUrl
-            };
+          metadataBatch[metadataIndex] = {
+            Method: "GET",
+            Resource: attr.valueUrl
+          };
 
-            metadataMap[metadataIndex] = attr;
+          metadataMap[metadataIndex] = attr;
 
-            metadataIndex++;
-
-          });
+          metadataIndex++;
 
         });
 
       });
 
-      if (Object.keys(metadataBatch).length) {
+    });
 
-        const metadataResponse = await fetch(
-          "https://sekkai-consulting-pivision.com/PIWEBAPI/batch",
-          {
-            method: "POST",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify(metadataBatch)
+    if (Object.keys(metadataBatch).length) {
+
+      const metadataResponse = await fetch(
+        "https://sekkai-consulting-pivision.com/PIWEBAPI/batch",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(metadataBatch)
+        }
+      );
+
+      const metadataValues =
+        await metadataResponse.json();
+
+      console.log(
+        "Metadata Values",
+        metadataValues
+      );
+
+      Object.entries(metadataValues)
+        .forEach(([key, result]) => {
+
+          const attr = metadataMap[key];
+
+          if (
+            result.Content &&
+            result.Content.Value !== undefined
+          ) {
+            attr.value = result.Content.Value;
           }
-        );
 
-        const metadataValues =
-          await metadataResponse.json();
-
-        console.log(
-          "Metadata Values",
-          metadataValues
-        );
-
-        Object.entries(metadataValues)
-          .forEach(([key, result]) => {
-
-            const attr = metadataMap[key];
-
-            if (
-              result.Content &&
-              result.Content.Value !== undefined
-            ) {
-              attr.value = result.Content.Value;
-            }
-
-          });
-
-      }
-
-      formModel.sections.forEach(section => {
-        section.parameters.sort((a, b) => {
-          const ordreA = a.attributes.find(attr => attr.name === "ordre")?.value ?? Infinity;
-          const ordreB = b.attributes.find(attr => attr.name === "ordre")?.value ?? Infinity;
-
-          return ordreA - ordreB;
         });
-      });
-      
+
+    }
+
+
       console.log("FINAL MODEL:", formModel);
       return formModel;
     }
@@ -5756,76 +5343,76 @@ async function loadFormStructure(formWebId) {
 
       function renderMetadataSection(section, parent) {
 
-      const card = document.createElement("div");
+        const card = document.createElement("div");
 
-      card.className = "card";
-      card.style.padding = "18px";
-      card.style.marginBottom = "18px";
+        card.className = "card";
+        card.style.padding = "18px";
+        card.style.marginBottom = "18px";
 
-      card.innerHTML = `
+        card.innerHTML = `
           <div class="card-title">
             ${section.name}
           </div>
         `;
 
-      // Sort by Ordre
-      const parameters = [...section.parameters];
+        // Sort by Ordre
+        const parameters = [...section.parameters];
 
-      parameters.sort((a, b) => {
+        parameters.sort((a, b) => {
 
-        const orderA =
-          a.attributes.find(
-            x => x.name === "Ordre"
-          )?.value ?? 999;
+          const orderA =
+            a.attributes.find(
+              x => x.name === "Ordre"
+            )?.value ?? 999;
 
-        const orderB =
-          b.attributes.find(
-            x => x.name === "Ordre"
-          )?.value ?? 999;
+          const orderB =
+            b.attributes.find(
+              x => x.name === "Ordre"
+            )?.value ?? 999;
 
-        return orderA - orderB;
-      });
+          return orderA - orderB;
+        });
 
-      parameters.forEach(parameter => {
+        parameters.forEach(parameter => {
 
-        const nom =
+          const nom =
           parameter.attributes.find(
             a => a.name === "Nom"
           )?.value || parameter.name;
 
-        const inputType =
+          const inputType =
           parameter.attributes.find(
             a => a.name === "Input type"
           )?.value?.Name;
 
-        const tag =
-          parameter.attributes.find(
-            a => a.name.toLowerCase() === "tag"
-          );
+          const tag =
+            parameter.attributes.find(
+              a => a.name.toLowerCase() === "tag"
+            );
 
-        const listAttribute =
-          parameter.attributes.find(
-            a => a.name === "Liste"
-          );
+          const listAttribute =
+            parameter.attributes.find(
+              a => a.name === "Liste"
+            );
 
-        const pointWebId =
-          tag?.pointWebId || "";
+          const pointWebId =
+            tag?.pointWebId || "";
 
-        const valueUrl = tag?.valueUrl || "";
+          const valueUrl = tag?.valueUrl || "";
 
-        let controlHtml = "";
+          let controlHtml = "";
 
-        const row =
-          document.createElement("div");
+          const row =
+            document.createElement("div");
 
-        row.style.display = "flex";
-        row.style.alignItems = "center";
-        row.style.gap = "12px";
-        row.style.marginBottom = "10px";
+          row.style.display = "flex";
+          row.style.alignItems = "center";
+          row.style.gap = "12px";
+          row.style.marginBottom = "10px";
 
-        let control = "";
-
-        if (inputType === "Liste") {
+          let control = "";
+          
+          if (inputType === "Liste") {
 
           const options =
             parameter.attributes.find(
@@ -5836,10 +5423,8 @@ async function loadFormStructure(formWebId) {
             <select
               class="fc"
               id="${tag?.pointWebId || ''}"
-              data-url="${tag?.valueUrl || ''}"
-              attributename="${parameter.name}"
-              >
-              
+              data-url="${tag?.valueUrl || ''}">
+
               <option value="">
                 -- Sélectionner --
               </option>
@@ -5854,9 +5439,9 @@ async function loadFormStructure(formWebId) {
           `;
         }
 
-        else if (inputType === "Manual Input") {
+          else if (inputType === "Manual Input") {
 
-          controlHtml = `
+            controlHtml = `
               <input
                 class="fc"
                 type="text"
@@ -5865,11 +5450,11 @@ async function loadFormStructure(formWebId) {
                 attributename="${parameter.name}"
                 ">
             `;
-        }
+          }
 
-        else {
+              else {
 
-          controlHtml = `
+            controlHtml = `
               <input
                 class="fc"
                 type="text"
@@ -5877,10 +5462,10 @@ async function loadFormStructure(formWebId) {
                 data-url="${valueUrl}"
                 attributename="${parameter.name}">
             `;
-        }
+    }
+          
 
-
-        row.innerHTML = `
+          row.innerHTML = `
           <label
             style="
               min-width:220px;
@@ -5891,114 +5476,79 @@ async function loadFormStructure(formWebId) {
           ${controlHtml}
         `;
 
-        card.appendChild(row);
+          card.appendChild(row);
 
-      });
-
-      // let SumbitButondiv = document.createElement("div");
-
-      // SumbitButondiv.style.textAlign = "center";
-      // SumbitButondiv.innerHTML = `<button class="btn btn-primary" onclick="sendAllValuesBatch2('page-AdBlue')">Soumettre</button>`;
-
-
-      parent.appendChild(card);
-      parent.appendChild(card);
-      // parent.appendChild(SumbitButondiv);
-
-    }
-
-    function handleSeuilChange(checkbox) {
-
-      const row = checkbox.closest('tr');
-
-      if (!row) return;
-
-      const inputs = row.querySelectorAll('input[type="number"]');
-
-      if (checkbox.checked) {
-
-        inputs.forEach(input => {
-          input.value = 0;
-          input.disabled = true;
         });
 
-      } else {
-
-        inputs.forEach(input => {
-          // Don't re-enable calculated fields
-          if (!input.hasAttribute('data-formula')) {
-            input.disabled = false;
-          }
-        });
+        parent.appendChild(card);
 
       }
+  async function renderForm2() {
 
-      refreshAll();
-}
-    async function renderForm2() {
+  // Reset alert configs before re-building form (prevents accumulation)
+  APP.alertConfigs = [];
 
-      // -----------------------------------
-      // TEMPLATE PAGE
-      // -----------------------------------
+  // -----------------------------------
+  // TEMPLATE PAGE
+  // -----------------------------------
 
-      const topParent =
-        document.getElementById("content");
+  const topParent =
+    document.getElementById("content");
 
-      const templatePage =
-        topParent.querySelector("#page-entry");
+  const templatePage =
+    topParent.querySelector("#page-entry");
 
-      // -----------------------------------
-      // ITERATE ALL PAGES
-      // -----------------------------------
+  // -----------------------------------
+  // ITERATE ALL PAGES
+  // -----------------------------------
+
+  Object.entries(APP.pageNametoData)
+    .forEach(([pageName, formModel]) => {
+
       let validationWebId = null;
-      Object.entries(APP.pageNametoData)
-        .forEach(([pageName, formModel]) => {
-          validationWebId = formModel.validationwebid;
-          console.log("Rendering page:", pageName, "with validationWebId:", validationWebId);
-          const templatePage = topParent.querySelector(`#page-${pageName}`);
+      if (formModel.validationwebid) {
+        validationWebId = formModel.validationwebid;
+        console.log("Rendering page:", pageName, "with validationWebId:", validationWebId);
+      }
+      const templatePage = topParent.querySelector(`#page-${pageName}`);
 
-          console.log("Rendering:", pageName);
+      console.log("Rendering:", pageName);
 
-          // -----------------------------------
-          // LOOP SECTIONS
-          // -----------------------------------
+      // -----------------------------------
+      // LOOP SECTIONS
+      // -----------------------------------
 
-          formModel.sections.forEach(section => {
+      formModel.sections.forEach(section => {
 
-            const isMetadataSection =
-              section.parameters.length > 0 &&
-              section.parameters.every(
-                p => p.template === "MetadataParameterTemplate"
-              );
+        const isMetadataSection =
+        section.parameters.length > 0 &&
+        section.parameters.every(
+          p => p.template === "MetadataParameterTemplate"
+        );
 
-            if (isMetadataSection) {
+      if (isMetadataSection) {
 
-              renderMetadataSection(section, templatePage);
-              /* let SumbitButondiv = document.createElement("div");
-              SumbitButondiv.style.textAlign = "center";
-              SumbitButondiv.innerHTML = `<button class="btn btn-primary" onclick="sendAllValuesBatch2('page-AdBlue')">Soumettre</button>`;
-              templatePage.appendChild(SumbitButondiv); */
+        renderMetadataSection(section, templatePage);
 
+        return;
+      }
 
-              return;
-            }
+        // -----------------------------------
+        // CARD
+        // -----------------------------------
 
-            // -----------------------------------
-            // CARD
-            // -----------------------------------
+        const card =
+          document.createElement("div");
 
-            const card =
-              document.createElement("div");
+        card.className = "card";
+        card.style.padding = "0";
+        card.style.marginBottom = "18px";
 
-            card.className = "card";
-            card.style.padding = "0";
-            card.style.marginBottom = "18px";
+        // -----------------------------------
+        // CARD STRUCTURE
+        // -----------------------------------
 
-            // -----------------------------------
-            // CARD STRUCTURE
-            // -----------------------------------
-
-            card.innerHTML = `
+        card.innerHTML = `
 
           <div
             style="
@@ -6028,6 +5578,15 @@ async function loadFormStructure(formWebId) {
           <div class="lmt-table-wrap">
 
             <table class="lmt">
+              <colgroup>
+    <col class="c-prop">
+    <col class="c-thresh">
+    <col class="c-inp">
+    <col class="c-calc">
+    <col class="c-calc">
+    <col class="c-ind">
+    <col class="c-tip">
+  </colgroup>
 
               <thead>
                 <tr>
@@ -6072,116 +5631,104 @@ async function loadFormStructure(formWebId) {
           </div>
         `;
 
-            // -----------------------------------
-            // TBODY
-            // -----------------------------------
+        // -----------------------------------
+        // TBODY
+        // -----------------------------------
 
-            const tbody =
-              card.querySelector("tbody");
+        const tbody =
+          card.querySelector("tbody");
 
-            // -----------------------------------
-            // PARAMETERS
-            // -----------------------------------
+        // -----------------------------------
+        // PARAMETERS
+        // -----------------------------------
 
-            section.parameters.forEach(parameter => {
+        section.parameters.forEach(parameter => {
 
-              // -----------------------------------
-              // FIND ATTRIBUTES
-              // -----------------------------------
+          // -----------------------------------
+          // FIND ATTRIBUTES
+          // -----------------------------------
 
-              const seuil =
-                parameter.attributes.find(
-                  a => a.name === "Seuil"
-                );
+          const seuil =
+            parameter.attributes.find(
+              a => a.name === "Seuil"
+            );
 
-              const valeurSaisie =
-                parameter.attributes.find(
-                  a => a.name === "Valeur Saisie"
-                );
+          const valeurSaisie =
+            parameter.attributes.find(
+              a => a.name === "Valeur Saisie"
+            );
 
-              const calc1 =
-                parameter.attributes.find(
-                  a => a.name === "Valeur Calculée"
-                );
+          const calc1 =
+            parameter.attributes.find(
+              a => a.name === "Valeur Calculée"
+            );
 
-              const calc2 =
-                parameter.attributes.find(
-                  a => a.name === "Valeur Calculée 2"
-                );
+          const calc2 =
+            parameter.attributes.find(
+              a => a.name === "Valeur Calculée 2"
+            );
 
-              const calc1Formula = parameter.formulas?.CalcFormula1?.value || '';
-              const calc2Formula = parameter.formulas?.CalcFormula2?.value || '';
+          const calc1Formula = parameter.formulas?.CalcFormula1?.value || '';
+          const calc2Formula = parameter.formulas?.CalcFormula2?.value || '';
+          
+          const hiHi =
+            parameter.attributes.find(
+              a => a.name === "HiHi"
+            );
 
-              const hiHi =
-                parameter.attributes.find(
-                  a => a.name === "HiHi"
-                );
+          const loLo =
+            parameter.attributes.find(
+              a => a.name === "LoLo"
+            );
 
-              const loLo =
-                parameter.attributes.find(
-                  a => a.name === "LoLo"
-                );
+          const uom =
+            parameter.attributes.find(
+              a => a.name === "UOM"
+            );
 
-              const uom =
-                parameter.attributes.find(
-                  a => a.name === "UOM"
-                );
+          const uom1 =
+            parameter.attributes.find(
+              a => a.name === "UOM1"
+            );
 
-              const uom1 =
-                parameter.attributes.find(
-                  a => a.name === "UOM1"
-                );
+          const uom2 =
+            parameter.attributes.find(
+              a => a.name === "UOM2"
+            );
 
-              const uom2 =
-                parameter.attributes.find(
-                  a => a.name === "UOM2"
-                );
+          // Wassim: AlertField — determines which attribute to watch for threshold alerts
+          const AlertField = parameter.attributes.find(a => a.name === "AlertField");
+          if (AlertField && AlertField.type === "EnumerationValue") {
+            const enumValue = AlertField.value;
+            if (enumValue && enumValue.hasOwnProperty("Value")) {
+              const v = enumValue.Value;
+              // Doit correspondre exactement aux attributeName générés dans le HTML
+              AlertField.value = v === 0 ? parameter.name                          // "Al"
+                               : v === 1 ? `Valeur Calculée 1 ${parameter.name}`  // "Valeur Calculée 1 Al"
+                               :           `Valeur Calculée 2 ${parameter.name}`; // "Valeur Calculée 2 Al"
+            }
+          }
 
-              const AlertField =
-                parameter.attributes.find(
-                  a => a.name === "AlertField"
-                );
+          const hiHiValue    = hiHi?.value;
+          const loLoValue    = loLo?.value;
+          const AlertFieldval = AlertField?.value ?? parameter.name;
 
-              if (AlertField && AlertField.type == "EnumerationValue") {
-                const enumValue = AlertField.value;
-                if (enumValue && enumValue.hasOwnProperty("Value")) {
-                  let value = enumValue.Value;
-                  if (value === 0) {
-                    AlertField.value = parameter.name;
-                  }
+          // Wassim: register alert config for this parameter
+          APP.alertConfigs.push({
+            parameterName:  parameter.name,
+            alertFieldValue: AlertFieldval,
+            loLoValue:       loLoValue,
+            hiHiValue:       hiHiValue
+          });
 
-                  else if (value === 1) {
-                    AlertField.value = "VC1 " + parameter.name
-                  }
+          // -----------------------------------
+          // ROW
+          // -----------------------------------
 
-                  else {
-                    AlertField.value = "VC2 " + parameter.name
-                  }
-
-                  //AlertField.value = enumValue.Value;
-                }
-              }
-              console.log("AlertField:", AlertField?.value);
-              const hiHiValue = hiHi?.value;
-              const loLoValue = loLo?.value;
-              const AlertFieldval = AlertField?.value;
-
-              APP.alertConfigs.push({
-                parameterName: parameter.name,
-                alertFieldValue: AlertFieldval,
-                loLoValue: loLoValue,
-                hiHiValue: hiHiValue
-              });
-              console.log("Alert Configs:", APP.alertConfigs);
-
-              // -----------------------------------
-              // ROW
-              // -----------------------------------
-              // oninput='handleInputChange("${AlertFieldval} ${parameter.name}",${loLoValue},${hiHiValue})' 
-              const tr =
-                document.createElement("tr");
-              //tr.classList.add("lmt-exceed")
-              tr.innerHTML = `
+          const tr =
+            document.createElement("tr");
+          //tr.classList.add("lmt-exceed")
+          tr.innerHTML = `
 
             <td>
               ${parameter.name}
@@ -6191,18 +5738,16 @@ async function loadFormStructure(formWebId) {
             
             <td>
 
-              ${seuil
+              ${
+                seuil
                   ? `
                     <input
                       type="checkbox"
                       id="${seuil.pointWebId}"
-                      data-url="${seuil.valueUrl}"
-                      attributename = "Seuil ${parameter.name}"
-                       onchange="handleSeuilChange(this, '${parameter.name}')"
-                      >
+                      data-url="${seuil.valueUrl}">
                   `
                   : "-"
-                }
+              }
 
             </td>
 
@@ -6210,7 +5755,8 @@ async function loadFormStructure(formWebId) {
             
             <td>
               <div class="Field-UOM">
-              ${valeurSaisie
+              ${
+                valeurSaisie
                   ? `
                     <input
                       class="fc"
@@ -6220,14 +5766,13 @@ async function loadFormStructure(formWebId) {
                       attributeName="${parameter.name}"
                       ${loLoValue != null ? `min="${loLoValue}"` : ""}
                       ${hiHiValue != null ? `max="${hiHiValue}"` : ""}
-                      
                       oninput="refreshAll()"
                       >
                       <span>${uom?.value || '-'}</span>
                       
                   `
                   : "-"
-                }
+              }
               </div>
             </td>
             
@@ -6235,95 +5780,94 @@ async function loadFormStructure(formWebId) {
 
             <td>
               <div class="Field-UOM">
-              ${calc1
+              ${
+                calc1
                   ? `
                     <input
                       class="fc"
                       type="number"
                       id="${calc1.pointWebId}"
                       data-url="${calc1.valueUrl}"
-                      data-formula="${(calc1Formula || '').replace(/"/g, '&quot;')}"
-                      disabled attributeName="VC1 ${parameter.name}"
+                      data-formula="${(calc1Formula||'').replace(/"/g,'&quot;')}"
+                      disabled attributeName="Valeur Calculée 1 ${parameter.name}"
                     >
-                    <span>${uom1?.value || '-'}</span>  
+                    <span>${uom1?.value || '-'}</span>
                   `
-                  
                   : "-"
-                }
+              }
               </div>
-              <div><span class="formulaexp" style="font-size:9px;color:var(--text-faint);margin-left:4px">${calc1Formula} </span></div>
+              <div style="max-width:200px;word-break:break-word"><span style="font-size:9px;color:var(--text-faint);margin-left:4px">${calc1Formula}</span></div>
+</td>
             </td>
 
             <!-- CALC 2 -->
 
             <td>
               <div class="Field-UOM">
-              ${calc2
+              ${
+                calc2
                   ? `
                     <input
                       class="fc"
                       type="number"
                       id="${calc2.pointWebId}"
                       data-url="${calc2.valueUrl}"
-                      data-formula="${(calc2Formula || '').replace(/"/g, '&quot;')}"
-                      disabled attributeName="VC2 ${parameter.name}"
+                      data-formula="${(calc2Formula||'').replace(/"/g,'&quot;')}"
+                      disabled attributeName="Valeur Calculée 2 ${parameter.name}"
                     >
                     <span>${uom2?.value || '-'}</span>
                   `
-
                   : "-"
-                }
+              }
               </div>
-              <div><span class="formulaexp" style="font-size:9px;color:var(--text-faint);margin-left:4px">${calc2Formula} </span></div>
+              <div><span style="font-size:9px;color:var(--text-faint);margin-left:4px">${calc2Formula}</span></div>
             </td>
 
-            <td class="lmt-ind-cell"><div class="lmt-ind" id="lt-ind-${parameter.name}"></div><div><span class="lmt-range" style="font-size:9px;color:var(--text-faint);margin-left:4px">[Min: ${loLoValue}, Max: ${hiHiValue}]</span></div></td>
+            <td class="lmt-ind-cell"><div class="lmt-ind" id="lt-ind-${parameter.name}"></div></td>
             <td class="lmt-tip-cell"><span class="tip-btn" data-tip="${parameter.description}">?</span></td>
           `;
 
-              tbody.appendChild(tr);
-            });
-
-
-
-            // -----------------------------------
-            // APPEND CARD
-            // -----------------------------------
-
-            templatePage.appendChild(card);
-            
-            
-          });
-
-          let Validation_card = document.createElement("div");
-          Validation_card.className = "card";
-          Validation_card.innerHTML= `
-          <div class="card-hdr"><span class="card-title">Statut de validation</span></div>
-                <div class="fg-lbl" style="margin-bottom:9px;font-size:10px">Résultat d'analyse</div>
-                <div class="valid-chips">
-                  <label class="valid-chip conf">
-                    <input type="radio" name="validation_${pageName}" attributeName="validation" value=1 id="${validationWebId}" checked>
-                    <span class="valid-chip-lbl">✔ Conforme</span>
-                  </label>
-                  <label class="valid-chip nonconf">
-                    <input type="radio" name="validation_${pageName}" attributeName="validation" value=0 id="${validationWebId}">
-                    <span class="valid-chip-lbl">✖ Non Conforme</span>
-                  </label>
-          </div>
-          `
-          
-          let SumbitButondiv = document.createElement("div");
-          SumbitButondiv.style.textAlign = "center";
-          SumbitButondiv.style.marginTop="20px";
-          SumbitButondiv.innerHTML = `<button class="btn btn-primary" onclick="sendAllValuesBatch2('page-${pageName}')">Soumettre</button>`;
-          templatePage.appendChild(Validation_card);
-          templatePage.appendChild(SumbitButondiv);
-          
+          tbody.appendChild(tr);
         });
 
-      
+        // -----------------------------------
+        // APPEND CARD
+        // -----------------------------------
 
-    }
+        templatePage.appendChild(card);
+      });
+            // ── Statut de validation (dynamique, par page AF) ──────────
+      const validationCard = document.createElement('div');
+      validationCard.className = 'card';
+      validationCard.innerHTML = `
+        <div class="card-hdr"><span class="card-title">Statut de validation</span></div>
+        <div class="fg-lbl" style="margin-bottom:9px;font-size:10px">Résultat d'analyse</div>
+        <div class="valid-chips">
+          <label class="valid-chip conf">
+            <input type="radio" name="validation_${pageName}" attributeName="validation" value=1 id="${validationWebId}" checked>
+            <span class="valid-chip-lbl">✔ Conforme</span>
+          </label>
+          <label class="valid-chip nonconf">
+            <input type="radio" name="validation_${pageName}" attributeName="validation" value=0 id="${validationWebId}">
+            <span class="valid-chip-lbl">✖ Non Conforme</span>
+          </label>
+        </div>`;
+      templatePage.appendChild(validationCard);
+
+      // ── Bouton Soumettre ───────────────────────────────────────
+      const submitDiv = document.createElement('div');
+      submitDiv.style.cssText = 'text-align:center;margin-top:20px;margin-bottom:28px';
+      submitDiv.innerHTML = `
+        <button class="btn btn-primary" style="padding:11px 32px;font-size:14px"
+          onclick="sendAllValuesBatch2('page-${pageName}')">
+          Soumettre
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:6px">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </button>`;
+      templatePage.appendChild(submitDiv);
+    });
+}
 
     let pageNametoData = {};
 
@@ -6358,7 +5902,7 @@ async function loadFormStructure(formWebId) {
             parseFloat(el.value);
 
           values[attr] =
-            isNaN(value) ? "" : value;
+            isNaN(value) ? 0 : value;
 
         });
 
@@ -6366,29 +5910,22 @@ async function loadFormStructure(formWebId) {
     }
 
     function evaluateFormula(
-      formula,
-      values
-    ) {
+        formula,
+        values
+      ) {
 
       let expr = formula;
 
       expr = expr.replace(/\[([^\]]+)\]/g, (_match, token) => {
         const key = token.trim();
         const value = values.hasOwnProperty(key) ? values[key] : "";
-        // if (value === undefined || value === null || Number.isNaN(value)) {
-        //   console.warn(`Formula missing value for [${key}]: replacing with 0`);
-        //   return '0';
-        // }
 
-        if (value === undefined ||
-          value === null ||
-          value === "" ||
-          Number.isNaN(value)
-        ) {
+        // Si la valeur est absente ou vide → throw pour laisser le champ vide
+        // (ne pas substituer 0, sinon [Al]*5 = 0 quand Al est vide)
+        if (value === undefined || value === null || value === "" || Number.isNaN(value)) {
           throw new Error(`Missing value for [${key}]`);
         }
 
-        /* return Number.isFinite(value) ? value : 0; */
         return value;
       });
 
@@ -6408,147 +5945,194 @@ async function loadFormStructure(formWebId) {
         .trim();
     }
 
+    /* handleInputChange — Wassim version: handles per-parameter alert thresholds
+       Called with (alertFieldValue, loLoValue, hiHiValue) from refreshAllAlerts()
+       or directly from oninput on form fields via refreshAll(). */
     function handleInputChange(alertFieldValue, loLoValue, hiHiValue) {
-      console.log("Input changed:", alertFieldValue, loLoValue, hiHiValue);
       const field = document.querySelector(`input[attributeName="${alertFieldValue}"]`);
+      if (!field) return;
+      const row    = field.closest('tr');
+      const lmtDiv = row ? row.querySelector('.lmt-ind') : null;
+      if (!lmtDiv) return;
 
-
-      console.log("alert Field found:", field);
-      console.log("alert Field value:", field.value);
-
-
-      const row = field.closest('tr');
-      const lmtDiv = row.querySelector('.lmt-ind');
-
-      if (field.value === '') {
+      if (field.value === '' || isNaN(parseFloat(field.value))) {
         row.classList.remove('lmt-exceed');
-        lmtDiv.classList.remove('ok');
-        lmtDiv.classList.remove('crit');
+        lmtDiv.classList.remove('ok', 'crit');
         return;
+      }
+      if (!alertFieldValue) return;
 
+      /*if (parseFloat(field.value) < loLoValue || parseFloat(field.value) > hiHiValue) {
+        row.classList.add('lmt-exceed');
+        lmtDiv.classList.remove('ok');
+        lmtDiv.classList.add('crit');
+      } else {
+        row.classList.remove('lmt-exceed');
+        lmtDiv.classList.remove('crit');
+        lmtDiv.classList.add('ok');
+      }*/
+     // Si les seuils ne sont pas configurés dans PI AF, pas d'alerte
+      if (loLoValue == null && hiHiValue == null) {
+        lmtDiv.classList.remove('ok', 'crit');
+        return;
       }
 
-      console.log(lmtDiv);
-      if (field.value < loLoValue || field.value > hiHiValue) {
-        row.classList.add('lmt-exceed');
-        lmtDiv.classList.remove('ok')
-        lmtDiv.classList.add('crit')
+      const val = parseFloat(field.value);
+      const exceedsLo = loLoValue != null && val < loLoValue;
+      const exceedsHi = hiHiValue != null && val > hiHiValue;
 
+      if (exceedsLo || exceedsHi) {
+        row.classList.add('lmt-exceed');
+        lmtDiv.classList.remove('ok');
+        lmtDiv.classList.add('crit');
       } else {
         row.classList.remove('lmt-exceed');
         lmtDiv.classList.remove('crit');
         lmtDiv.classList.add('ok');
       }
-
-
     }
 
-
+    /* recalculateAllFormulas — Wassim version: multi-pass formula recalculation */
     function recalculateAllFormulas() {
-
-      const formulaFields =
-        Array.from(document.querySelectorAll('input[data-formula]'));
-
+      const formulaFields = Array.from(document.querySelectorAll('input[data-formula]'));
       const buildValues = () => {
         const values = {};
-
-        document.querySelectorAll('[attributeName]')
-          .forEach(el => {
-
-            const attr = el.getAttribute('attributeName');
-            const value = parseFloat(el.value);
-
-            values[attr] =
-              Number.isFinite(value) ? value : "";
-          });
-        
+        document.querySelectorAll('[attributeName]').forEach(el => {
+          const attr  = el.getAttribute('attributeName');
+          const value = parseFloat(el.value);
+          values[attr] = Number.isFinite(value) ? value : '';
+        });
         return values;
       };
 
       let values = buildValues();
-      console.log("Those are the values from buildValues:", values);
       const maxPasses = 6;
 
       for (let pass = 0; pass < maxPasses; pass++) {
-
         let anyChange = false;
-
         formulaFields.forEach(el => {
-
-          const rawFormula =
-            el.dataset.formula || '';
-
-          const formula =
-            normalizeFormula(rawFormula);
-
+          const rawFormula = el.dataset.formula || '';
+          const formula    = normalizeFormula(rawFormula);
           if (!formula) return;
-
           try {
-
-            const result =
-              evaluateFormula(formula, values);
-
-            const normalized =
-              Number.isFinite(result)
-                ? parseFloat(result.toFixed(6))
-                : '';
-
+            const result     = evaluateFormula(formula, values);
+            const normalized = Number.isFinite(result) ? parseFloat(result.toFixed(6)) : '';
             if (el.value !== String(normalized)) {
-
               el.value = normalized;
-
-              const attrName =
-                el.getAttribute('attributeName');
-
-              if (attrName) {
-                values[attrName] =
-                  Number.isFinite(normalized)
-                    ? normalized
-                    : "";
-              }
-
+              const attrName = el.getAttribute('attributeName');
+              if (attrName) values[attrName] = Number.isFinite(normalized) ? normalized : '';
               anyChange = true;
             }
-
           } catch (err) {
             el.value = '';
             console.warn(err);
           }
-
         });
-
         if (!anyChange) break;
       }
     }
 
+    /* refreshAllAlerts — Wassim: re-evaluates all alert indicators after input */
     function refreshAllAlerts() {
-
       APP.alertConfigs.forEach(cfg => {
+        handleInputChange(cfg.alertFieldValue, cfg.loLoValue, cfg.hiHiValue);
+      });
+    }
 
-        handleInputChange(
-          cfg.alertFieldValue,
-          cfg.loLoValue,
-          cfg.hiHiValue
-        );
+    /* refreshAll — single entry point called by oninput on form fields */
+    function refreshAll() {
+      recalculateAllFormulas();
+      refreshAllAlerts();
+    }
 
+    /* Getformdata — Wassim: collects all form field values with WebId for batch send */
+    function Getformdata(pagename) {
+      const container = document.getElementById(pagename);
+      const values    = [];
+      container.querySelectorAll('input, select').forEach(el => {
+        const key = el.getAttribute('attributeName') || el.getAttribute('id');
+        if (el.type === 'checkbox') {
+          values[key] = { value: el.checked, WebId: el.getAttribute('id'), element: el };
+        } else if (el.type === 'radio') {
+          if (el.checked) values[key] = { value: el.value, WebId: el.getAttribute('id'), element: el };
+        } else {
+          values[key] = { value: el.value, WebId: el.getAttribute('id'), element: el };
+        }
+      });
+      return values;
+    }
+
+    /* validateValues — Wassim: marks empty required fields with .err class */
+    function validateValues(values, pagename) {
+      let hasError = false;
+      const container = document.getElementById(pagename);
+      Object.entries(values).forEach(([key, data]) => {
+        const value = data.value;
+        const empty = value === '' || value === null || value === undefined;
+        const field = container.querySelector(`[attributeName="${key}"]`) ||
+                      container.querySelector(`#${CSS.escape(key)}`);
+        if (empty) { if (field) field.classList.add('err');    hasError = true; }
+        else        { if (field) field.classList.remove('err'); }
+      });
+      return !hasError;
+    }
+
+    /* sendAllValuesBatch2 — Wassim: collects, validates and batch-sends all form values to PI */
+    async function sendAllValuesBatch2(pagename) {
+      const values = Getformdata(pagename);
+      if (!validateValues(values, pagename)) { alert('Certains champs sont vides'); return; }
+
+      const batch     = {};
+      const dateValue = values['f-date'].value;
+      const timeValue = values['f-time'].value;
+      const timestamp = buildTimestamp(dateValue, timeValue);
+
+      Object.entries(values).forEach(([name, data], index) => {
+        const webId = data.WebId || data.WebdId;
+        let value   = data.value;
+        if (typeof value === 'boolean') value = value ? 1 : 0;
+        if (!webId || data.WebId === 'f-date' || data.WebId === 'f-time') return;
+        batch[`item${index}`] = {
+          Method:   'POST',
+          Resource: `${PI.base}/streams/${webId}/value`,
+          Content:  JSON.stringify({ Value: isNaN(value) ? value : parseFloat(value), Timestamp: timestamp })
+        };
       });
 
+      const response = await fetch(`${PI.base}/batch`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(batch)
+      });
+      const result = await response.json();
+      let allSuccess = true;
+      Object.entries(result).forEach(([key, res]) => {
+        if (res.Status === 202) { console.log(`Success ${key}`); }
+        else { allSuccess = false; console.error(`Error ${key}`, res); }
+      });
+      if (allSuccess) {
+        document.getElementById('form-ok').classList.add('show');
+        notify('Toutes les valeurs envoyées au DATA ARCHIVE', 'ok');
+      } else {
+        notify("Certaines valeurs n'ont pas pu être envoyées", 'warn');
+      }
     }
 
-    function refreshAll() {
-
-      recalculateAllFormulas();
-
-      refreshAllAlerts();
-
-    }
     window.onload = async function () {
       GetWebIdAFServer()
       GetDBWebId()
       await GetEntryDataPages()
       //loadFormStructure("F1EmOw3wdib9jEOPBIsnP79txQi1w0AAdO8RG8sQ55u_M6egRUMyQU1BWi00RjhVUk9MXFlBUkEgTEFCT1JBVE9SWVxORVcgREFUQV9MQUJcQURCTFVF")
       await pagetodata()
-      await renderForm2() 
+      await renderForm2()
+
+      // Charge toutes les classes UOM + leurs unités en arrière-plan
+      // (après AF_SERVER_WEBID disponible, sans bloquer le rendu)
+      piLoadUomClasses().then(async classes => {
+        if (!classes || classes.length === 0) return;
+        await Promise.all(classes.map(c => piLoadUomUnits(c.unitsUrl)));
+        console.log('[UOM] All classes and units loaded:', classes.length, 'classes');
+      });
       //const values = getAttributeValues();
       //const formula = "[Concentration]-[Biuret]"
       
@@ -6573,10 +6157,6 @@ async function loadFormStructure(formWebId) {
 
 
         APP.username = data.Name.split("\\")[1].toUpperCase();
-        console.log("User Info:", data.Name.split("\\")[1].toUpperCase());
-        //sb-name
-        const UserName = document.getElementsByClassName("sb-user-name");
-        UserName[0].textContent = APP.username //Set the username on the side bar
         const UserData = document.getElementsByClassName("sb-user-domain");
         APP.domain = data.Name;
         UserData[0].textContent = data.Name //Set the username on the side bar 
@@ -7022,289 +6602,6 @@ async function loadFormStructure(formWebId) {
       // console.log("Batch result:", result);
     }
 
-    /* function Getformdata(pagename) {
-      const container = document.getElementById(pagename);
-
-      const values = {};
-
-      container.querySelectorAll('input, select').forEach(el => {
-
-        const key = el.getAttribute('attributeName') || el.getAttribute('id');
-
-        if (el.type === 'checkbox') {
-          values[key] = { value: el.checked, WebId: el.getAttribute('id') };
-        }
-
-        // Radio buttons
-        else if (el.type === 'radio') {
-
-          if (el.checked) {
-
-            values[key] = {
-              value: el.value,
-              WebId: el.getAttribute('id')
-            };
-
-          }
-
-        }
-
-        else {
-          values[key] = { value: el.value, WebId: el.getAttribute('id') };
-        }
-
-
-      });
-      return values
-    } */
-
-
-        function Getformdata(pagename) {
-      const container = document.getElementById(pagename);
-
-      const values = [];
-
-      container.querySelectorAll('input, select').forEach(el => {
-
-        const key = el.getAttribute('attributeName') || el.getAttribute('id');
-
-        if (el.type === 'checkbox') {
-          values[key]= { value: el.checked, WebId: el.getAttribute('id'),element:el };
-        }
-
-        // Radio buttons
-        else if (el.type === 'radio') {
-
-          if (el.checked) {
-
-            values[key] = {
-              value: el.value,
-              WebId: el.getAttribute('id'),element:el
-            };
-
-          }
-
-        }
-
-        else {
-          values[key] = { value: el.value, WebId: el.getAttribute('id'),element:el};
-        }
-
-
-      });
-      return values
-    }
-
-    /* function Getformdata(pagename) {
-      const container = document.getElementById(pagename);
-
-      const values = [];
-
-      container.querySelectorAll('input, select').forEach(el => {
-
-        //const key = el.getAttribute('attributeName') || el.getAttribute('id');
-
-        if (el.type === 'checkbox') {
-          values.push({ value: el.checked, WebId: el.getAttribute('id'),element:el });
-        }
-
-        // Radio buttons
-        else if (el.type === 'radio') {
-
-          if (el.checked) {
-
-            values.push({
-              value: el.value,
-              WebId: el.getAttribute('id'),element:el
-            });
-
-          }
-
-        }
-
-        else {
-          values.push({ value: el.value, WebId: el.getAttribute('id'),element:el});
-        }
-
-
-      });
-      return values
-    } */
-
-
-    function validateValues(values, pagename) {
-
-      let hasError = false;
-      const container = document.getElementById(pagename);
-      Object.entries(values).forEach(([key, data]) => {
-
-        const value = data.value;
-
-        const empty =
-          value === '' ||
-          value === null ||
-          value === undefined;
-
-        if (empty) {
-
-          // const field = container.querySelector(`[attributeName="${key}"]`) || container.getElementById(`${key}`);
-          const field = container.querySelector(`[attributeName="${key}"]`) || container.querySelector(`#${CSS.escape(key)}`);
-
-
-          if (field) {
-            field.classList.add('err');
-          }
-
-          hasError = true;
-
-        } else {
-
-          const field = container.querySelector(`[attributeName="${key}"]`) || container.querySelector(`#${CSS.escape(key)}`);
-
-          if (field) {
-            field.classList.remove('err');
-          }
-        }
-
-      });
-      return !hasError;
-    }
-
-    /* function validateValues(values, pagename) {
-
-      let hasError = false;
-      const container = document.getElementById(pagename);
-      Object.entries(values).forEach(([key, data]) => {
-
-        const value = data.value;
-
-        const empty =
-          value === '' ||
-          value === null ||
-          value === undefined;
-
-        if (empty) {
-
-          // const field = container.querySelector(`[attributeName="${key}"]`) || container.getElementById(`${key}`);
-          const field = data.element
-
-
-          if (field) {
-            field.classList.add('err');
-          }
-
-          hasError = true;
-
-        } else {
-
-          const field = data.element;
-
-          if (field) {
-            field.classList.remove('err');
-          }
-        }
-
-      });
-      return !hasError;
-    } */
-
-
-
-    async function sendAllValuesBatch2(pagename) {
-      const container = document.getElementById(pagename);
-      /* const dateValue = container.querySelector("#f-date").value;
-      const timeValue = container.querySelector("#f-time").value;
-      const timestamp = buildTimestamp(dateValue, timeValue); */
-      /* console.log("timestamp:", timestamp);
-      console.log("dateValue:", dateValue);
-      console.log("timeValue:", timeValue);
-      console.log("send values of the page name: ", pagename); */
-
-      //Get the vales of the form
-      const values = Getformdata(pagename);
-      console.log(values);
-      //Check if all the are set and not empty
-      if (!validateValues(values, pagename)) {
-        alert('Certains champs sont vides');
-        return;
-      }
-
-
-
-
-      const batch = {};
-      const dateValue = values['f-date'].value;
-      const timeValue = values['f-time'].value;
-      const timestamp = buildTimestamp(dateValue, timeValue);
-
-      console.log("timestamp:", timestamp);
-      console.log("dateValue:", dateValue);
-      console.log("timeValue:", timeValue);
-      console.log("send values of the page name: ", pagename);
-
-      Object.entries(values).forEach(([name, data], index) => {
-
-        const webId = data.WebId || data.WebdId;
-        let value = data.value;
-        
-        if(typeof value === 'boolean'){
-          value = value ? 1 : 0;
-        }
-
-        if (!webId || data.WebId ==="f-date" || data.WebId === "f-time"){
-          console.log("No WebId for:", name, " — skipping");
-          return;
-        } 
-        //if (value === '' || value === null || value === undefined) return;
-
-        batch[`item${index}`] = {
-          Method: "POST",
-          Resource: `${CONFIG.WEBAPIURL}/streams/${webId? webId:name}/value`,
-          Content: JSON.stringify({
-            Value: isNaN(value) ? value : parseFloat(value), Timestamp: timestamp
-          })
-        };
-
-      });
-      console.log("Batch to send:", batch);
-      const response = await fetch(
-        `${CONFIG.WEBAPIURL}/batch`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(batch)
-        }
-      );
-
-      const result = await response.json();
-
-      console.log(result);
-
-      let allSuccess = true;
-        // Handle response
-        Object.entries(result).forEach(([key, res]) => {
-          if (res.Status === 202) {
-            console.log(`Success ${key}`);
-
-          } else {
-            allSuccess = false;
-            console.error(`Error ${key}`, res);
-          }
-        });
-
-        if (allSuccess) {
-          document.getElementById('form-ok').classList.add('show');
-          alert("Toutes les valeurs ont été envoyées avec succès au DATA ARCHIVE");
-        } else {
-          alert("Certaines valeurs n'ont pas pu être envoyées avec succès au DATA ARCHIVE");
-        }
-    }
-
-
-
 
 
     const ROLES = {
@@ -7346,7 +6643,7 @@ async function loadFormStructure(formWebId) {
       document.getElementById('page-' + pid).classList.add('active');
       document.getElementById('bc').textContent = PAGE_LABELS[pid];
       if (pid === 'history') renderHistory();
-      if (pid === 'config') {cfgLoadTree(); cfgInitFormulasTab(); cfgInitLimitsTab();}
+      if (pid === 'config') {cfgLoadAFTree(); cfgInitFormulasTab(); cfgInitLimitsTab();}
     }
 
     /* ══════════════════════════════════════════════════════
@@ -9204,29 +8501,515 @@ async function loadFormStructure(formWebId) {
        le même paramètre que la cible choisie. Permet de stocker l'unité
        du résultat de la formule dans un attribut PI AF existant.
     ─────────────────────────────────────────────────────────────────── */
+    /* ══════════════════════════════════════════════════════════════
+       UOM HIERARCHY — PI AF Unit Classes → Units
+       ─────────────────────────────────────────────────────────────
+       Data flow:
+         GET /assetservers/{id}/unitclasses
+           → _piUomCache = [{ name, webId, unitsUrl, uoms:null }, ...]
+         GET {unitsUrl}?selectedFields=Items.Name;Items.Abbreviation  (lazy)
+           → cache entry.uoms = [{ name, abbr }, ...]
+       Cache persists for the session — zero repeat PI calls.
+    ══════════════════════════════════════════════════════════════ */
+    let _piUomCache   = null;   // null = not yet loaded
+    let _piUomLoading = false;
+
+    async function piLoadUomClasses() {
+      if (_piUomCache)   return _piUomCache;
+      if (_piUomLoading) return null;
+      _piUomLoading = true;
+
+      const assetServerWebId = sessionStorage.getItem('AF_SERVER_WEBID');
+      if (!assetServerWebId) {
+        cfgDiagLog('warn', 'UOM: AF_SERVER_WEBID not found in sessionStorage');
+        _piUomCache   = [];
+        _piUomLoading = false;
+        return _piUomCache;
+      }
+
+      try {
+        const d = await piFetch(
+          `${PI.base}/assetservers/${assetServerWebId}/unitclasses` +
+          `?selectedFields=Items.Name;Items.WebId;Items.Links.Units`
+        );
+        _piUomCache = (d.Items || [])
+          .sort((a, b) => a.Name.localeCompare(b.Name))
+          .map(c => ({
+            name:     c.Name,
+            webId:    c.WebId,
+            unitsUrl: c.Links?.Units || '',
+            uoms:     null          // loaded on demand
+          }));
+        cfgDiagLog('ok', `UOM classes: ${_piUomCache.length} loaded`);
+      } catch(e) {
+        cfgDiagLog('err', `UOM classes: ${e.message}`);
+        _piUomCache = [];
+      }
+
+      _piUomLoading = false;
+      return _piUomCache;
+    }
+
+    async function piLoadUomUnits(unitsUrl) {
+      if (!unitsUrl) return [];
+      const cls = (_piUomCache || []).find(c => c.unitsUrl === unitsUrl);
+      if (!cls) return [];
+      if (cls.uoms) return cls.uoms;   // already cached
+
+      try {
+        const d = await piFetch(
+          `${unitsUrl}?selectedFields=Items.Name;Items.Abbreviation`
+        );
+        cls.uoms = (d.Items || [])
+          .sort((a, b) => a.Name.localeCompare(b.Name))
+          .map(u => ({ name: u.Name, abbr: u.Abbreviation || u.Name }));
+      } catch(e) {
+        cls.uoms = [];
+      }
+      return cls.uoms;
+    }
+
+    /* ── First select: list of Unit Classes ─────────────────────── */
+    /* ── Single <select> with <optgroup> per Unit Class ─────────────
+       Built once the cache is fully loaded (all classes + all units).
+       value = unit abbreviation, e.g. "mg/L"
+    ─────────────────────────────────────────────────────────────── 
+    function cfgUomPickerHtml(cardId, f) {
+      if (!f.uomField) return '';
+      const currentAbbr = f._uomValue || '';
+
+      // Cache not loaded yet
+      if (!_piUomCache || _piUomCache.length === 0) {
+        return `<select class="fml-select"
+          style="width:100%;min-width:0;box-sizing:border-box;font-size:11px;margin-top:6px"
+          id="fml-uom-unit-${cardId}" disabled>
+          <option>⏳ Chargement des unités…</option>
+        </select>`;
+      }
+
+      const groups = _piUomCache
+        .filter(c => c.uoms && c.uoms.length > 0)
+        .map(c => `
+          <optgroup label="${esc(c.name)}">
+            ${c.uoms.map(u =>
+              `<option value="${esc(u.abbr)}" ${u.abbr === currentAbbr ? 'selected' : ''}>
+                ${esc(u.abbr)} — ${esc(u.name)}
+              </option>`
+            ).join('')}
+          </optgroup>`
+        ).join('');
+
+      return `
+        <div style="margin-top:6px">
+          <select class="fml-select"
+            style="width:100%;min-width:0;box-sizing:border-box;font-size:11px"
+            id="fml-uom-unit-${cardId}"
+            onchange="cfgUomUnitChanged('${cardId}',this.value)">
+            <option value="">— Choisir une unité —</option>
+            ${groups || '<option disabled>Aucune unité disponible</option>'}
+          </select>
+          ${currentAbbr
+            ? `<div style="margin-top:4px;font-size:10px;color:var(--ok)">
+                ✓ Unité : <strong>${esc(currentAbbr)}</strong>
+               </div>`
+            : ''}
+        </div>`;
+    }
+
+    function cfgUomUnitChanged(cardId, abbr) {
+      const f = _formulaCards.find(f => f.id === cardId); if (!f) return;
+      f._uomValue = abbr;
+      if (f._fromPI) f._dirty = true;
+
+      const wrap = document.getElementById('fml-uom-unit-' + cardId)?.closest('div');
+      if (!wrap) return;
+      let confirmDiv = wrap.querySelector('[data-uom-confirm]');
+      if (abbr) {
+        if (!confirmDiv) {
+          confirmDiv = document.createElement('div');
+          confirmDiv.setAttribute('data-uom-confirm', '1');
+          confirmDiv.style.cssText = 'margin-top:4px;font-size:10px;color:var(--ok)';
+          wrap.appendChild(confirmDiv);
+        }
+        confirmDiv.innerHTML = `✓ Unité : <strong>${esc(abbr)}</strong>`;
+      } else if (confirmDiv) {
+        confirmDiv.remove();
+      }
+    }*/
+   /*function cfgUomPickerHtml(cardId, f) {
+  if (!f.uomField) return '';
+  const currentAbbr = f._uomValue || '';
+
+  return `
+    <div style="margin-top:6px;position:relative" id="uom-wrap-${cardId}">
+      <input
+        type="text"
+        class="fml-input"
+        id="uom-input-${cardId}"
+        style="width:100%;box-sizing:border-box"
+        placeholder="Taper une unité ou abréviation… (ex: mg/L, ppm)"
+        value="${esc(currentAbbr)}"
+        autocomplete="off"
+        oninput="cfgUomSearch('${cardId}', this.value)"
+        onfocus="cfgUomSearch('${cardId}', this.value)"
+      >
+      <div id="uom-results-${cardId}"
+        style="display:none;position:absolute;top:100%;left:0;right:0;
+               background:var(--bg-card);border:1px solid var(--border);
+               border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);
+               max-height:220px;overflow-y:auto;z-index:9999;font-size:12px">
+      </div>
+    </div>`;
+}*/
+
+function cfgUomSearch(cardId, query) {
+  const resultsEl = document.getElementById('uom-results-' + cardId);
+  if (!resultsEl) return;
+
+  const q = query.trim().toLowerCase();
+
+  // Si cache vide → lancer le chargement puis réessayer
+  if (!_piUomCache || _piUomCache.length === 0) {
+    resultsEl.innerHTML = '<div style="padding:10px;color:var(--text-faint)">⏳ Chargement…</div>';
+    resultsEl.style.display = 'block';
+    piLoadUomClasses().then(async classes => {
+      await Promise.all(classes.map(c => piLoadUomUnits(c.unitsUrl)));
+      cfgUomSearch(cardId, query); // retry
+    });
+    return;
+  }
+
+  // Pas de saisie → cacher
+  if (!q) { resultsEl.style.display = 'none'; return; }
+
+  // Recherche dans toutes les classes et toutes les unités
+  const matches = [];
+  (_piUomCache || []).forEach(cls => {
+    if (!cls.uoms) return;
+    cls.uoms.forEach(u => {
+      if (
+        u.abbr.toLowerCase().includes(q) ||
+        u.name.toLowerCase().includes(q)
+      ) {
+        matches.push({ cls: cls.name, abbr: u.abbr, name: u.name });
+      }
+    });
+  });
+
+  if (matches.length === 0) {
+    resultsEl.innerHTML = '<div style="padding:10px;color:var(--text-faint)">Aucun résultat</div>';
+    resultsEl.style.display = 'block';
+    return;
+  }
+
+  resultsEl.innerHTML = matches.slice(0, 50).map(m => `
+    <div onclick="cfgUomSelectUnit('${cardId}','${esc(m.abbr)}','${esc(m.name)}')"
+      style="padding:7px 12px;cursor:pointer;border-bottom:1px solid var(--border)"
+      onmouseover="this.style.background='var(--blue-soft)'"
+      onmouseout="this.style.background=''">
+      <span style="font-weight:700;color:var(--text-h)">${esc(m.abbr)}</span>
+      <span style="color:var(--text-muted)"> — ${esc(m.name)}</span>
+      <span style="font-size:10px;color:var(--text-faint);margin-left:6px">${esc(m.cls)}</span>
+    </div>`).join('');
+  resultsEl.style.display = 'block';
+}
+
+function cfgUomSelectUnit(cardId, abbr, name) {
+  const f = _formulaCards.find(f => f.id === cardId); if (!f) return;
+  f._uomValue = abbr;
+  if (f._fromPI) f._dirty = true;
+
+  // Met à jour le champ texte
+  const input = document.getElementById('uom-input-' + cardId);
+  if (input) input.value = abbr;
+
+  // Cache les résultats
+  const resultsEl = document.getElementById('uom-results-' + cardId);
+  if (resultsEl) resultsEl.style.display = 'none';
+}
+
+function cfgUomUnitsHtml(cardId, uoms, selectedAbbr) {
+  if (!uoms || uoms.length === 0)
+    return '<div class="uom-empty">Aucune unité</div>';
+  return uoms.map(u => `
+    <div class="uom-unit-item ${u.abbr === selectedAbbr ? 'selected' : ''}"
+      onclick="cfgUomSelectUnit('${cardId}','${esc(u.abbr)}','${esc(u.name)}')">
+      ${esc(u.abbr)} — ${esc(u.name)}
+    </div>`).join('');
+}
+
+function cfgUomToggle(cardId) {
+  const wrap = document.getElementById('uom-wrap-' + cardId);
+  if (!wrap) return;
+  const isOpen = wrap.classList.contains('open');
+  document.querySelectorAll('.uom-wrapper.open').forEach(w => w.classList.remove('open'));
+  if (!isOpen) wrap.classList.add('open');
+}
+
+async function cfgUomHoverClass(cardId, classIndex) {
+  const cls = _piUomCache[classIndex]; if (!cls) return;
+  const colClasses = document.getElementById('uom-classes-' + cardId);
+  if (colClasses) {
+    colClasses.querySelectorAll('.uom-class-item').forEach((el, i) => {
+      el.classList.toggle('active', i === classIndex);
+    });
+  }
+  if (!cls.uoms) await piLoadUomUnits(cls.unitsUrl);
+  const f = _formulaCards.find(f => f.id === cardId);
+  const currentAbbr = f?._uomValue || '';
+  const colUnits = document.getElementById('uom-units-' + cardId);
+  if (colUnits) colUnits.innerHTML = cfgUomUnitsHtml(cardId, cls.uoms, currentAbbr);
+}
+
+function cfgUomSelectUnit(cardId, abbr, name) {
+  const f = _formulaCards.find(f => f.id === cardId); if (!f) return;
+  f._uomValue = abbr;
+  if (f._fromPI) f._dirty = true;
+  const label = document.getElementById('uom-label-' + cardId);
+  if (label) label.textContent = abbr ? `${abbr} — ${name}` : '— Choisir une unité —';
+  const colUnits = document.getElementById('uom-units-' + cardId);
+  if (colUnits) {
+    colUnits.querySelectorAll('.uom-unit-item').forEach(el => {
+      el.classList.toggle('selected', el.textContent.trim().startsWith(abbr + ' '));
+    });
+  }
+  const wrap = document.getElementById('uom-wrap-' + cardId);
+  if (wrap) wrap.classList.remove('open');
+}
+
+function cfgUomFilterClasses(cardId, query) {
+  const colClasses = document.getElementById('uom-classes-' + cardId);
+  if (!colClasses) return;
+  const q = query.toLowerCase().trim();
+  colClasses.querySelectorAll('.uom-class-item').forEach(el => {
+    el.style.display = (!q || el.textContent.toLowerCase().includes(q)) ? '' : 'none';
+  });
+}
+
+document.addEventListener('click', e => {
+  // Ferme les dropdowns UOM deux-colonnes
+  if (!e.target.closest('.uom-wrapper')) {
+    document.querySelectorAll('.uom-wrapper.open').forEach(w => w.classList.remove('open'));
+  }
+  // Ferme les résultats de recherche UOM
+  if (!e.target.closest('[id^="uom-wrap-"]')) {
+    document.querySelectorAll('[id^="uom-results-"]').forEach(el => el.style.display = 'none');
+  }
+});
+
+    async function cfgEnsureUomCache(cardId) {
+      if (!_piUomCache || _piUomCache.length === 0) await piLoadUomClasses();
+      // Load all units in parallel
+      await Promise.all((_piUomCache || []).map(c => piLoadUomUnits(c.unitsUrl)));
+      const f = _formulaCards.find(f => f.id === cardId); if (!f) return;
+      const pickerEl = document.getElementById('fml-uom-picker-' + cardId);
+      if (pickerEl) pickerEl.innerHTML = cfgUomPickerHtml(cardId, f);
+    }
+
+
+    /* ── Dropdown 1: which PI AF attribute stores the UOM (UOM/UOM1/UOM2) 
     function cfgGetPIUomOptions(paramName, selectedValue) {
       const formModel = APP.pageNametoData && APP.pageNametoData[_currentForm];
-      if (!formModel || !paramName) return `<option value="">— Choisir une cible d'abord —</option>`;
-
-      let attrObj = null, foundParam = null;
-      formModel.sections.forEach(section => {
-        section.parameters.forEach(param => {
-          if (param.name === paramName) foundParam = param;
-        });
-      });
-      if (!foundParam || !foundParam.formulas) return `<option value="">— Aucun UOM disponible —</option>`;
-
+      if (!formModel || !paramName) {
+        return `<option value="">— Choisir une cible d'abord —</option>`;
+      }
+      let foundParam = null;
+      formModel.sections.forEach(s => s.parameters.forEach(p => {
+        if (p.name === paramName) foundParam = p;
+      }));
+      if (!foundParam || !foundParam.formulas) {
+        return `<option value="">— Aucun attribut UOM disponible —</option>`;
+      }
       let opts = `<option value="">— Aucune (ne pas écrire l'UOM) —</option>`;
       ['UOM','UOM1','UOM2'].forEach(k => {
         const a = foundParam.formulas[k];
         if (!a || !a.attributeWebId) return;
         const value = `${paramName}::${k}`;
-        const cur   = a.value != null ? String(a.value) : '(vide)';
-        opts += `<option value="${esc(value)}" ${value===selectedValue?'selected':''}
-          data-attr-webid="${esc(a.attributeWebId)}">${esc(k)} — actuel: ${esc(cur)}</option>`;
+        const cur   = a.value != null && a.value !== '' ? String(a.value) : '(vide)';
+        opts += `<option value="${esc(value)}"
+          data-attr-webid="${esc(a.attributeWebId)}"
+          ${value === selectedValue ? 'selected' : ''}>
+          ${esc(k)} — actuel : ${esc(cur)}
+        </option>`;
       });
       return opts;
-    }
+    }*/
+
+    
+/* Ferme les résultats UOM au clic extérieur */
+document.addEventListener('click', e => {
+  if (!e.target.closest('[id^="uom-wrap-"]')) {
+    document.querySelectorAll('[id^="uom-results-"]').forEach(el => el.style.display = 'none');
+  }
+});
+
+/* Trouve le premier attributeWebId UOM disponible pour un paramètre */
+function cfgGetFirstUomWebId(paramName) {
+  const formModel = APP.pageNametoData && APP.pageNametoData[_currentForm];
+  if (!formModel || !paramName) return '';
+  let webId = '';
+  formModel.sections.forEach(s => s.parameters.forEach(p => {
+    if (p.name !== paramName) return;
+    ['UOM','UOM1','UOM2'].forEach(k => {
+      if (!webId && p.formulas?.[k]?.attributeWebId)
+        webId = p.formulas[k].attributeWebId;
+    });
+  }));
+  return webId;
+}
+
+function cfgUomPickerHtml(cardId, f) {
+  const currentAbbr = f._uomValue || '';
+  return `
+    <div style="position:relative" id="uom-wrap-${cardId}">
+      <input
+        type="text"
+        class="fml-input"
+        id="uom-input-${cardId}"
+        style="width:100%;box-sizing:border-box;margin-top:2px"
+        placeholder="Taper abréviation ou nom (ex: mg/L, ppm)…"
+        value="${esc(currentAbbr)}"
+        autocomplete="off"
+        spellcheck="false"
+        oninput="cfgUomSearch('${cardId}',this.value)"
+        onfocus="cfgUomSearch('${cardId}',this.value)"
+      >
+      <div id="uom-results-${cardId}"
+        style="display:none;position:absolute;top:100%;left:0;right:0;
+               background:var(--bg-card);border:1px solid var(--border);
+               border-radius:0 0 var(--radius-sm) var(--radius-sm);
+               box-shadow:var(--shadow-lg);max-height:220px;
+               overflow-y:auto;z-index:9999;font-size:12px">
+      </div>
+    </div>`;
+}
+
+function cfgUomSearch(cardId, query) {
+  const resultsEl = document.getElementById('uom-results-' + cardId);
+  if (!resultsEl) return;
+  const q = (query || '').trim().toLowerCase();
+
+  if (!_piUomCache || _piUomCache.length === 0) {
+    if (q.length === 0) { resultsEl.style.display = 'none'; return; }
+    resultsEl.innerHTML = '<div style="padding:10px;color:var(--text-faint)">⏳ Chargement…</div>';
+    resultsEl.style.display = 'block';
+    piLoadUomClasses().then(async cls => {
+      await Promise.all(cls.map(c => piLoadUomUnits(c.unitsUrl)));
+      cfgUomSearch(cardId, query);
+    });
+    return;
+  }
+
+  if (q.length === 0) { resultsEl.style.display = 'none'; return; }
+
+  const matches = [];
+  _piUomCache.forEach(cls => {
+    if (!cls.uoms) return;
+    cls.uoms.forEach(u => {
+      if (u.abbr.toLowerCase().includes(q) || u.name.toLowerCase().includes(q))
+        matches.push({ cls: cls.name, abbr: u.abbr, name: u.name });
+    });
+  });
+
+  if (matches.length === 0) {
+    resultsEl.innerHTML = '<div style="padding:10px 12px;color:var(--text-faint)">Aucun résultat</div>';
+    resultsEl.style.display = 'block';
+    return;
+  }
+
+  resultsEl.innerHTML = matches.slice(0, 60).map((m, i) => {
+    const safeId = `uom-row-${cardId}-${i}`;
+    return `<div id="${safeId}"
+      data-abbr="${esc(m.abbr)}" data-name="${esc(m.name)}"
+      onclick="cfgUomSelectUnit('${cardId}','${safeId}')"
+      onmousedown="event.preventDefault()"
+      style="padding:7px 12px;cursor:pointer;border-bottom:1px solid var(--border);
+             display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+      <span>
+        <strong style="color:var(--text-h)">${esc(m.abbr)}</strong>
+        <span style="color:var(--text-muted)"> — ${esc(m.name)}</span>
+      </span>
+      <span style="font-size:10px;color:var(--text-faint);white-space:nowrap">${esc(m.cls)}</span>
+    </div>`;
+  }).join('')
+  + (matches.length > 60
+    ? `<div style="padding:6px 12px;font-size:10px;color:var(--text-faint)">
+        ${matches.length - 60} résultat(s) supplémentaire(s) — affinez la recherche
+       </div>` : '');
+  resultsEl.style.display = 'block';
+}
+
+function cfgUomSelectUnit(cardId, rowId) {
+  const f = _formulaCards.find(f => f.id === cardId); if (!f) return;
+  const row = document.getElementById(rowId);
+  if (!row) return;
+  const abbr = row.dataset.abbr;
+  f._uomValue     = abbr;
+  f._uomAttrWebId = cfgGetFirstUomWebId(f._targetParam || f._paramName);
+  if (f._fromPI) f._dirty = true;
+  const input = document.getElementById('uom-input-' + cardId);
+  if (input) input.value = abbr;
+  const resultsEl = document.getElementById('uom-results-' + cardId);
+  if (resultsEl) resultsEl.style.display = 'none';
+}
+
+async function cfgEnsureUomCache(cardId) {
+  if (!_piUomCache || _piUomCache.length === 0) await piLoadUomClasses();
+  await Promise.all((_piUomCache || []).map(c => piLoadUomUnits(c.unitsUrl)));
+}
+
+    /*function cfgGetPIUomOptions(paramName, selectedValue) {
+  const formModel = APP.pageNametoData && APP.pageNametoData[_currentForm];
+  if (!formModel || !paramName)
+    return `<option value="">— Choisir une cible d'abord —</option>`;
+  let foundParam = null;
+  formModel.sections.forEach(s => s.parameters.forEach(p => {
+    if (p.name === paramName) foundParam = p;
+  }));
+  if (!foundParam || !foundParam.formulas)
+    return `<option value="">— Aucun attribut UOM disponible —</option>`;
+  let opts = `<option value="">— Aucune (ne pas écrire l'UOM) —</option>`;
+  ['UOM','UOM1','UOM2'].forEach(k => {
+    const a = foundParam.formulas[k];
+    if (!a || !a.attributeWebId) return;
+    const value = `${paramName}::${k}`;
+    const cur   = a.value != null && a.value !== '' ? String(a.value) : '(vide)';
+    opts += `<option value="${esc(value)}"
+      data-attr-webid="${esc(a.attributeWebId)}"
+      ${value === selectedValue ? 'selected' : ''}>
+      ${esc(k)} — actuel : ${esc(cur)}
+    </option>`;
+  });
+  return opts;
+}*/
+
+    /* ── Attribute UOM target selected by user ───────────────────── 
+    function cfgUpdateFormulaUom(id, selectEl) {
+      const f = _formulaCards.find(f => f.id === id); if (!f) return;
+      const opt = selectEl.options[selectEl.selectedIndex];
+
+      f.uomField      = selectEl.value;               // "Al::UOM1" or ''
+      f._uomAttrWebId = opt?.dataset.attrWebid || '';
+      f._uomClass     = '';                            // reset class/unit on attribute change
+      f._uomValue     = '';
+      if (f._fromPI) f._dirty = true;
+
+      // Show / hide the UOM picker below
+      const pickerEl = document.getElementById('fml-uom-picker-' + id);
+      if (!pickerEl) return;
+
+      if (!f.uomField) {
+        pickerEl.innerHTML = '';
+        return;
+      }
+
+      // Load UOM classes if needed, then render picker
+      piLoadUomClasses().then(() => {
+        pickerEl.innerHTML = cfgUomPickerHtml(id, f);
+      });
+    }*/
+
+
 
     function cfgRenderFormulaCards() {
       const container = document.getElementById('cfg-formula-cards');
@@ -9262,11 +9045,9 @@ async function loadFormStructure(formWebId) {
                 </select>
               </div>
               <div>
-                <label class="fml-label">UOM (PI AF)</label>
-                <select class="fml-select" id="fml-uom-${f.id}" style="width:100%;min-width:0;box-sizing:border-box" onchange="cfgUpdateFormulaUom('${f.id}',this)">
-                  ${cfgGetPIUomOptions(f._targetParam, f.uomField)}
-                </select>
-              </div>
+  <label class="fml-label">UOM (PI AF)</label>
+  ${cfgUomPickerHtml(f.id, f)}
+</div>
               <div>
                 <label class="fml-label">Formula expression *</label>
                 <textarea class="fml-textarea" id="fml-expr-${f.id}"
@@ -9359,25 +9140,11 @@ async function loadFormStructure(formWebId) {
       const t = document.querySelector(`#fml-${id} .fml-card-title`);
       if (t && !f._fromPI) t.textContent = f._targetParam ? `${f._targetParam} VC${(f._targetAttrKey||'').replace(/\D/g,'')}` : 'New formula';
 
-      // Le choix de cible change le paramètre → reconstruire le select UOM
+      /*// Le choix de cible change le paramètre → reconstruire le select UOM
       const uomSel = document.getElementById('fml-uom-'+id);
-      if (uomSel) uomSel.innerHTML = cfgGetPIUomOptions(f._targetParam, f.uomField);
+      if (uomSel) uomSel.innerHTML = cfgGetPIUomOptions(f._targetParam, f.uomField);*/
 
       cfgPreviewFormula(id);
-    }
-
-    /* ── Sélection de l'attribut UOM PI AF où stocker l'unité du résultat ── */
-    function cfgUpdateFormulaUom(id, selectEl) {
-      const f = _formulaCards.find(f => f.id === id); if (!f) return;
-      const opt = selectEl.options[selectEl.selectedIndex];
-
-      f.uomField     = selectEl.value;                    // "Al::UOM1" ou ''
-      f._uomAttrWebId = opt?.dataset.attrWebid || '';
-
-      if (f._fromPI) f._dirty = true;
-
-      // Re-render pour afficher/masquer le champ de saisie de la valeur UOM
-      cfgRenderFormulaCards();
     }
 
     function cfgInsertAttrToken(fmlId, attrName) {
@@ -9486,23 +9253,24 @@ async function loadFormStructure(formWebId) {
           })
         ];
 
-        // Écriture UOM optionnelle, si choisie dans le dropdown
-        if (f.uomValue) {
+        // Write UOM to PI AF: use f._uomValue (abbreviation chosen in the picker)
+        if (f._uomAttrWebId && f._uomValue) {
           calls.push(
             fetch(`${PI.base}/streams/${f._uomAttrWebId}/value`, {
-              method:      'POST',
+              method:      'PUT',
               credentials: 'include',
               headers: { 'Content-Type':'application/json', 'X-Requested-With':'XMLHttpRequest' },
-              body: JSON.stringify({ Value: f.uomValue })
+              body: JSON.stringify({ Value: f._uomValue })
             }).then(resp => {
               if (!resp.ok) throw new Error(`HTTP ${resp.status} (UOM)`);
+              // Update in-memory model
               const pageModel = APP.pageNametoData && APP.pageNametoData[_currentForm];
               const [uomParam, uomKey] = (f.uomField||'').split('::');
               if (pageModel && uomParam && uomKey) {
                 pageModel.sections.forEach(section => {
                   section.parameters.forEach(param => {
                     if (param.name === uomParam && param.formulas[uomKey]) {
-                      param.formulas[uomKey].value = f.uomValue;
+                      param.formulas[uomKey].value = f._uomValue;
                     }
                   });
                 });
@@ -9654,7 +9422,14 @@ async function loadFormStructure(formWebId) {
               sectionName:   sec.name,
               lolo:          f.LoLo && f.LoLo.value != null ? f.LoLo.value : '',
               hihi:          f.HiHi && f.HiHi.value != null ? f.HiHi.value : '',
-              uom:           f.UOM  && f.UOM.value  != null ? f.UOM.value  : '—',
+              //uom:           f.UOM  && f.UOM.value  != null ? f.UOM.value  : '—',
+              alertFieldValue: (() => {
+                const af = f.AlertField;
+                if ( !af || af.value == null ) return '0';
+                const v = typeof af.value === 'object' ? af.value.Value : af.value;
+                return String(v ?? '0');
+              })(),
+              _alertFieldAttrWebId: f.AlertField ? f.AlertField.attributeWebId : '',
               _loloAttrWebId: f.LoLo ? f.LoLo.attributeWebId : '',
               _hihiAttrWebId: f.HiHi ? f.HiHi.attributeWebId : '',
               _dirty:        false
@@ -9726,8 +9501,14 @@ async function loadFormStructure(formWebId) {
                 ${row._hihiAttrWebId ? '' : 'disabled'}
                 oninput="cfgUpdateLimitField(${idx},'hihi',this.value)">
             </td>
-            <td style="text-align:center;color:var(--text-muted);font-size:11px">
-              ${esc(String(row.uom))}
+            <td>
+              <select class="fc" style="font-size:11px;height:32px"
+                onchange="cfgUpdateLimitField(${idx},'alertFieldValue',this.value)"
+                ${row._alertFieldAttrWebId ? '' : 'disabled'}>
+                <option value="0" ${row.alertFieldValue==='0'?'selected':''}>Valeur Saisie</option>
+                <option value="1" ${row.alertFieldValue==='1'?'selected':''}>Valeur Calculée 1</option>
+                <option value="2" ${row.alertFieldValue==='2'?'selected':''}>Valeur Calculée 2</option>
+              </select>
             </td>
           </tr>`).join('');
 
@@ -9829,6 +9610,23 @@ async function loadFormStructure(formWebId) {
             }).catch(e => { cfgDiagLog('err', `PUT HiHi ${row.paramName}: ${e.message}`); fail++; })
           );
         }
+        // Écriture de la cible (AlertField) en PI AF
+if (row._alertFieldAttrWebId) {
+  calls.push(
+    fetch(`${PI.base}/streams/${row._alertFieldAttrWebId}/value`, {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+      body: JSON.stringify({ Value: parseInt(row.alertFieldValue, 10) })
+    }).then(resp => {
+      if (!resp.ok) throw new Error(`HTTP ${resp.status} (AlertField)`);
+      // Mise à jour mémoire
+      if (pageModel) pageModel.sections.forEach(s => s.parameters.forEach(p => {
+        if (p.name === row.paramName && p.formulas.AlertField)
+          p.formulas.AlertField.value = parseInt(row.alertFieldValue, 10);
+      }));
+    }).catch(e => { cfgDiagLog('err', `POST AlertField ${row.paramName}: ${e.message}`); })
+  );
+}
         return calls;
       });
 
