@@ -2953,6 +2953,41 @@
       
      }
     
+.formula-editor{
+    position:relative;
+}
+
+.autocomplete-results{
+
+    position:absolute;
+
+    left:0;
+    right:0;
+    top:97%;
+
+    background:white;
+    border:1px solid #ccc;
+    max-height:200px;
+
+    overflow-y:auto;
+
+    display:none;
+
+    z-index:1000;
+}
+
+.autocomplete-item{
+
+    padding:6px 10px;
+    cursor:pointer;
+}
+
+.autocomplete-item:hover{
+
+    background:#eef5ff;
+}
+
+    
   </style>
 </head>
 
@@ -4106,6 +4141,7 @@
       refreshRem: 10,
       timer: null,
       sessionStart: new Date(),
+      Formfields: {}
     };
 
     APP.alertConfigs = []
@@ -5746,11 +5782,30 @@ async function loadFormStructure(formWebId) {
               const AlertFieldval = AlertField?.value;
 
               APP.alertConfigs.push({
+                formname:pageName,
                 parameterName: parameter.name,
                 alertFieldValue: AlertFieldval,
                 loLoValue: loLoValue,
                 hiHiValue: hiHiValue
               });
+              
+              if (!APP.Formfields[pageName]) {
+                APP.Formfields[pageName] = [];
+              }
+
+              APP.Formfields[pageName].push(parameter.name);
+
+              if (calc1){
+                
+                APP.Formfields[pageName].push("VC1 " + parameter.name);
+              }
+
+              if (calc2){
+                APP.Formfields[pageName].push("VC2 " + parameter.name);
+              }
+              
+
+
               console.log("Alert Configs:", APP.alertConfigs);
 
               // -----------------------------------
@@ -6390,6 +6445,8 @@ async function loadFormStructure(formWebId) {
         // }
 
         mapPIToRecords()
+        console.log("This is the APP====================================================================================================",APP);
+
 
       }
       catch (err) {
@@ -9292,7 +9349,79 @@ async function cfgEnsureUomCache(cardId) {
     }*/
 
 
+    function formulaAutocomplete(textarea){
 
+        const results =
+            textarea.parentElement.querySelector(".autocomplete-results");
+        const select = document.getElementById("cfg-form-select");
+        const Selectedform = select.options[select.selectedIndex].text;
+        const attributeNames = APP.Formfields[Selectedform]? APP.Formfields[Selectedform] : [];
+
+        console.log(Selectedform, attributeNames);
+        const text = textarea.value;
+
+        // Find the last '['
+        const pos = text.lastIndexOf("[");
+
+        if(pos === -1){
+
+            results.style.display="none";
+            return;
+        }
+
+        // Don't autocomplete after ']'
+        if(text.substring(pos).includes("]")){
+
+            results.style.display="none";
+            return;
+        }
+
+        const search =
+            text.substring(pos+1).toLowerCase();
+
+        const matches =
+            attributeNames.filter(name=>
+
+                name.toLowerCase().startsWith(search)
+
+            );
+
+        results.innerHTML="";
+
+        if(matches.length===0){
+
+            results.style.display="none";
+            return;
+        }
+
+        matches.forEach(name=>{
+
+            const item =
+                document.createElement("div");
+
+            item.className="autocomplete-item";
+
+            item.textContent=name;
+
+            item.onclick=()=>{
+
+                textarea.value =
+                    text.substring(0,pos+1)
+                    + name
+                    + "]";
+
+                results.style.display="none";
+
+                textarea.focus();
+
+            };
+
+            results.appendChild(item);
+
+        });
+
+        results.style.display="block";
+}
     function cfgRenderFormulaCards() {
       const container = document.getElementById('cfg-formula-cards');
       const empty     = document.getElementById('cfg-formula-empty');
@@ -9330,12 +9459,13 @@ async function cfgEnsureUomCache(cardId) {
   <label class="fml-label">UOM (PI AF)</label>
   ${cfgUomPickerHtml(f.id, f)}
 </div>
-              <div>
+              <div class="formula-editor">
                 <label class="fml-label">Formula expression *</label>
                 <textarea class="fml-textarea" id="fml-expr-${f.id}"
                   style="min-height:80px;font-size:12px"
                   placeholder="ex: [Al]*5"
-                  oninput="cfgUpdateFormulaField('${f.id}','formula',this.value)">${esc(f.formula||'')}</textarea>
+                  oninput="cfgUpdateFormulaField('${f.id}','formula',this.value);formulaAutocomplete(this)">${esc(f.formula||'')}</textarea>
+                  <div id="searchResults" class="autocomplete-results"></div>
               </div>
             </div>
           </div>`).join('')}
