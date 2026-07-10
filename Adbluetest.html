@@ -2952,7 +2952,7 @@
       color:var(--text-faint);
       
      }
-    
+
 .formula-editor{
     position:relative;
 }
@@ -2987,6 +2987,83 @@
     background:#eef5ff;
 }
 
+
+
+.entry-unit{
+
+    margin-bottom:6px;
+}
+
+.entry-unit-header{
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:10px 12px;
+
+    cursor:pointer;
+
+    border-radius:6px;
+
+    transition:background .2s;
+}
+
+.entry-unit-header:hover{
+
+    background:#f3f3f31c
+}
+
+.entry-unit-name{
+
+    color:white;
+}
+
+
+.dropdown-chevron1{
+
+    width:16px;
+    height:16px;
+
+    transition:transform .25s ease;
+
+    flex-shrink:0;
+}
+
+.dropdown-chevron1.open{
+
+    transform:rotate(180deg);
+}
+
+.entry-unit-content{
+
+    display:none;
+
+    margin-left:18px;
+    margin-right: 10px;
+    margin-top:4px;
+}
+
+.entry-unit-content.open{
+
+    display:block;
+}
+
+.entry-item{
+
+    padding:8px 12px;
+
+    cursor:pointer;
+
+    border-radius:6px;
+
+    transition:background .2s;
+}
+
+.entry-item:hover{
+
+    background:#f3f3f31c;
+}
     
   </style>
 </head>
@@ -4141,12 +4218,31 @@
       refreshRem: 10,
       timer: null,
       sessionStart: new Date(),
-      Formfields: {}
+      Formfields: {},
+      FactoryUnits : [],
+      Forms:{}
     };
 
     APP.alertConfigs = []
 
     const PAGE_LABELS = { dashboard: 'Tableau de bord', entry: 'Saisie de données', history: 'Historique & Analyse', config: 'Configuration' };
+
+    function toggleUnit(header) {
+
+    const content = header.nextElementSibling;
+
+    if (!content) return;
+
+    content.classList.toggle("open");
+
+    const chevron =
+        header.querySelector(".dropdown-chevron1");
+
+    if (chevron) {
+        chevron.classList.toggle("open");
+    }
+
+}
 
 
     async function mapPIToRecords() {
@@ -4386,167 +4482,332 @@
       }
     }
 
-    async function renderEntryDropdown() {
+    async function GetRootElementWebId() {
 
-      const container =
-        document.getElementById('entry-dropdown');
+        const path = encodeURIComponent(CONFIG.RootElementPath);
 
-      if (!container) return;
+        const response = await fetch(
+            `${CONFIG.WEBAPIURL}/elements?path=${path}&selectedFields=WebId;Name`,
+            {
+                method: "GET",
+                credentials: "include"
+            }
+        );
 
-      if (!APP.entryPages?.length) {
+        if (!response.ok) {
+            throw new Error("Unable to retrieve root element.");
+        }
 
-        container.innerHTML =
-          '<div class="entry-empty">Aucune page</div>';
+        const element = await response.json();
 
-        return;
+        console.log("Root element:", element);
+
+        localStorage.setItem("RootElementWebId", element.WebId);
+
+        return element.WebId;
       }
 
-      container.innerHTML =
-        APP.entryPages.map(el => `
+    async function GetUnitsElementsWebId() {
 
-      <div class="entry-item"
-            onclick="nav('${el.Name}', this)">
+        const rootWebId = localStorage.getItem("RootElementWebId");
 
-        ${el.Name}
+        if (!rootWebId) {
+            throw new Error("Root element WebId not found.");
+        }
 
-      </div>
+        const response = await fetch(
+            `${CONFIG.WEBAPIURL}/elements/${rootWebId}/elements?selectedFields=Items.Name;Items.WebId`,
+            {
+                method: "GET",
+                credentials: "include"
+            }
+        );
 
-    `).join('');
-    }
+        if (!response.ok) {
+            throw new Error("Unable to retrieve unit elements.");
+        }
+
+        const data = await response.json();
+
+        // Array of children
+        const units = data.Items.map(el => ({
+            Name: el.Name,
+            WebId: el.WebId
+        }));
+
+        APP.FactoryUnits = units;
+
+        console.log("Units:", APP.FactoryUnits);
+
+        localStorage.setItem(
+            "UnitsElements",
+            JSON.stringify(units)
+        );
+
+        return units;
+}
+
+    async function GetFormsElementsWebId() {
+
+        const units = APP.FactoryUnits;
+
+        if (!Array.isArray(units) || units.length === 0) {
+            throw new Error("Factory units not found.");
+        }
+
+        // Build the batch request
+        const batch = {};
+
+        units.forEach((unit, index) => {
+
+            batch[index + 1] = {
+                Method: "GET",
+                Resource:
+                    `${CONFIG.WEBAPIURL}/elements/${unit.WebId}/elements` +
+                    `?selectedFields=Items.Name;Items.WebId`
+            };
+
+        });
+
+        // Execute the batch request
+        const response = await fetch(
+            `${CONFIG.WEBAPIURL}/batch`,
+            {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(batch)
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Unable to retrieve forms.");
+        }
+
+        const batchData = await response.json();
+
+        console.log("Batch response:", batchData);
+
+        const forms = {};
+
+        units.forEach((unit, index) => {
+
+            const result = batchData[index + 1];
+
+            if (!result || result.Status !== 200) {
+                console.warn(`Unable to retrieve forms for unit "${unit.Name}"`, result);
+                forms[unit.Name] = [];
+                return;
+            }
+
+            const items = result.Content.Items || [];
+
+            forms[unit.Name] = items.map(item => ({
+                Name: item.Name,
+                WebId: item.WebId
+            }));
+
+        });
+
+        APP.Forms = forms;
+
+        localStorage.setItem(
+            "FormsElements",
+            JSON.stringify(forms)
+        );
+
+        console.log("Forms:", forms);
+        renderEntryPages();
+        return forms;
+}
+
+    
+
+    
+    async function renderEntryDropdown() {
+
+    const container = document.getElementById("entry-dropdown");
+
+    if (!container) return;
+
+    let html = "";
+
+    APP.FactoryUnits.forEach(unit => {
+
+        const forms = APP.Forms[unit.Name] || [];
+        const hasChildren = forms.length > 0;
+
+        html += `
+            <div class="entry-unit">
+
+                <div class="entry-unit-header"
+                     ${hasChildren ? 'onclick="event.stopPropagation();toggleUnit(this)"' : ""}>
+
+                    <span class="entry-unit-name">
+                        ${unit.Name}
+                    </span>
+
+                    ${hasChildren ? `
+                        <svg class="dropdown-chevron1"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2">
+
+                            <polyline points="6 9 12 15 18 9"></polyline>
+
+                        </svg>
+                    ` : ""}
+
+                </div>
+
+                ${hasChildren ? `
+                    <div class="entry-unit-content">
+
+                        ${forms.map(form => `
+                            <div class="entry-item"
+                                 onclick="event.stopPropagation();nav('${form.Name}', this)">
+
+                                - ${form.Name}
+
+                            </div>
+                        `).join("")}
+
+                    </div>
+                ` : ""}
+
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+
 
     async function renderEntryPages() {
 
-      // Parent container
-      const topParent =
-        document.getElementById('content');
+        // Parent container
+        const topParent = document.getElementById("content");
 
-      // Template page
-      const templatePage =
-        topParent.querySelector('#page-entry');
+        // Template page
+        const templatePage = topParent.querySelector("#page-entry");
 
-      if (!templatePage) {
-        console.error('Template page #page-entry not found');
-        return;
-      }
-
-      // Header to clone
-      const pagehdr =
-        templatePage.querySelector('.pg-hdr');
-
-      // Card template
-      const card =
-        document.createElement('div');
-
-      card.className = 'card';
-
-      card.innerHTML = `
-    <div class="card-hdr">
-      <span class="card-title">
-        §1 — Identification de l'enregistrement
-      </span>
-
-      <span style="font-size:9px;color:var(--text-faint)">
-        Champs <span style="color:var(--crit)">*</span>
-        obligatoires
-      </span>
-    </div>
-
-    <div class="fg2">
-
-      <div class="fg">
-        <div class="fg-row">
-          <label class="fg-lbl">
-            Date <span class="fg-req">*</span>
-          </label>
-
-          <span class="fg-tag">DATE-001</span>
-        </div>
-
-        <input
-          type="date"
-          class="fc"
-          id="f-date"
-          oninput="onDateChange()"
-        >
-
-        <div class="fg-err" id="err-date">
-          Date requise.
-        </div>
-      </div>
-
-      <div class="fg">
-        <div class="fg-row">
-          <label class="fg-lbl">
-            Heure <span class="fg-req">*</span>
-          </label>
-
-          <span class="fg-tag">TIME-001</span>
-        </div>
-
-        <input
-          type="time"
-          class="fc"
-          id="f-time"
-          step="1"
-        >
-
-        <div class="fg-err" id="err-time">
-          Heure requise.
-        </div>
-      </div>
-
-    </div>
-  `;
-
-      if (!APP.entryPages?.length) {
-        console.warn('No entry pages found');
-        return;
-      }
-
-      APP.entryPages.forEach(el => {
-
-        // Create page
-        const newPage =
-          document.createElement('div');
-
-        newPage.className = 'page';
-        newPage.id = `page-${el.Name}`;
-
-        // Clone header
-        if (pagehdr) {
-          const hdrClone =
-            pagehdr.cloneNode(true);
-
-          newPage.appendChild(hdrClone);
+        if (!templatePage) {
+            console.error("Template page #page-entry not found");
+            return;
         }
 
-        // Clone card
-        const cardClone =
-          card.cloneNode(true);
+        // Header to clone
+        const pagehdr = templatePage.querySelector(".pg-hdr");
 
-        newPage.appendChild(cardClone);
+        // Card template
+        const card = document.createElement("div");
 
-        // Add page to DOM
-        topParent.appendChild(newPage);
+        card.className = "card";
 
-        // Navigation label
-        PAGE_LABELS[`entry-${el.Name}`] =
-          `Saisie de données ${el.Name}`;
+        card.innerHTML = `
+            <div class="card-hdr">
+                <span class="card-title">
+                    §1 — Identification de l'enregistrement
+                </span>
 
-        console.log(
-          `Created page: page-${el.Name}`
-        );
-      });
+                <span style="font-size:9px;color:var(--text-faint)">
+                    Champs <span style="color:var(--crit)">*</span>
+                    obligatoires
+                </span>
+            </div>
 
-      console.log(
-        'Generated pages:',
-        APP.entryPages.length
-      );
+            <div class="fg2">
 
-      console.log(
-        'PAGE_LABELS:',
-        PAGE_LABELS
-      );
+                <div class="fg">
+                    <div class="fg-row">
+                        <label class="fg-lbl">
+                            Date <span class="fg-req">*</span>
+                        </label>
+
+                        <span class="fg-tag">DATE-001</span>
+                    </div>
+
+                    <input
+                        type="date"
+                        class="fc"
+                        id="f-date"
+                        oninput="onDateChange()"
+                    >
+
+                    <div class="fg-err" id="err-date">
+                        Date requise.
+                    </div>
+                </div>
+
+                <div class="fg">
+                    <div class="fg-row">
+                        <label class="fg-lbl">
+                            Heure <span class="fg-req">*</span>
+                        </label>
+
+                        <span class="fg-tag">TIME-001</span>
+                    </div>
+
+                    <input
+                        type="time"
+                        class="fc"
+                        id="f-time"
+                        step="1"
+                    >
+
+                    <div class="fg-err" id="err-time">
+                        Heure requise.
+                    </div>
+                </div>
+
+            </div>
+        `;
+
+        if (!APP.Forms || Object.keys(APP.Forms).length === 0) {
+            console.warn("No forms found.");
+            return;
+        }
+
+        Object.entries(APP.Forms).forEach(([unitName, forms]) => {
+
+            forms.forEach(form => {
+
+                // Create page
+                const newPage = document.createElement("div");
+
+                newPage.className = "page";
+                newPage.id = `page-${form.Name}`;
+
+                // Clone header
+                if (pagehdr) {
+                    newPage.appendChild(pagehdr.cloneNode(true));
+                }
+
+                // Clone card
+                newPage.appendChild(card.cloneNode(true));
+
+                // Add page to DOM
+                topParent.appendChild(newPage);
+
+                // Navigation label
+                PAGE_LABELS[`entry-${form.Name}`] =
+                    `Saisie de données ${unitName} - ${form.Name}`;
+
+                console.log(
+                    `Created page: page-${form.Name}`
+                );
+
+            });
+
+        });
+
+        console.log("Generated pages:", Object.values(APP.Forms).flat().length);
+
+        console.log("PAGE_LABELS:", PAGE_LABELS);
     }
 
 
@@ -4562,7 +4823,7 @@
 
     }
 
-    async function GetEntryDataPages() {
+    /* async function GetEntryDataPages() {
       try {
 
         // Get DB WebId from localStorage
@@ -4597,8 +4858,8 @@
         }
 
         const data = await response.json();
-
-        console.log('Elements:', data.Items);
+        
+        console.log('Elements:#############################################################################################', data.Items);
         APP.entryPages = data.Items || [];
         renderEntryDropdown();
         renderEntryPages();
@@ -4615,7 +4876,7 @@
 
         return [];
       }
-    }
+    } */
 
 
     async function getAttributesofSectionparent(formwebId) {
@@ -5370,7 +5631,7 @@ async function loadFormStructure(formWebId) {
 
 
       function renderMetadataSection(section, parent) {
-
+        console.log("Rendering metadata section:", section.name, parent);
       const card = document.createElement("div");
 
       card.className = "card";
@@ -5559,17 +5820,19 @@ async function loadFormStructure(formWebId) {
       const topParent =
         document.getElementById("content");
 
-      const templatePage =
-        topParent.querySelector("#page-entry");
+      const templatePage = topParent.querySelector("#page-entry");
 
       // -----------------------------------
       // ITERATE ALL PAGES
       // -----------------------------------
       let validationWebId = null;
-      Object.entries(APP.pageNametoData)
+      Object.entries(APP.pageNametoData).forEach(([unitName, forms]) => {
+
+        Object.entries(forms)
         .forEach(([pageName, formModel]) => {
           validationWebId = formModel.validationwebid;
           console.log("Rendering page:", pageName, "with validationWebId:", validationWebId);
+
           const templatePage = topParent.querySelector(`#page-${pageName}`);
 
           console.log("Rendering:", pageName);
@@ -5954,6 +6217,8 @@ async function loadFormStructure(formWebId) {
           templatePage.appendChild(SumbitButondiv);
           
         });
+      })
+      
 
       
 
@@ -5961,18 +6226,26 @@ async function loadFormStructure(formWebId) {
 
     let pageNametoData = {};
 
-    async function pagetodata() {
+    async function LoadDataForEachForm() {
 
-      for (const page of APP.entryPages) {
+    const pageNametoData = {};
 
-        const data = await loadFormStructure(page.WebId);
-        pageNametoData[page.Name] = data;
-      }
-      APP.pageNametoData = pageNametoData
+    for (const [unitName, forms] of Object.entries(APP.Forms)) {
 
+        pageNametoData[unitName] = {};
 
-      console.log(pageNametoData);
+        for (const form of forms) {
+
+            const data = await loadFormStructure(form.WebId);
+
+            pageNametoData[unitName][form.Name] = data;
+        }
     }
+
+    APP.pageNametoData = pageNametoData;
+
+    console.log(pageNametoData);
+}
 
 
 
@@ -6179,10 +6452,16 @@ async function loadFormStructure(formWebId) {
     window.onload = async function () {
       GetWebIdAFServer()
       GetDBWebId()
-      await GetEntryDataPages()
+      //await GetEntryDataPages()
       //loadFormStructure("F1EmOw3wdib9jEOPBIsnP79txQi1w0AAdO8RG8sQ55u_M6egRUMyQU1BWi00RjhVUk9MXFlBUkEgTEFCT1JBVE9SWVxORVcgREFUQV9MQUJcQURCTFVF")
-      await pagetodata()
-      await renderForm2() 
+      //await pagetodata()
+      //await renderForm2() 
+      await GetRootElementWebId()
+      await GetUnitsElementsWebId()
+      await GetFormsElementsWebId()
+      await renderEntryDropdown()
+      await LoadDataForEachForm()
+      await renderForm2()
       //const values = getAttributeValues();
       //const formula = "[Concentration]-[Biuret]"
       
@@ -6462,7 +6741,7 @@ async function loadFormStructure(formWebId) {
 
       // Convert to ISO string (UTC)
       const isoString = new Date(localDateTime).toISOString();
-
+      
       return isoString;
     }
 
