@@ -8,10 +8,12 @@ const CONFIG = {
 
   AF_DATABASE_PATH:'\\\\EC2AMAZ-4F8UROL\\Yara Laboratory',
 
-  Level1_Template:"DataEntryTemplate"
+  RootElementPath:'\\\\EC2AMAZ-4F8UROL\\Yara Laboratory\\Data Lab 2',
+  //Level1_Template:"UniteTemplate",
+
+  //Level2_Template:"DataEntryTemplate"
 
 //   REFRESH_SEC: 10,
-
 //   CREDENTIALS_MODE: 'include',
 
   
