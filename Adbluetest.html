@@ -2298,6 +2298,8 @@
     /* ── History table wrapper ── */
     .hist-tbl-outer {
       overflow-x: auto;
+      overflow-y: auto;
+      max-height: calc(100vh - 280px);
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-sm);
       background: var(--bg-card);
@@ -2313,9 +2315,7 @@
     }
 
     .hist-tbl thead {
-      position: sticky;
-      top: 0;
-      z-index: 10;
+      /* Use sticky on the header cells for better browser support */
     }
 
     .hist-tbl thead tr {
@@ -2323,6 +2323,10 @@
     }
 
     .hist-tbl thead th {
+      position: sticky;
+      top: 0;
+      z-index: 15;
+      background: #f1f5f9;
       padding: 9px 10px;
       font-size: 9px;
       text-transform: uppercase;
@@ -2335,10 +2339,69 @@
       cursor: pointer;
       user-select: none;
       transition: background .12s;
+      box-shadow: inset 0 -1px 0 rgba(0,0,0,.05);
     }
 
     .hist-tbl thead th:hover {
       background: #e2e8f0;
+    }
+
+    /* Sticky first three columns */
+    .hist-tbl thead th:nth-child(1){
+      position: sticky;
+      min-width: 42px;
+      left: 0;
+      z-index: 16;
+      background: #f1f5f9;
+    }
+    .hist-tbl tbody td:nth-child(1) {
+      position: sticky;
+      left: 0;
+      min-width: 42px;
+      z-index: 14;
+      background: #fff;
+    }
+
+    .hist-tbl thead th:nth-child(2){
+      position: sticky;
+      left: 42px;
+      z-index: 16;
+      background: #f1f5f9;
+    }
+
+    .hist-tbl tbody td:nth-child(2) {
+      position: sticky;
+      left: 42px;
+      min-width: 110px;
+      z-index: 13;
+      background: #fff;
+    }
+
+    .hist-tbl thead th:nth-child(3){
+      position: sticky;
+      left: calc(42px + 110px);
+      z-index: 16;
+      background: #f1f5f9;
+    
+    }
+    .hist-tbl tbody td:nth-child(3) {
+      position: sticky;
+      left: calc(42px + 110px);
+      min-width: 70px;
+      z-index: 12;
+      background: #fff;
+    }
+
+    .hist-tbl thead th:nth-child(1),
+    .hist-tbl thead th:nth-child(2),
+    .hist-tbl thead th:nth-child(3) {
+      background: #f1f5f9;
+    }
+
+    .hist-tbl tbody td:nth-child(1),
+    .hist-tbl tbody td:nth-child(2),
+    .hist-tbl tbody td:nth-child(3) {
+      box-shadow: inset -1px 0 0 rgba(0,0,0,.08);
     }
 
     .hist-tbl thead th.sort-asc::after {
@@ -2384,7 +2447,7 @@
 
     /* Base cell */
     .hist-tbl tbody td {
-      padding: 8px 10px;
+      padding: 14px 10px;
       vertical-align: middle;
       white-space: nowrap;
       font-family: var(--font-mono);
@@ -2735,6 +2798,22 @@
       overflow: hidden;
     }
 
+    .history-dropdown {
+
+      display: none;
+
+      background: #fff;
+
+      border: 1px solid #d1d5db;
+
+      border-radius: 8px;
+
+      overflow: hidden;
+    }
+
+
+    
+
     .entry-dropdown.show {
       display: block;
       position: absolute;
@@ -2746,6 +2825,19 @@
       border: none;
     }
 
+    .history-dropdown.show {
+      display: block;
+      position: absolute;
+      top: 100%;
+      width: 100%;
+      right: 0;
+      z-index: 1;
+      background-color: #2b394d;
+      border: none;
+    }
+
+
+
     .entry-item {
 
       padding: 10px 12px;
@@ -2755,7 +2847,22 @@
       font-size: 13px;
     }
 
+    .history-item {
+
+      padding: 10px 12px;
+
+      cursor: pointer;
+
+      font-size: 13px;
+    }
+
+
     .entry-item:hover {
+      background: rgba(255, 255, 255, .05);
+      color: var(--sb-text-hi);
+    }
+
+    .history-item:hover {
       background: rgba(255, 255, 255, .05);
       color: var(--sb-text-hi);
     }
@@ -2768,6 +2875,17 @@
 
       font-size: 12px;
     }
+
+    .history-empty {
+
+      padding: 10px;
+
+      color: #94a3b8;
+
+      font-size: 12px;
+    }
+
+
 
 
     .dropdown-chevron {
@@ -2994,7 +3112,29 @@
     margin-bottom:6px;
 }
 
+.history-unit{
+
+    margin-bottom:6px;
+}
+
+
+
 .entry-unit-header{
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:10px 12px;
+
+    cursor:pointer;
+
+    border-radius:6px;
+
+    transition:background .2s;
+}
+
+.history-unit-header{
 
     display:flex;
     justify-content:space-between;
@@ -3014,7 +3154,19 @@
     background:#f3f3f31c
 }
 
+.history-unit-header:hover{
+
+    background:#f3f3f31c
+}
+
+
+
 .entry-unit-name{
+
+    color:white;
+}
+
+.history-unit-name{
 
     color:white;
 }
@@ -3044,7 +3196,21 @@
     margin-top:4px;
 }
 
+.history-unit-content{
+
+    display:none;
+
+    margin-left:18px;
+    margin-right: 10px;
+    margin-top:4px;
+}
+
 .entry-unit-content.open{
+
+    display:block;
+}
+
+.history-unit-content.open{
 
     display:block;
 }
@@ -3060,7 +3226,23 @@
     transition:background .2s;
 }
 
+.history-item{
+
+    padding:8px 12px;
+
+    cursor:pointer;
+
+    border-radius:6px;
+
+    transition:background .2s;
+}
+
 .entry-item:hover{
+
+    background:#f3f3f31c;
+}
+    
+.history-item:hover{
 
     background:#f3f3f31c;
 }
@@ -3158,11 +3340,19 @@
         </div>
 
       </div>
-      <div class="nav-item" onclick="nav('history',this)">
+      <div class="nav-item nav-dropdown" onclick="/*nav('history',this)*/;toggleHistoryDropdown()">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
         </svg>
         <span class="nav-lbl">Historique &amp; Analyse</span>
+        <svg id="history-chevron" class="dropdown-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+
+          <polyline points="6 9 12 15 18 9"></polyline>
+
+        </svg>
+        <div id="history-dropdown" class="history-dropdown">
+        </div>
       </div>
       <div class="sb-sec">Système</div>
       <div class="nav-item" onclick="notify('Module alarmes — non disponible dans ce prototype.','info')">
@@ -4220,7 +4410,8 @@
       sessionStart: new Date(),
       Formfields: {},
       FactoryUnits : [],
-      Forms:{}
+      Forms:{},
+      HistoTableCols:{}
     };
 
     APP.alertConfigs = []
@@ -4245,134 +4436,244 @@
 }
 
 
-    async function mapPIToRecords() {
-      const Request = await fetch("https://sekkai-consulting-pivision.com/PIWEBAPI/elements/F1EmOw3wdib9jEOPBIsnP79txQOWCuX8s88RG8nw55u_M6egRUMyQU1BWi00RjhVUk9MXFlBUkEgTEFCT1JBVE9SWVxEQVRBIExBQlxBREJMVUU/attributes?categoryName=rapport&selectedFields=Items.Name;Items.Links.RecordedData", {
+    async function mapPIToRecords(unitName, formName) {
 
-        method: "GET",
-        credentials: "include"
-      });
+    //----------------------------------------
+    // Get form model
+    //----------------------------------------
 
-      const RequestData = await Request.json();
-      console.log(RequestData)
+    const formData = APP.pageNametoData[unitName][formName];
 
-      const items = RequestData.Items;
+    //----------------------------------------
+    // Collect parameters
+    //----------------------------------------
 
-      const recordedLinks = items.map(item => ({
-        name: item.Name,
-        url: item.Links.RecordedData
-      }));
+    const parameters = [];
 
-      console.log(recordedLinks);
+    formData.sections.forEach(section => {
 
-      const batchBody = {};
+        section.parameters.forEach(parameter => {
 
-      recordedLinks.forEach((item, index) => {
-        batchBody[index] = {
+            parameters.push({
+
+                unitName,
+
+                formName,
+
+                sectionName: section.name,
+
+                parameterName: parameter.name,
+
+                webId: parameter.webId
+
+            });
+
+        });
+
+    });
+
+    //----------------------------------------
+    // Retrieve parameter attributes
+    //----------------------------------------
+
+    const attributeBatch = {};
+    const attributeRequestMap = {};
+
+    parameters.forEach((parameter, index) => {
+
+        const id = index + 1;
+
+        attributeBatch[id] = {
+
           Method: "GET",
-          Resource: item.url + "?startTime=*-2y"
+
+            Resource:
+                `${CONFIG.WEBAPIURL}/elements/${parameter.webId}/attributes` +
+                `?selectedFields=Items.Name;Items.Links.RecordedData`
+
         };
-      });
 
-      console.log(batchBody);
+        attributeRequestMap[id] = parameter;
 
-      const batchResponse3 = await fetch(
-        "https://sekkai-consulting-pivision.com/PIWEBAPI/batch",
+    });
+
+    const attributeResponse = await fetch(
+
+        `${CONFIG.WEBAPIURL}/batch`,
+
         {
+
           method: "POST",
+
           credentials: "include",
+
           headers: {
+
             "Content-Type": "application/json"
+
           },
-          body: JSON.stringify(batchBody)
+
+            body: JSON.stringify(attributeBatch)
+
         }
+
       );
 
-      const batchData = await batchResponse3.json();
+    const attributeData = await attributeResponse.json();
 
-      console.log(batchData);
+    //----------------------------------------
+    // Build recorded-data batch
+    //----------------------------------------
 
-      const finalData = RequestData.Items.map((item, index) => ({
-        name: item.Name,
-        records: batchData[index]?.Content?.Items || []
-      }));
+    const recordedBatch = {};
+    const recordedRequestMap = {};
 
-      console.log(finalData);
-      const rowsMap = {};
+    let requestId = 1;
 
-      finalData.forEach(attr => {
+    Object.entries(attributeData).forEach(([batchId, response]) => {
 
-        //const attrName = attr.name.toLowerCase();
-        const attrName = attr.name;
-        attr.records.forEach(rec => {
+        if (response.Status !== 200)
+            return;
 
-          const ts = rec.Timestamp;
+        const parameterInfo = attributeRequestMap[batchId];
 
-          if (!rowsMap[ts]) {
+        const histoValue = response.Content.Items.find(attr =>
+            attr.Name === "Histo Value"
+        );
+        console.log(
+            parameterInfo.parameterName,
+            response.Content.Items.map(a => a.Name)
+        );
+        if (!histoValue?.Links?.RecordedData)
+            return; 
 
-            rowsMap[ts] = {
-              id: Object.keys(rowsMap).length + 1,
+         recordedBatch[requestId] = {
 
-              date: ts.split('T')[0],
-              time: ts.split('T')[1].slice(0, 5),
+            Method: "GET",
 
-              lot: '',
-              operator: '',
-              mass: 0,
-              bac: '',
-              conc: 0,
-              validation: '—',
+            Resource:
+                histoValue.Links.RecordedData +
+                "?startTime=*-2y"
 
-              icpData: {}
-            };
-          }
+        };
 
-          const row = rowsMap[ts];
+        recordedRequestMap[requestId] = parameterInfo;
 
-          switch (attrName) {
+        requestId++;
 
-            case 'N° Lot':
-              row.lot = rec.Value;
-              break;
+    });
 
-            case 'Masse d_enfiolage Lu':
-              row.mass = parseFloat(rec.Value);
-              break;
+    //----------------------------------------
+    // Retrieve recorded values
+    //----------------------------------------
 
-            case 'Concentration (%pds) Réel':
-              row.conc = parseFloat(rec.Value);
-              break;
+    const recordedResponse = await fetch(
 
-            case 'Opérateur':
-              row.operator = rec.Value;
-              break;
+        `${CONFIG.WEBAPIURL}/batch`,
 
-            case 'Validation':
-              row.validation = parseFloat(rec.Value);
-              break;
+        {
 
+            method: "POST",
 
+            credentials: "include",
 
+            headers: {
 
+                "Content-Type": "application/json"
 
-            default:
+            },
 
-              // Treat everything else as ICP
-              row.icpData[attrName] = {
-                icp: rec.Value,
-                //threshold: false
-              };
+            body: JSON.stringify(recordedBatch)
 
+        }
 
-              break;
-          }
+    );
+
+    const recordedData = await recordedResponse.json();
+
+    //----------------------------------------
+    // Build records grouped by timestamp
+    //----------------------------------------
+
+    const recordsMap = {};
+
+    Object.entries(recordedData).forEach(([batchId, response]) => {
+        
+        if (response.Status !== 200)
+            return;
+
+        const parameterInfo = recordedRequestMap[batchId];
+
+        console.log({
+          parameter: parameterInfo.parameterName,
+          count: response.Content?.Items?.length,
+          items: response.Content?.Items
+      });
+
+        const items = response.Content.Items || [];
+
+        items.forEach(item => {
+
+            const ts = item.Timestamp;
+
+            if (!recordsMap[ts]) {
+
+                recordsMap[ts] = {
+
+                    timestamp: ts,
+
+                    date: ts.split("T")[0],
+
+                    time: ts.split("T")[1].substring(0, 8),
+
+                    unitName,
+
+                    formName,
+
+                    values: {}
+
+                };
+
+            }
+
+            recordsMap[ts].values[parameterInfo.parameterName] =
+                item.Value;
 
         });
 
       });
-      console.log(Object.values(rowsMap));
-      APP.records = Object.values(rowsMap)
-      return Object.values(rowsMap);
-    }
+
+    //----------------------------------------
+    // Convert to array
+    //----------------------------------------
+
+    const records = Object.values(recordsMap);
+
+    records.sort((a, b) =>
+        new Date(b.timestamp) - new Date(a.timestamp)
+    );
+
+    //----------------------------------------
+    // Save
+    //----------------------------------------
+
+    if (!APP.records)
+        APP.records = {};
+
+    if (!APP.records[unitName])
+        APP.records[unitName] = {};
+
+    APP.records[unitName][formName] = records;
+
+    console.log(
+        `History for ${unitName} / ${formName}`,
+        records
+    );
+
+    return records;
+
+}
+
 
 
     async function GetWebIdAFServer() {
@@ -4620,12 +4921,73 @@
 
         console.log("Forms:", forms);
         renderEntryPages();
+        //renderHistoryPages();
         return forms;
 }
 
     
 
     
+    async function renderHistoryDropdown() {
+
+    const container = document.getElementById("history-dropdown");
+
+    if (!container) return;
+
+    let html = "";
+
+    APP.FactoryUnits.forEach(unit => {
+
+        const forms = APP.Forms[unit.Name] || [];
+        const hasChildren = forms.length > 0;
+
+        html += `
+            <div class="history-unit">
+
+                <div class="history-unit-header"
+                     ${hasChildren ? 'onclick="event.stopPropagation();toggleUnit(this)"' : ""}>
+
+                    <span class="history-unit-name">
+                        ${unit.Name}
+                    </span>
+
+                    ${hasChildren ? `
+                        <svg class="dropdown-chevron1"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2">
+
+                            <polyline points="6 9 12 15 18 9"></polyline>
+
+                        </svg>
+                    ` : ""}
+
+                </div>
+
+                ${hasChildren ? `
+                    <div class="history-unit-content">
+
+                        ${forms.map(form => `
+                            <div class="history-item"
+                                 onclick="event.stopPropagation();nav('history-${form.Name}', this)">
+
+                                - ${form.Name}
+
+                            </div>
+                        `).join("")}
+
+                    </div>
+                ` : ""}
+
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+
     async function renderEntryDropdown() {
 
     const container = document.getElementById("entry-dropdown");
@@ -4684,6 +5046,8 @@
 
     container.innerHTML = html;
 }
+
+
 
 
 
@@ -4810,6 +5174,261 @@
         console.log("PAGE_LABELS:", PAGE_LABELS);
     }
 
+   async function renderHistoryPages() {
+
+    console.log("Rendering history pages...");
+
+    const topParent = document.getElementById("content");
+
+    const templatePage = document.getElementById("page-history");
+
+    if (!templatePage) {
+        console.error("Template page #page-history not found");
+        return;
+    }
+
+    const pagehdr = templatePage.querySelector(".pg-hdr");
+    const histtoolbar = templatePage.querySelector(".hist-toolbar");
+    const histLegend = templatePage.querySelector(".hist-legend");
+
+    if (!APP.Forms) {
+        console.warn("APP.Forms is empty");
+        return;
+    }
+
+    Object.entries(APP.Forms).forEach(([unitName, forms]) => {
+
+        forms.forEach(form => {
+
+            console.log("Creating history page for:", form.Name);
+
+            //---------------------------------------
+            // PAGE
+            //---------------------------------------
+
+            const page = document.createElement("div");
+            page.className = "page";
+            page.id = `page-history-${form.Name}`;
+
+            //---------------------------------------
+            // HEADER
+            //---------------------------------------
+
+            if (pagehdr) {
+                page.appendChild(pagehdr.cloneNode(true));
+            }
+
+            if (histtoolbar) {
+                page.appendChild(histtoolbar.cloneNode(true));
+            }
+
+            if (histLegend) {
+                page.appendChild(histLegend.cloneNode(true));
+            }
+
+            //---------------------------------------
+            // TABLE CONTAINER
+            //---------------------------------------
+
+            const tableWrapper = document.createElement("div");
+            tableWrapper.className = "hist-tbl-outer";
+
+            const table = document.createElement("table");
+            table.className = "hist-tbl";
+
+            //---------------------------------------
+            // HEADERS
+            //---------------------------------------
+            console.log("Current form:", form);
+            console.log("form.Name:", `"${form.Name}"`);
+            console.log("APP.HistoTableCols:", APP.HistoTableCols);
+            console.log("Available keys:", Object.keys(APP.HistoTableCols || {}));
+
+           try{
+           
+            const cols = APP.HistoTableCols?.[form.Name] || [];;
+            
+            if (cols.length === 0) {
+              console.warn("No history columns for", form.Name);
+              tableWrapper.appendChild(table);
+
+              page.appendChild(tableWrapper);
+
+              topParent.appendChild(page);
+
+              PAGE_LABELS[`history-${form.Name}`] =
+                  `Historique ${unitName} - ${form.Name}`;
+              return;
+              
+            }
+            console.log("Retrieved cols:", cols);
+            console.log("Is array:", Array.isArray(cols));
+
+            console.log(`Columns for "${form.Name}"`, cols);
+
+            const thead = document.createElement("thead");
+            const tr = document.createElement("tr");
+
+            let th = document.createElement("th");
+            th.textContent = "ID";
+            tr.appendChild(th); 
+
+            th = document.createElement("th");
+            th.textContent = "Date";  
+            tr.appendChild(th);
+
+            th = document.createElement("th");
+            th.textContent = "Heure";
+            tr.appendChild(th);
+
+            th = document.createElement("th");
+
+          
+
+
+            cols.forEach(col => {
+                console.log(`Adding header column: ${col}`);
+                const th = document.createElement("th");
+                const alert = APP.alertConfigs.find(alert => alert.parameterName === col);
+                if (alert) {
+                    th.innerHTML = `${col}<br><= ${alert.hiHiValue}`;
+                } else {
+                    th.textContent = col;
+                }
+                tr.appendChild(th);
+
+            });
+
+            thead.appendChild(tr);
+            table.appendChild(thead);
+           }
+
+           catch(err){
+            console.error(`Error creating table headers for form "${form.Name}":`, err);}
+            
+
+            //---------------------------------------
+            // BODY
+            //---------------------------------------
+
+            const tbody = document.createElement("tbody");
+            tbody.id = `history-body-${unitName}-${form.Name}`;
+
+            table.appendChild(tbody);
+
+            //---------------------------------------
+            // Assemble
+            //---------------------------------------
+
+            tableWrapper.appendChild(table);
+
+            page.appendChild(tableWrapper);
+
+            topParent.appendChild(page);
+
+            PAGE_LABELS[`history-${form.Name}`] =
+                `Historique ${unitName} - ${form.Name}`;
+
+        });
+
+    });
+
+    console.log("History pages rendered.");
+}
+   function renderHistoryTable(unitName, formName) {
+
+    const tbody = document.getElementById(
+        `history-body-${unitName}-${formName}`
+    );
+
+    if (!tbody)
+        return;
+
+    tbody.innerHTML = "";
+
+    const records =
+        APP.records?.[unitName]?.[formName] || [];
+
+    const cols =
+        APP.HistoTableCols?.[formName] || [];
+    
+    records.forEach((record, index) => {
+
+        const tr = document.createElement("tr");
+
+        //----------------------------------------
+        // ID
+        //----------------------------------------
+
+        let td = document.createElement("td");
+        td.textContent = index + 1;
+        td.classList.add("hc-date");
+        tr.appendChild(td);
+
+        //----------------------------------------
+        // Date
+        //----------------------------------------
+
+        td = document.createElement("td");
+        td.textContent = record.date;
+        td.classList.add("hc-date");
+        tr.appendChild(td);
+
+        //----------------------------------------
+        // Time
+        //----------------------------------------
+
+        td = document.createElement("td");
+        td.textContent = record.time;
+        td.classList.add("hc-time");
+        tr.appendChild(td);
+
+        //----------------------------------------
+        // Parameter values
+        //----------------------------------------
+        console.log("Columns:", cols);
+        console.log("Record values:", record.values);
+        console.log("Record keys:", Object.keys(record.values));
+
+        cols.forEach(parameter => {
+            console.log(
+        "Looking for:",
+        `"${parameter}"`,
+        "=>",
+        record.values[parameter]
+    );
+            td = document.createElement("td");
+
+            td.textContent =
+                record.values[parameter] ?? "-";
+            td.classList.add("hc-val");
+
+            tr.appendChild(td);
+
+        });
+
+        tbody.appendChild(tr);
+
+    });
+
+}
+
+      async function renderAllHistoryTables() {
+
+          for (const [unitName, forms] of Object.entries(APP.Forms)) {
+
+              for (const form of forms) {
+
+                  await mapPIToRecords(unitName, form.Name);
+
+                  renderHistoryTable(unitName, form.Name);
+
+              }
+
+          }
+
+      }
+
 
 
     function toggleEntryDropdown() {
@@ -4822,6 +5441,19 @@
       chev.classList.toggle('rotated');
 
     }
+
+    function toggleHistoryDropdown() {
+
+      const dd = document.getElementById('history-dropdown');
+      const chev = document.getElementById('history-chevron');
+
+      dd.classList.toggle('show');
+
+      chev.classList.toggle('rotated');
+
+    }
+
+    
 
     /* async function GetEntryDataPages() {
       try {
@@ -5180,7 +5812,7 @@ async function loadFormStructure(formWebId) {
             value: undefined
           };
 
-          if (/^CalcFormula\d+$/i.test(attr.Name) || attr.Name === 'HiHi' || attr.Name === 'LoLo' || attr.Name === 'UOM' || attr.Name === 'ordre' || attr.Name === 'AlertField') {
+          if (/^CalcFormula\d+$/i.test(attr.Name) || attr.Name === 'HiHi' || attr.Name === 'LoLo' || attr.Name === 'UOM' || attr.Name === 'ordre' || attr.Name === 'AlertField' || attr.Name === 'Histo') {
             parameterObj.formulas[attr.Name] = attributeObj;
           }
 
@@ -5208,7 +5840,7 @@ async function loadFormStructure(formWebId) {
           parameter.attributes.forEach(attr => {
 
             if (
-              attr.name === "HiHi" || attr.name === "LoLo" || /^CalcFormula\d+$/i.test(attr.name) || attr.name === "UOM" || attr.name === "UOM1" || attr.name === "UOM2" || attr.name === "AlertField" || attr.name === "ordre"
+              attr.name === "HiHi" || attr.name === "LoLo" || /^CalcFormula\d+$/i.test(attr.name) || attr.name === "UOM" || attr.name === "UOM1" || attr.name === "UOM2" || attr.name === "AlertField" || attr.name === "ordre" ||attr.name === "Histo"
             ) {
 
               limitBatch[batchIndex] = {
@@ -5255,7 +5887,7 @@ async function loadFormStructure(formWebId) {
           ) {
 
             attr.value = item.Content.Value;
-            if (/^CalcFormula\d+$/i.test(attr.name) || attr.name === 'HiHi' || attr.name === 'LoLo' || attr.name === 'UOM' || attr.name === 'UOM1' || attr.name === 'UOM2' || attr.name === 'ordre') {
+            if (/^CalcFormula\d+$/i.test(attr.name) || attr.name === 'HiHi' || attr.name === 'LoLo' || attr.name === 'UOM' || attr.name === 'UOM1' || attr.name === 'UOM2' || attr.name === 'ordre' || attr.name === 'Histo') {
               const parentParam = formModel.sections
                 .flatMap(s => s.parameters)
                 .find(p => p.attributes.includes(attr));
@@ -6020,6 +6652,19 @@ async function loadFormStructure(formWebId) {
                   a => a.name === "AlertField"
                 );
 
+              
+              const Histo =
+                parameter.attributes.find(
+                  a => a.name === "Histo"
+                );
+
+              if (Histo && Histo.type == "Boolean") {
+                const histoValue = Histo.value;
+                if (histoValue === true) {
+                  APP.HistoTableCols[pageName].push(parameter.name);
+                }
+              }
+
               if (AlertField && AlertField.type == "EnumerationValue") {
                 const enumValue = AlertField.value;
                 if (enumValue && enumValue.hasOwnProperty("Value")) {
@@ -6045,6 +6690,7 @@ async function loadFormStructure(formWebId) {
               const AlertFieldval = AlertField?.value;
 
               APP.alertConfigs.push({
+                unitName: unitName,
                 formname:pageName,
                 parameterName: parameter.name,
                 alertFieldValue: AlertFieldval,
@@ -6223,13 +6869,12 @@ async function loadFormStructure(formWebId) {
       
 
     }
-
+    async function GetHistoTableCols(){}
     let pageNametoData = {};
 
     async function LoadDataForEachForm() {
 
     const pageNametoData = {};
-    APP.entryPages = [];
 
     for (const [unitName, forms] of Object.entries(APP.Forms)) {
 
@@ -6240,12 +6885,7 @@ async function loadFormStructure(formWebId) {
             const data = await loadFormStructure(form.WebId);
 
             pageNametoData[unitName][form.Name] = data;
-            //pageNametoData[form.Name] = data;
-            APP.entryPages.push({
-              Name:      form.Name,
-              WebId:     form.WebId,
-              GroupName: unitName
-            });
+            APP.HistoTableCols[form.Name] = []; // Initialize the HistoTableCols for this form
       }
     }
 
@@ -6254,27 +6894,7 @@ async function loadFormStructure(formWebId) {
       console.log(pageNametoData);
     }
 
-    function getFormModel(formName) {
-      if (!formName || !APP.pageNametoData) return null;
-      for (const forms of Object.values(APP.pageNametoData)) {
-        if (forms && forms[formName]) return forms[formName];
-      }
-      return null;
-    }
 
-    function buildFormOptgroups(valueKey) {
-      const units = APP.FactoryUnits || [];
-      const forms = APP.Forms || {};
-      return units.map(unit => {
-        const list = forms[unit.Name] || [];
-        if (!list.length) return '';
-        return `<optgroup label="${esc(unit.Name)}">` +
-          list.map(f =>
-            `<option value="${esc(f[valueKey])}" data-name="${esc(f.Name)}">${esc(f.Name)}</option>`
-          ).join('') +
-          `</optgroup>`;
-      }).join('');
-    }
 
 
     function getAttributeValues() {
@@ -6487,14 +7107,19 @@ async function loadFormStructure(formWebId) {
       await GetUnitsElementsWebId()
       await GetFormsElementsWebId()
       await renderEntryDropdown()
+      await renderHistoryDropdown();
       await LoadDataForEachForm()
       await renderForm2() 
+      await renderHistoryPages()
+      
+      await renderAllHistoryTables();
       //const values = getAttributeValues();
       //const formula = "[Concentration]-[Biuret]"
       
       console.log("Those are the entry pages:",APP.entryPages)
 
       console.log("map page to data",pageNametoData)
+      console.log("Those are the history pages:",APP.Forms)
       //API CALL TO GET THE USER INFO
       try {
         const response = await fetch(
@@ -6750,7 +7375,7 @@ async function loadFormStructure(formWebId) {
         //   return Object.values(rowsMap);
         // }
 
-        mapPIToRecords()
+        //mapPIToRecords()
         console.log("This is the APP====================================================================================================",APP);
 
 
@@ -8569,7 +9194,7 @@ async function loadFormStructure(formWebId) {
     }
 
     function refresh() {
-      mapPIToRecords();
+      //mapPIToRecords();
       renderHistory();
 
     }
@@ -8860,8 +9485,7 @@ async function loadFormStructure(formWebId) {
 
       // Peuple depuis APP.entryPages (Name + WebId déjà disponibles)
       sel.innerHTML = `<option value="">— Select a form —</option>` +
-        //pages.map(p => `<option value="${esc(p.WebId)}" data-name="${esc(p.Name)}">${esc(p.Name)}</option>`).join('');
-        buildFormOptgroups('WebId');
+        pages.map(p => `<option value="${esc(p.WebId)}" data-name="${esc(p.Name)}">${esc(p.Name)}</option>`).join('');
 
       cfgDiagLog('ok', `${pages.length} formulaire(s) depuis APP.entryPages (cache)`);
 
@@ -8893,10 +9517,8 @@ async function loadFormStructure(formWebId) {
       const tree = document.getElementById('af-tree');
       tree.innerHTML = '<div class="cfg-loading">Chargement depuis PI AF...</div>';
       try {
-        const rootWebId = localStorage.getItem('RootElementWebId');
-        if (!rootWebId) throw new Error('Hiérarchie PI AF non encore chargée');
-        const root = await piFetch(`${PI.base}/elements/${rootWebId}?selectedFields=WebId;Name;Description`);
-        const kids = await piFetch(`${PI.base}/elements/${rootWebId}/elements?selectedFields=Items.WebId;Items.Name;Items.Description`);
+        const root = await piFetch(`${PI.base}/elements/${PI.rootWebId}?selectedFields=WebId;Name;Description`);
+        const kids = await piFetch(`${PI.base}/elements/${PI.rootWebId}/elements?selectedFields=Items.WebId;Items.Name;Items.Description`);
         let html = cfgTreeNodeHtml({...root, _type:'element', _level:0});
         (kids.Items||[]).forEach(c => html += cfgTreeNodeHtml({...c,_type:'element',_level:1}));
         tree.innerHTML = html;
@@ -9056,8 +9678,7 @@ async function loadFormStructure(formWebId) {
       // ── Fusion PI AF + localStorage ───────────────────────────
       // 1. Formules PI AF depuis APP.pageNametoData → converties en cartes
       const piFormulas = [];
-      //const pageModel  = APP.pageNametoData && APP.pageNametoData[name];
-      const pageModel = getFormModel(name);
+      const pageModel  = APP.pageNametoData && APP.pageNametoData[name];
       if (pageModel && Array.isArray(pageModel.sections)) {
         pageModel.sections.forEach(section => {
           section.parameters.forEach(param => {
@@ -9113,7 +9734,7 @@ async function loadFormStructure(formWebId) {
          "<paramName>::<attrKey>"   ex: "Al::CalcFormula1"
     ─────────────────────────────────────────────────────────────────── */
     function cfgGetPITargetOptions(selectedValue) {
-      const formModel = getFormModel(_currentForm);
+      const formModel = APP.pageNametoData && APP.pageNametoData[_currentForm];
       if (!formModel || !Array.isArray(formModel.sections)) {
         return `<option value="">— Formulaire non chargé —</option>`;
       }
@@ -10118,7 +10739,7 @@ async function cfgEnsureUomCache(cardId) {
         return;
       }
       sel.innerHTML = `<option value="">— Select a form —</option>` +
-        buildFormOptgroups('Name');
+        pages.map(p => `<option value="${esc(p.Name)}">${esc(p.Name)}</option>`).join('');
       if (pages.length === 1) { sel.value = pages[0].Name; cfgSelectLimitsForm(pages[0].Name); }
     }
 
@@ -10128,8 +10749,7 @@ async function cfgEnsureUomCache(cardId) {
       if (!formName) { if (section) section.style.display = 'none'; _currentLimitsForm = null; return; }
 
       _currentLimitsForm = formName;
-      //const formModel = APP.pageNametoData && APP.pageNametoData[formName];
-      const formModel = getFormModel(formName);
+      const formModel = APP.pageNametoData && APP.pageNametoData[formName];
       _limitRows = [];
 
       if (formModel && Array.isArray(formModel.sections)) {
@@ -10298,8 +10918,7 @@ async function cfgEnsureUomCache(cardId) {
       const toNum = v => parseFloat(String(v).replace(',', '.'));
 
       let ok = 0, fail = 0;
-      //const pageModel = APP.pageNametoData && APP.pageNametoData[_currentLimitsForm];
-      const pageModel = getFormModel(_currentLimitsForm);
+      const pageModel = APP.pageNametoData && APP.pageNametoData[_currentLimitsForm];
 
       const writes = toSave.flatMap(row => {
         const calls = [];
