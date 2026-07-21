@@ -6875,6 +6875,7 @@ async function loadFormStructure(formWebId) {
     async function LoadDataForEachForm() {
 
     const pageNametoData = {};
+    APP.entryPages = [];
 
     for (const [unitName, forms] of Object.entries(APP.Forms)) {
 
@@ -6886,6 +6887,11 @@ async function loadFormStructure(formWebId) {
 
             pageNametoData[unitName][form.Name] = data;
             APP.HistoTableCols[form.Name] = []; // Initialize the HistoTableCols for this form
+            APP.entryPages.push({
+              Name:      form.Name,
+              WebId:     form.WebId,
+              GroupName: unitName
+            });
       }
     }
 
@@ -6894,7 +6900,27 @@ async function loadFormStructure(formWebId) {
       console.log(pageNametoData);
     }
 
+    function getFormModel(formName) {
+      if (!formName || !APP.pageNametoData) return null;
+      for (const forms of Object.values(APP.pageNametoData)) {
+        if (forms && forms[formName]) return forms[formName];
+      }
+      return null;
+    }
 
+    function buildFormOptgroups(valueKey) {
+      const units = APP.FactoryUnits || [];
+      const forms = APP.Forms || {};
+      return units.map(unit => {
+        const list = forms[unit.Name] || [];
+        if (!list.length) return '';
+        return `<optgroup label="${esc(unit.Name)}">` +
+          list.map(f =>
+            `<option value="${esc(f[valueKey])}" data-name="${esc(f.Name)}">${esc(f.Name)}</option>`
+          ).join('') +
+          `</optgroup>`;
+      }).join('');
+    }
 
 
     function getAttributeValues() {
@@ -9485,7 +9511,8 @@ async function loadFormStructure(formWebId) {
 
       // Peuple depuis APP.entryPages (Name + WebId déjà disponibles)
       sel.innerHTML = `<option value="">— Select a form —</option>` +
-        pages.map(p => `<option value="${esc(p.WebId)}" data-name="${esc(p.Name)}">${esc(p.Name)}</option>`).join('');
+        //pages.map(p => `<option value="${esc(p.WebId)}" data-name="${esc(p.Name)}">${esc(p.Name)}</option>`).join('');
+        buildFormOptgroups('WebId');
 
       cfgDiagLog('ok', `${pages.length} formulaire(s) depuis APP.entryPages (cache)`);
 
@@ -9517,8 +9544,10 @@ async function loadFormStructure(formWebId) {
       const tree = document.getElementById('af-tree');
       tree.innerHTML = '<div class="cfg-loading">Chargement depuis PI AF...</div>';
       try {
-        const root = await piFetch(`${PI.base}/elements/${PI.rootWebId}?selectedFields=WebId;Name;Description`);
-        const kids = await piFetch(`${PI.base}/elements/${PI.rootWebId}/elements?selectedFields=Items.WebId;Items.Name;Items.Description`);
+        const rootWebId = localStorage.getItem('RootElementWebId');
+        if (!rootWebId) throw new Error('Hiérarchie PI AF non encore chargée');
+        const root = await piFetch(`${PI.base}/elements/${rootWebId}?selectedFields=WebId;Name;Description`);
+        const kids = await piFetch(`${PI.base}/elements/${rootWebId}/elements?selectedFields=Items.WebId;Items.Name;Items.Description`);
         let html = cfgTreeNodeHtml({...root, _type:'element', _level:0});
         (kids.Items||[]).forEach(c => html += cfgTreeNodeHtml({...c,_type:'element',_level:1}));
         tree.innerHTML = html;
@@ -9678,7 +9707,8 @@ async function loadFormStructure(formWebId) {
       // ── Fusion PI AF + localStorage ───────────────────────────
       // 1. Formules PI AF depuis APP.pageNametoData → converties en cartes
       const piFormulas = [];
-      const pageModel  = APP.pageNametoData && APP.pageNametoData[name];
+      //const pageModel  = APP.pageNametoData && APP.pageNametoData[name];
+      const pageModel = getFormModel(name);
       if (pageModel && Array.isArray(pageModel.sections)) {
         pageModel.sections.forEach(section => {
           section.parameters.forEach(param => {
@@ -9734,7 +9764,7 @@ async function loadFormStructure(formWebId) {
          "<paramName>::<attrKey>"   ex: "Al::CalcFormula1"
     ─────────────────────────────────────────────────────────────────── */
     function cfgGetPITargetOptions(selectedValue) {
-      const formModel = APP.pageNametoData && APP.pageNametoData[_currentForm];
+      const formModel = getFormModel(_currentForm);
       if (!formModel || !Array.isArray(formModel.sections)) {
         return `<option value="">— Formulaire non chargé —</option>`;
       }
@@ -10739,7 +10769,7 @@ async function cfgEnsureUomCache(cardId) {
         return;
       }
       sel.innerHTML = `<option value="">— Select a form —</option>` +
-        pages.map(p => `<option value="${esc(p.Name)}">${esc(p.Name)}</option>`).join('');
+        buildFormOptgroups('Name');
       if (pages.length === 1) { sel.value = pages[0].Name; cfgSelectLimitsForm(pages[0].Name); }
     }
 
@@ -10749,7 +10779,8 @@ async function cfgEnsureUomCache(cardId) {
       if (!formName) { if (section) section.style.display = 'none'; _currentLimitsForm = null; return; }
 
       _currentLimitsForm = formName;
-      const formModel = APP.pageNametoData && APP.pageNametoData[formName];
+      //const formModel = APP.pageNametoData && APP.pageNametoData[formName];
+      const formModel = getFormModel(formName);
       _limitRows = [];
 
       if (formModel && Array.isArray(formModel.sections)) {
@@ -10918,7 +10949,8 @@ async function cfgEnsureUomCache(cardId) {
       const toNum = v => parseFloat(String(v).replace(',', '.'));
 
       let ok = 0, fail = 0;
-      const pageModel = APP.pageNametoData && APP.pageNametoData[_currentLimitsForm];
+      //const pageModel = APP.pageNametoData && APP.pageNametoData[_currentLimitsForm];
+      const pageModel = getFormModel(_currentLimitsForm);
 
       const writes = toSave.flatMap(row => {
         const calls = [];
