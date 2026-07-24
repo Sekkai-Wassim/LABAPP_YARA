@@ -2696,7 +2696,7 @@
       .hist-toolbar,
       .hist-legend,
       .hist-stats-bar,
-      .page:not(#page-history),
+      .page:not([id^="page-history"]),
       #loading-overlay,
       #access-denied,
       #toast,
@@ -2719,10 +2719,6 @@
       #content {
         overflow: visible !important;
         padding: 0 !important;
-      }
-
-      #page-history {
-        display: block !important;
       }
 
       .hist-tbl-outer {
@@ -5158,7 +5154,7 @@
         topParent.appendChild(newPage);
 
         // Navigation label
-                PAGE_LABELS[`entry-${form.Name}`] =
+                PAGE_LABELS[form.Name] =
                     `Saisie de données ${unitName} - ${form.Name}`;
 
         console.log(
@@ -5430,27 +5426,49 @@
       }
 
 
+      function closeAllDropdowns() {
+        ['entry', 'history'].forEach(key => {
+            document.getElementById(key + '-dropdown')?.classList.remove('show');
+            document.getElementById(key + '-chevron')?.classList.remove('rotated');
+          });
+          document.querySelectorAll('.entry-unit-content, .history-unit-content, .dropdown-chevron1').forEach(el => {
+            el.classList.remove('open');
+          });
+      }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.nav-dropdown')) {
+        closeAllDropdowns();
+      }
+    })
 
     function toggleEntryDropdown() {
 
       const dd = document.getElementById('entry-dropdown');
       const chev = document.getElementById('entry-chevron');
 
-      dd.classList.toggle('show');
-
-      chev.classList.toggle('rotated');
-
+      const wasOpen = dd.classList.contains('show');
+      closeAllDropdowns();
+      if (!wasOpen) {
+        dd.classList.add('show');
+        chev.classList.add('rotated');
+      }
     }
+
 
     function toggleHistoryDropdown() {
 
       const dd = document.getElementById('history-dropdown');
       const chev = document.getElementById('history-chevron');
 
+      const wasOpen = dd.classList.contains('show');
+      closeAllDropdowns();
+      if (!wasOpen) {
+
       dd.classList.toggle('show');
 
       chev.classList.toggle('rotated');
-
+      }
     }
 
     
@@ -7933,6 +7951,7 @@ async function loadFormStructure(formWebId) {
          notify('Configuration restreinte — accès administrateur requis.', 'warn');
          return;
       }
+      closeAllDropdowns();
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       el.classList.add('active');
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -9254,9 +9273,13 @@ async function loadFormStructure(formWebId) {
     function exportPdf() {
       // Update print-header date
       document.getElementById('print-date-str').textContent = nowIso();
-      // Ensure history page is active
-      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      document.getElementById('page-history').classList.add('active');
+      
+      
+       const currentPage = document.querySelector('.page.active');
+       if (!currentPage || !currentPage.id.startsWith('page-history')) {
+          notify('Ouvre d\'abord un formulaire dans Historique avant d\'exporter.', 'warn');
+       return;
+         }
       // Trigger browser print dialog
       setTimeout(() => { window.print(); }, 150);
     }
