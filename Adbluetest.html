@@ -5516,7 +5516,37 @@
 
 }
 
-   function renderHistoryTable(unitName, formName, fromDate = "", toDate = "") {
+   function normalizeHistoryValidationValue(value) {
+    if (value === null || value === undefined || value === "")
+        return null;
+
+    if (typeof value === "boolean")
+        return value ? 1 : 0;
+
+    if (typeof value === "number")
+        return Number.isFinite(value) ? value : null;
+
+    if (typeof value === "string") {
+        const trimmed = value.trim();
+        if (trimmed === "")
+            return null;
+
+        if (trimmed === "1" || trimmed.toLowerCase() === "true" || trimmed.toLowerCase() === "conforme")
+            return 1;
+
+        if (trimmed === "0" || trimmed.toLowerCase() === "false" || trimmed.toLowerCase() === "non conforme" || trimmed.toLowerCase() === "nonconforme")
+            return 0;
+
+        if (trimmed === "—" || trimmed.toLowerCase() === "na" || trimmed.toLowerCase() === "n/a" || trimmed.toLowerCase() === "null" || trimmed.toLowerCase() === "undefined")
+            return "—";
+
+        return trimmed;
+    }
+
+    return value;
+}
+
+   function renderHistoryTable(unitName, formName, fromDate = "", toDate = "", status = "") {
 
     const tbody = document.getElementById(
         `history-body-${unitName}-${formName}`
@@ -5535,6 +5565,20 @@
     const records = allRecords.filter(record => {
         if (fromDate && record.date < fromDate) return false;
         if (toDate   && record.date > toDate)   return false;
+
+        if (status !== "" && status !== null && status !== undefined) {
+            const recordValidation = normalizeHistoryValidationValue(
+                record.validation ?? record.values?.Validation
+            );
+
+            if (status === "—") {
+                if (recordValidation === 1 || recordValidation === 0)
+                    return false;
+            } else if (recordValidation !== status) {
+                return false;
+            }
+        }
+
         return true;
     });
 
@@ -5656,9 +5700,11 @@
         page.querySelector("#hist-filter-date-from")?.value || "";
     const toDate =
         page.querySelector("#hist-filter-date-to")?.value || "";
+    const rawStatus = page.querySelector("#hist-filter-valid")?.value ?? "";
+    const status = rawStatus === "—" ? "—" : (rawStatus !== "" ? Number(rawStatus) : "");
 
     // Re-render the table with only the records inside the chosen range.
-    renderHistoryTable(unitName, formName, fromDate, toDate);
+    renderHistoryTable(unitName, formName, fromDate, toDate, status);
 
 }
 
@@ -5672,8 +5718,10 @@
 
     const from = page.querySelector("#hist-filter-date-from");
     const to   = page.querySelector("#hist-filter-date-to");
+    const valid = page.querySelector("#hist-filter-valid");
     if (from) from.value = "";
     if (to)   to.value = "";
+    if (valid) valid.value = "";
 
     refreshHistory(triggerEl);
 
