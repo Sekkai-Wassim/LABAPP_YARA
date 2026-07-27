@@ -2519,6 +2519,27 @@
       font-weight: 700;
     }
 
+    .cell-crit-low {
+      background: #3aa8e7 !important;
+      color: #ffff !important;
+      font-weight: 700;
+    }
+
+
+    /* HIGH: value sits in the Hi..hiHi warning band */
+    .cell-orange {
+      background: #ffedd5 !important;
+      color: #9a3412 !important;
+      font-weight: 600;
+    }
+
+    /* MAX: value reached / exceeded the maximum allowed value */
+    .cell-max {
+      background: #272525c9 !important;
+      color: #ffffff !important;
+      font-weight: 700;
+    }
+
     /* THRESHOLD: checkbox was checked (= 0.000) */
     .cell-thresh {
       background: #fafafa !important;
@@ -2555,13 +2576,13 @@
     }
 
     .cell-delta-tag.up {
-      background: #fee2e2;
-      color: #dc2626;
+      background: #dcfce7;
+      color: #1d231f;
     }
 
     .cell-delta-tag.dn {
       background: #dcfce7;
-      color: #16a34a;
+      color: #1d231f;
     }
 
     /* Validation cell */
@@ -2672,8 +2693,19 @@
       border: 1px solid #fecaca;
     }
 
+    .leg-crit-low {
+      background: #3aa8e7;
+      border: 1px solid #3aa8e7;
+    }
+
+    .leg-beyondcrit {
+      background: #272525c9;
+      border: 1px solid #272525c9;
+    }
+
+
     .leg-th {
-      background: #f8fafc;
+      background: #ffedd5;
       border: 1px solid var(--border);
     }
 
@@ -3973,25 +4005,22 @@
           <!-- Toolbar -->
           <div class="hist-toolbar">
             <div class="hist-toolbar-left">
-              <span class="hist-filter-lbl">Filtrer:</span>
-              <input class="hist-filter" type="text" id="hist-filter-lot" placeholder="N° Lot…"
-                oninput="renderHistory()" style="width:130px">
-              <input class="hist-filter" type="date" id="hist-filter-date-from" onchange="renderHistory()"
+              <input class="hist-filter" type="date" id="hist-filter-date-from" onchange="refreshHistory(this)"
                 title="Date début">
-              <input class="hist-filter" type="date" id="hist-filter-date-to" onchange="renderHistory()"
+              <input class="hist-filter" type="date" id="hist-filter-date-to" onchange="refreshHistory(this)"
                 title="Date fin">
-              <select class="hist-filter" id="hist-filter-valid" onchange="renderHistory()" style="width:140px">
+              <select class="hist-filter" id="hist-filter-valid" onchange="refreshHistory(this)" style="width:140px">
                 <option value="">Toutes validations</option>
                 <option value=1>Conforme</option>
                 <option value=0>Non Conforme</option>
                 <option value="—">Non renseigné</option>
               </select>
-              <button calss="btn btn-primary"
+              <button class="btn btn-primary"
                 style="background:#185fa7;color:white;border:1px solid var(--border);border-radius: var(--radius-sm);padding:7px 12px;font-size:10px"
-                onclick="renderHistory()">Refresh</button>
+                onclick="refreshHistory(this)">Refresh</button>
               <button class="btn-export"
                 style="background:#f8fafc;color:var(--text-muted);border:1px solid var(--border);padding:7px 12px;font-size:10px"
-                onclick="clearHistFilters()">✕ Réinitialiser</button>
+                onclick="resetHistoryFilters(this)">✕ Réinitialiser</button>
             </div>
             <div class="hist-toolbar-right">
               <span class="hist-record-count" id="hist-cnt">0 enregistrement(s)</span>
@@ -4020,7 +4049,7 @@
           <div class="hist-legend">
             <strong
               style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-right:4px">Légende
-              ICP:</strong>
+             :</strong>
             <div class="leg-item">
               <div class="leg-swatch leg-norm"></div>Normal (dans seuil)
             </div>
@@ -4032,19 +4061,28 @@
             -->
 
             <div class="leg-item">
-              <div class="leg-swatch leg-crit"></div>Critique (dépasse seuil)
+              <div class="leg-swatch leg-crit"></div>Supérieur au Maximum
             </div>
+
             <div class="leg-item">
-              <div class="leg-swatch leg-th"></div>Seuil détection (0)
+              <div class="leg-swatch leg-crit-low"></div>Inférieur au Minimum
+            </div>
+
+            <div class="leg-item">
+              <div class="leg-swatch leg-beyondcrit"></div>200% du Max
+            </div>
+
+            <div class="leg-item">
+              <div class="leg-swatch leg-th"></div>80% du Max
             </div>
             <!--
             
             -->
             <div class="leg-item">
-              <div class="leg-swatch leg-delta-up"></div>▲ Hausse vs précédent
+              <div class="leg-delta-up"></div>▲ Hausse vs précédent
             </div>
             <div class="leg-item">
-              <div class="leg-swatch leg-delta-down"></div>▼ Baisse vs précédent
+              <div class="leg-delta-down"></div>▼ Baisse vs précédent
             </div>
           </div>
 
@@ -4438,7 +4476,42 @@
     // Get form model
     //----------------------------------------
 
-    const formData = APP.pageNametoData[unitName][formName];
+    const formData = APP.pageNametoData?.[unitName]?.[formName];
+
+    if (!formData) {
+        console.warn(`No form data found for ${unitName} / ${formName}`);
+        return [];
+    }
+
+    const directFormAttributes = [];
+
+    const formWebId = APP.Forms?.[unitName]?.find(f => f.Name === formName)?.WebId;
+
+    if (formWebId) {
+        try {
+            const formAttributeResponse = await fetch(
+                `${CONFIG.WEBAPIURL}/elements/${formWebId}/attributes?selectedFields=Items.Name;Items.Links&searchFullHierarchy=true`,
+                {
+                    method: 'GET',
+                    credentials: 'include'
+                }
+            );
+
+            const formAttributeData = await formAttributeResponse.json();
+            const validationAttr = (formAttributeData.Items || []).find(
+                attr => attr.Name?.toLowerCase() === 'validation'
+            );
+
+            if (validationAttr?.Links?.RecordedData) {
+                directFormAttributes.push({
+                    attributeName: validationAttr.Name || 'Validation',
+                    recordedDataUrl: validationAttr.Links.RecordedData
+                });
+            }
+        } catch (err) {
+            console.warn('Unable to load form validation attribute:', err);
+        }
+    }
 
     //----------------------------------------
     // Collect parameters
@@ -4534,7 +4607,7 @@
         const parameterInfo = attributeRequestMap[batchId];
 
         const histoValue = response.Content.Items.find(attr =>
-            attr.Name === "Histo Value"
+            attr.Name === "Histo Value" || attr.Name ==="tag"
         );
         console.log(
             parameterInfo.parameterName,
@@ -4557,6 +4630,21 @@
 
         requestId++;
 
+    });
+
+    directFormAttributes.forEach(attributeInfo => {
+
+        recordedBatch[requestId] = {
+            Method: "GET",
+            Resource: `${attributeInfo.recordedDataUrl}?startTime=*-2y`
+        };
+
+        recordedRequestMap[requestId] = {
+            kind: 'formAttribute',
+            parameterName: attributeInfo.attributeName
+        };
+
+        requestId++;
     });
 
     //----------------------------------------
@@ -4634,6 +4722,10 @@
 
             recordsMap[ts].values[parameterInfo.parameterName] =
                 item.Value;
+
+            if (parameterInfo.parameterName?.toLowerCase() === 'validation') {
+                recordsMap[ts].validation = item.Value;
+            }
 
         });
 
@@ -5206,6 +5298,11 @@
             page.className = "page";
             page.id = `page-history-${form.Name}`;
 
+            // Remember which unit/form this page shows, so the Refresh button
+            // (which is cloned onto every page) knows what to re-render.
+            page.dataset.unit = unitName;
+            page.dataset.form = form.Name;
+
             //---------------------------------------
             // HEADER
             //---------------------------------------
@@ -5277,23 +5374,22 @@
             th.textContent = "Heure";
             tr.appendChild(th);
 
-            th = document.createElement("th");
-
-          
-
-
             cols.forEach(col => {
                 console.log(`Adding header column: ${col}`);
                 const th = document.createElement("th");
                 const alert = APP.alertConfigs.find(alert => alert.parameterName === col);
                 if (alert) {
-                    th.innerHTML = `${col}<br><= ${alert.hiHiValue}`;
+                    th.innerHTML = `${col}<br> Min:${alert.loLoValue} Max:${alert.hiHiValue}`;
                 } else {
                     th.textContent = col;
                 }
                 tr.appendChild(th);
 
             });
+
+            const validationHeader = document.createElement("th");
+            validationHeader.textContent = "Validation";
+            tr.appendChild(validationHeader);
 
             thead.appendChild(tr);
             table.appendChild(thead);
@@ -5331,7 +5427,96 @@
 
     console.log("History pages rendered.");
 }
-   function renderHistoryTable(unitName, formName) {
+   /* Turn a stored value into a number for comparison purposes.
+      Lab values can carry a detection-limit marker, e.g. "<0.03" or ">5",
+      so we strip a leading <, >, ≤, ≥ before parsing. The raw string is still
+      what gets displayed; this is only used for colouring and deltas.
+      Returns NaN when there is no usable number. */
+   function parseHistNumber(value) {
+
+    if (typeof value === "number")
+        return value;
+
+    if (value == null)
+        return NaN;
+
+    const cleaned = String(value).replace(/[<>≤≥]/g, "").trim();
+    if (cleaned === "")
+        return NaN;
+
+    return Number(cleaned);
+
+}
+
+   /* Decide the colour class for a value cell, based on the alert thresholds.
+      Priority (most severe first): Black > Red > Orange > Green.
+        - value >= MaximumValue                  -> "cell-max"    (black)
+        - value < loLoValue OR value > hiHiValue  -> "cell-crit"   (red, outside range)
+        - HiValue <= value < hiHiValue            -> "cell-orange" (warning band)
+        - value <= TargetValue                    -> "cell-ok"     (green)
+        - otherwise                               -> "" (no colour)
+      A threshold is only applied when it is a real, finite number. */
+   function histCellClass(value, cfg) {
+
+    if (!cfg)
+        return "";
+
+    const v = parseHistNumber(value);
+    if (!Number.isFinite(v))
+        return "";
+
+    const maxV   = Number(cfg.MaximumValue);
+    const hiHi   = Number(cfg.hiHiValue);
+    const loLo   = Number(cfg.loLoValue);
+    const hi     = Number(cfg.HiValue);
+    const target = Number(cfg.TargetValue);
+
+    if (Number.isFinite(maxV) && v >= maxV)
+        return "cell-max";
+
+    if ((Number.isFinite(loLo) && v < loLo)){
+      return "cell-crit-low";
+    }
+
+    if ((Number.isFinite(hiHi) && v >= hiHi))
+        return "cell-crit";
+
+    if (Number.isFinite(hi) && Number.isFinite(hiHi) && v > hi && v < hiHi)
+        return "cell-orange";
+
+    if (Number.isFinite(hi) && v <= hi)
+        return "cell-ok";
+
+    return "";
+
+}
+
+   /* Build a delta arrow chip comparing a value to the previous (older) row.
+        - delta > 0 -> up arrow   ▲ (class "cell-delta-tag up")
+        - delta < 0 -> down arrow ▼ (class "cell-delta-tag dn")
+        - delta = 0 -> no arrow
+      Returns "" when either value is missing / non-numeric. */
+   function histDeltaTag(value, prevValue) {
+
+    const v = parseHistNumber(value);
+    const p = parseHistNumber(prevValue);
+
+    if (!Number.isFinite(v) || !Number.isFinite(p))
+        return "";
+
+    const delta = v - p;
+
+    if (delta > 0)
+        return ` <span class="cell-delta-tag up" title="Δ +${delta.toFixed(3)}">▲</span>`;
+
+    if (delta < 0)
+        return ` <span class="cell-delta-tag dn" title="Δ ${delta.toFixed(3)}">▼</span>`;
+
+    return "";
+
+}
+
+   function renderHistoryTable(unitName, formName, fromDate = "", toDate = "") {
 
     const tbody = document.getElementById(
         `history-body-${unitName}-${formName}`
@@ -5342,8 +5527,16 @@
 
     tbody.innerHTML = "";
 
-    const records =
+    const allRecords =
         APP.records?.[unitName]?.[formName] || [];
+
+    // Keep only the records whose date is inside the selected range.
+    // record.date is "YYYY-MM-DD", so a plain string comparison is chronological.
+    const records = allRecords.filter(record => {
+        if (fromDate && record.date < fromDate) return false;
+        if (toDate   && record.date > toDate)   return false;
+        return true;
+    });
 
     const cols =
         APP.HistoTableCols?.[formName] || [];
@@ -5387,25 +5580,102 @@
         console.log("Record keys:", Object.keys(record.values));
 
         cols.forEach(parameter => {
-            console.log(
-        "Looking for:",
-        `"${parameter}"`,
-        "=>",
-        record.values[parameter]
-    );
-            td = document.createElement("td");
 
-            td.textContent =
-                record.values[parameter] ?? "-";
+            td = document.createElement("td");
             td.classList.add("hc-val");
+
+            const rawValue = record.values[parameter];
+
+            if (rawValue == null || rawValue === "") {
+                td.textContent = "-";
+                tr.appendChild(td);
+                return;
+            }
+
+            // Find the alert thresholds for this parameter in this unit.
+            const cfg = APP.alertConfigs.find(
+                c => c.parameterName === parameter && c.unitName === unitName
+            );
+
+            // 1-4) Colour the cell according to the thresholds.
+            const colorClass = histCellClass(rawValue, cfg);
+            if (colorClass)
+                td.classList.add(colorClass);
+
+            // 5) Delta arrow vs the previous (older) record for this parameter.
+            //    records are sorted newest-first, so index + 1 is the older row.
+            const prevRecord = records[index + 1];
+            const prevValue = prevRecord ? prevRecord.values[parameter] : null;
+            const deltaTag = histDeltaTag(rawValue, prevValue);
+
+            td.innerHTML = `${rawValue}${deltaTag}`;
 
             tr.appendChild(td);
 
         });
 
+        td = document.createElement("td");
+        td.classList.add("hc-valid");
+
+        const validationValue = record.validation ?? record.values.Validation;
+
+        if (validationValue === 1 || validationValue === '1' || validationValue === true) {
+            td.innerHTML = '<span class="pill pill-ok">✔ Conforme</span>';
+        } else if (validationValue === 0 || validationValue === '0' || validationValue === false) {
+            td.innerHTML = '<span class="pill pill-err">✖ Non Conforme</span>';
+        } else {
+            td.textContent = "-";
+        }
+
+        tr.appendChild(td);
+
         tbody.appendChild(tr);
 
     });
+
+}
+
+   /* Refresh button on a history page.
+      The toolbar is cloned onto every history page, so the filter inputs share
+      the same ids across pages. To read the correct ones we scope our lookups
+      to the page that actually contains the clicked button. */
+   function refreshHistory(triggerEl) {
+
+    const page = triggerEl.closest(".page");
+    if (!page)
+        return;
+
+    // Which unit/form does this page show? (stored on the page in renderHistoryPages)
+    const unitName = page.dataset.unit;
+    const formName = page.dataset.form;
+    if (!unitName || !formName)
+        return;
+
+    // Read the start/end date filters belonging to THIS page.
+    const fromDate =
+        page.querySelector("#hist-filter-date-from")?.value || "";
+    const toDate =
+        page.querySelector("#hist-filter-date-to")?.value || "";
+
+    // Re-render the table with only the records inside the chosen range.
+    renderHistoryTable(unitName, formName, fromDate, toDate);
+
+}
+
+   /* Reset button on a history page: clear this page's date filters,
+      then re-render the full (unfiltered) table. */
+   function resetHistoryFilters(triggerEl) {
+
+    const page = triggerEl.closest(".page");
+    if (!page)
+        return;
+
+    const from = page.querySelector("#hist-filter-date-from");
+    const to   = page.querySelector("#hist-filter-date-to");
+    if (from) from.value = "";
+    if (to)   to.value = "";
+
+    refreshHistory(triggerEl);
 
 }
 
@@ -5830,7 +6100,7 @@ async function loadFormStructure(formWebId) {
             value: undefined
           };
 
-          if (/^CalcFormula\d+$/i.test(attr.Name) || attr.Name === 'HiHi' || attr.Name === 'LoLo' || attr.Name === 'UOM' || attr.Name === 'ordre' || attr.Name === 'AlertField' || attr.Name === 'Histo') {
+          if (/^CalcFormula\d+$/i.test(attr.Name)||attr.Name === 'Hi'|| attr.Name === 'Target' || attr.Name === 'HiHi' || attr.Name === 'LoLo' || attr.Name === 'Maximum' || attr.Name === 'UOM' || attr.Name === 'ordre' || attr.Name === 'AlertField' || attr.Name === 'Histo') {
             parameterObj.formulas[attr.Name] = attributeObj;
           }
 
@@ -5858,7 +6128,7 @@ async function loadFormStructure(formWebId) {
           parameter.attributes.forEach(attr => {
 
             if (
-              attr.name === "HiHi" || attr.name === "LoLo" || /^CalcFormula\d+$/i.test(attr.name) || attr.name === "UOM" || attr.name === "UOM1" || attr.name === "UOM2" || attr.name === "AlertField" || attr.name === "ordre" ||attr.name === "Histo"
+              attr.name === "Target"|| attr.name === "Hi" ||attr.name === "HiHi" || attr.name === "LoLo"|| attr.name === "Maximum" || /^CalcFormula\d+$/i.test(attr.name) || attr.name === "UOM" || attr.name === "UOM1" || attr.name === "UOM2" || attr.name === "AlertField" || attr.name === "ordre" ||attr.name === "Histo"
             ) {
 
               limitBatch[batchIndex] = {
@@ -5905,7 +6175,7 @@ async function loadFormStructure(formWebId) {
           ) {
 
             attr.value = item.Content.Value;
-            if (/^CalcFormula\d+$/i.test(attr.name) || attr.name === 'HiHi' || attr.name === 'LoLo' || attr.name === 'UOM' || attr.name === 'UOM1' || attr.name === 'UOM2' || attr.name === 'ordre' || attr.name === 'Histo') {
+            if (/^CalcFormula\d+$/i.test(attr.name) || attr.name === 'Target' || attr.name === 'HiHi' || attr.name === 'LoLo' || attr.name === 'UOM' || attr.name === 'UOM1' || attr.name === 'UOM2' || attr.name === 'ordre' || attr.name === 'Histo') {
               const parentParam = formModel.sections
                 .flatMap(s => s.parameters)
                 .find(p => p.attributes.includes(attr));
@@ -6280,7 +6550,7 @@ async function loadFormStructure(formWebId) {
 }
 
 
-      function renderMetadataSection(section, parent) {
+      function renderMetadataSection(pageName, section, parent) {
         console.log("Rendering metadata section:", section.name, parent);
       const card = document.createElement("div");
 
@@ -6333,6 +6603,10 @@ async function loadFormStructure(formWebId) {
           parameter.attributes.find(
             a => a.name === "Liste"
           );
+        
+        const Histo = parameter.attributes.find(
+          a => a.name === "Histo"
+          );
 
         const pointWebId =
           tag?.pointWebId || "";
@@ -6350,6 +6624,10 @@ async function loadFormStructure(formWebId) {
         row.style.marginBottom = "10px";
 
         let control = "";
+
+        if (Histo && Histo.value === true){
+           APP.HistoTableCols[pageName].push(parameter.name);
+        }
 
         if (inputType === "Liste") {
 
@@ -6501,7 +6779,7 @@ async function loadFormStructure(formWebId) {
 
             if (isMetadataSection) {
 
-              renderMetadataSection(section, templatePage);
+              renderMetadataSection(pageName,section, templatePage);
               /* let SumbitButondiv = document.createElement("div");
               SumbitButondiv.style.textAlign = "center";
               SumbitButondiv.innerHTML = `<button class="btn btn-primary" onclick="sendAllValuesBatch2('page-AdBlue')">Soumettre</button>`;
@@ -6649,6 +6927,11 @@ async function loadFormStructure(formWebId) {
                 parameter.attributes.find(
                   a => a.name === "LoLo"
                 );
+              
+              const Hi = parameter.attributes.find(a => a.name === "Hi");
+              const Target = parameter.attributes.find(a => a.name === "Target");
+              const Maximum = parameter.attributes.find(a => a.name === "Maximum");
+
 
               const uom =
                 parameter.attributes.find(
@@ -6706,14 +6989,19 @@ async function loadFormStructure(formWebId) {
               const hiHiValue = hiHi?.value;
               const loLoValue = loLo?.value;
               const AlertFieldval = AlertField?.value;
-
+              const HiValue = Hi?.value;
+              const TargetValue = Target?.value;
+              const MaximumValue = Maximum?.value;
               APP.alertConfigs.push({
                 unitName: unitName,
                 formname:pageName,
                 parameterName: parameter.name,
                 alertFieldValue: AlertFieldval,
                 loLoValue: loLoValue,
-                hiHiValue: hiHiValue
+                hiHiValue: hiHiValue,
+                HiValue: HiValue,
+                TargetValue: TargetValue,
+                MaximumValue: MaximumValue
               });
               
               if (!APP.Formfields[pageName]) {
