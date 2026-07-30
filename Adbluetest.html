@@ -2372,35 +2372,39 @@
     .hist-tbl tbody td:nth-child(2) {
       position: sticky;
       left: 42px;
-      min-width: 110px;
+      min-width: 42px;
       z-index: 13;
       background: #fff;
     }
 
-    .hist-tbl thead th:nth-child(3){
+    .hist-tbl tbody td:nth-child(3) {
+      min-width: 52px;
+    }
+
+    /*.hist-tbl thead th:nth-child(3){
       position: sticky;
-      left: calc(42px + 110px);
+      left: calc(42px + 42px);
       z-index: 16;
       background: #f1f5f9;
     
     }
     .hist-tbl tbody td:nth-child(3) {
       position: sticky;
-      left: calc(42px + 110px);
-      min-width: 70px;
+      left: calc(42px + 42px);
+      min-width: 52px;
       z-index: 12;
       background: #fff;
-    }
+    }*/
 
     .hist-tbl thead th:nth-child(1),
-    .hist-tbl thead th:nth-child(2),
-    .hist-tbl thead th:nth-child(3) {
+    .hist-tbl thead th:nth-child(2) {
+    /*.hist-tbl thead th:nth-child(3) {*/
       background: #f1f5f9;
     }
 
     .hist-tbl tbody td:nth-child(1),
-    .hist-tbl tbody td:nth-child(2),
-    .hist-tbl tbody td:nth-child(3) {
+    .hist-tbl tbody td:nth-child(2) {
+    /*.hist-tbl tbody td:nth-child(3) {*/
       box-shadow: inset -1px 0 0 rgba(0,0,0,.08);
     }
 
@@ -2459,6 +2463,9 @@
     .hist-tbl td.hc-date {
       color: var(--text-h);
       font-weight: 600;
+      line-height: 1.2 !important;
+      padding-top: 2px !important;
+      padding-bottom: 2px !important;
     }
 
     .hist-tbl td.hc-lot {
@@ -2468,6 +2475,7 @@
 
     .hist-tbl td.hc-time {
       color: var(--text-muted);
+
     }
 
     .hist-tbl td.hc-mass {
@@ -2491,6 +2499,9 @@
     .hist-tbl td.hc-val {
       text-align: center;
       border-left: 1px solid var(--border);
+      white-space: normal;
+      word-break: break-word;
+      max-width: 100px;
     }
 
     /* ══ COLOUR DEGRADATION SYSTEM ══
@@ -2520,8 +2531,8 @@
     }
 
     .cell-crit-low {
-      background: #3aa8e7 !important;
-      color: #ffff !important;
+      background: #eff6ff !important;
+      color: #1d4ed8 !important;
       font-weight: 700;
     }
 
@@ -2535,8 +2546,8 @@
 
     /* MAX: value reached / exceeded the maximum allowed value */
     .cell-max {
-      background: #272525c9 !important;
-      color: #ffffff !important;
+      background: #e2e8f0 !important;
+      color: #334155 !important;
       font-weight: 700;
     }
 
@@ -2719,6 +2730,19 @@
       border: 1px solid #bbf7d0;
     }
 
+    .hc-time-inline {
+      display: block;
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 400;
+      line-height: 1.2;
+    }
+
+     .th-lim {
+      display: block;
+      line-height: 1.15;
+    }
+
     /* ── PDF / Print styles ── */
     @media print {
 
@@ -2761,17 +2785,21 @@
 
       .hist-tbl {
         min-width: unset !important;
-        font-size: 9px !important;
+        font-size: clamp(5px, calc(180mm / (var(--col-count, 10) * 12)), 9px) !important;
+        table-layout: fixed !important;
+        width: 100% !important;
       }
 
-      .hist-tbl thead th {
-        font-size: 8px !important;
-        padding: 5px 6px !important;
-      }
-
+      .hist-tbl thead th,
       .hist-tbl tbody td {
-        padding: 4px 6px !important;
-        font-size: 9px !important;
+        font-size: 4px !important;
+        padding: 1px 2px !important;
+        overflow: hidden !important;
+        white-space: nowrap !important;
+      }
+
+      .hist-tbl td.hc-date {
+        white-space: normal !important;
       }
 
       /* Keep colour backgrounds in print */
@@ -2784,6 +2812,65 @@
       #print-header {
         display: block !important;
       }
+
+      .hc-actions {
+        display: none !important;
+      }
+      .hist-tbl-outer {
+        max-height: none !important;
+      }
+
+      @page { size: A4 landscape; margin: 8mm;}
+
+      .hist-tbl thead {display: table-header-group;}
+      .hist-tbl tr {page-break-inside: avoid;}
+
+      .cell-delta-tag {
+        font-size: 4px !important;
+        padding: 0px 1px !important;
+      }
+
+      
+      .hist-tbl td.hc-date {
+        padding: 1px 3px !important;
+        line-height: 1.2 !important;
+      }
+
+      .hc-time-inline {
+        font-size: 3px !important;
+        line-height: 1 !important;
+        margin: 0 !important;
+      }
+
+      .hist-tbl td.hc-val {
+        white-space: normal !important;
+        word-break: break-word !important;
+        max-width: 80px !important;
+      }
+
+      .hist-tbl th:first-child,
+      .hist-tbl td:first-child { width: 20px !important; }   /* ID */
+
+      .hist-tbl th:nth-child(2),
+      .hist-tbl td:nth-child(2) { width: 22px !important; }  /* Date/Heure */
+
+    
+
+      .hist-tbl th:last-child,
+      .hist-tbl td:last-child {
+        width: 34px !important;
+        white-space: normal !important;
+        overflow: visible !important;
+      }
+
+      .hist-tbl td:last-child .pill {
+        display: inline-block !important;
+        white-space: normal !important;
+        font-size: 3.5px !important;
+        padding: 1px 2px !important;
+        line-height: 1.1 !important;
+      }
+
     }
 
     /* Certificate print area (hidden normally, shown only in cert print) */
@@ -5367,19 +5454,19 @@
             tr.appendChild(th); 
 
             th = document.createElement("th");
-            th.textContent = "Date";  
+            th.textContent = "Date / Heure";  
             tr.appendChild(th);
 
-            th = document.createElement("th");
+            /*th = document.createElement("th");
             th.textContent = "Heure";
-            tr.appendChild(th);
+            tr.appendChild(th);*/
 
             cols.forEach(col => {
                 console.log(`Adding header column: ${col}`);
                 const th = document.createElement("th");
                 const alert = APP.alertConfigs.find(alert => alert.parameterName === col);
                 if (alert) {
-                    th.innerHTML = `${col}<br> Min:${alert.loLoValue} Max:${alert.hiHiValue}`;
+                    th.innerHTML = `${col}<br> <span class="th-lim">Min:${alert.loLoValue}</span><span class="th-lim">Max:${alert.hiHiValue}</span>`;
                 } else {
                     th.textContent = col;
                 }
@@ -5393,6 +5480,7 @@
 
             thead.appendChild(tr);
             table.appendChild(thead);
+            table.style.setProperty('--col-count', cols.length + 4);
            }
 
            catch(err){
@@ -5599,22 +5687,23 @@
         tr.appendChild(td);
 
         //----------------------------------------
-        // Date
+        // Date + Time
         //----------------------------------------
 
         td = document.createElement("td");
-        td.textContent = record.date;
+        //td.textContent = record.date;
         td.classList.add("hc-date");
+        td.innerHTML = `<span>${record.date}</span>` + `<span class="hc-time-inline">${record.time}</span>`;
         tr.appendChild(td);
 
         //----------------------------------------
         // Time
         //----------------------------------------
 
-        td = document.createElement("td");
+        /*td = document.createElement("td");
         td.textContent = record.time;
         td.classList.add("hc-time");
-        tr.appendChild(td);
+        tr.appendChild(td);*/
 
         //----------------------------------------
         // Parameter values
@@ -5664,9 +5753,9 @@
         const validationValue = record.validation ?? record.values.Validation;
 
         if (validationValue === 1 || validationValue === '1' || validationValue === true) {
-            td.innerHTML = '<span class="pill pill-ok">✔ Conforme</span>';
+            td.innerHTML = '<span class="pill pill-ok">Conforme</span>';
         } else if (validationValue === 0 || validationValue === '0' || validationValue === false) {
-            td.innerHTML = '<span class="pill pill-err">✖ Non Conforme</span>';
+            td.innerHTML = '<span class="pill pill-err">Non Conforme</span>';
         } else {
             td.textContent = "-";
         }
