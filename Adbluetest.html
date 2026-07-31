@@ -2531,8 +2531,8 @@
     }
 
     .cell-crit-low {
-      background: #eff6ff !important;
-      color: #1d4ed8 !important;
+      background: #3aa8e7 !important;
+      color: #ffff !important;
       font-weight: 700;
     }
 
@@ -2546,8 +2546,8 @@
 
     /* MAX: value reached / exceeded the maximum allowed value */
     .cell-max {
-      background: #e2e8f0 !important;
-      color: #334155 !important;
+      background: #272525c9 !important;
+      color: #ffffff !important;
       font-weight: 700;
     }
 
@@ -2556,6 +2556,42 @@
       background: #fafafa !important;
       color: #94a3b8 !important;
       font-style: italic;
+    }
+
+    /* Alert indicator classes for the form limit widget */
+    .alert-ind-ok {
+      background: #0be15c  !important;
+      color: #166534 !important;
+      font-weight: 700;
+      border-radius: 999px;
+    }
+
+    .alert-ind-orange {
+      background: #ff980e !important;
+      color: #9a2c00 !important;
+      font-weight: 700;
+      border-radius: 999px;
+    }
+
+    .alert-ind-crit {
+      background: #ff1655 !important;
+      color: #b91c1c !important;
+      font-weight: 700;
+      border-radius: 999px;
+    }
+
+    .alert-ind-crit-low {
+      background: #65a7ff !important;
+      color: #1d4ed8 !important;
+      font-weight: 700;
+      border-radius: 999px;
+    }
+
+    .alert-ind-max {
+      background: #111827 !important;
+      color: #ffffff !important;
+      font-weight: 700;
+      border-radius: 999px;
     }
 
     /* DELTA UP: value increased from previous row */
@@ -4137,40 +4173,24 @@
             <strong
               style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-right:4px">Légende
              :</strong>
+
             <div class="leg-item">
               <div class="leg-swatch leg-norm"></div>Normal (dans seuil)
             </div>
-            <!--
-            <div class="leg-item">
-              <div class="leg-swatch leg-warn"></div>Attention (70–100% seuil)
-            </div>
             
-            -->
 
             <div class="leg-item">
-              <div class="leg-swatch leg-crit"></div>Supérieur au Maximum
+              <div class="leg-swatch leg-crit"></div>En dehors des limites (Min/Max)
             </div>
 
-            <div class="leg-item">
-              <div class="leg-swatch leg-crit-low"></div>Inférieur au Minimum
-            </div>
-
-            <div class="leg-item">
-              <div class="leg-swatch leg-beyondcrit"></div>200% du Max
-            </div>
-
-            <div class="leg-item">
-              <div class="leg-swatch leg-th"></div>80% du Max
-            </div>
-            <!--
-            
-            -->
             <div class="leg-item">
               <div class="leg-delta-up"></div>▲ Hausse vs précédent
             </div>
+
             <div class="leg-item">
               <div class="leg-delta-down"></div>▼ Baisse vs précédent
             </div>
+
           </div>
 
           <!-- Table -->
@@ -5099,6 +5119,155 @@
         //renderHistoryPages();
         return forms;
 }
+    async function GetFormsElementsAttributes() {
+
+    const forms = APP.Forms;
+
+    if (!forms || Object.keys(forms).length === 0) {
+        throw new Error("Forms not found.");
+    }
+
+    //----------------------------------------
+    // 1. Retrieve all form attributes
+    //----------------------------------------
+
+    const batch = {};
+    const requestMap = {};
+
+    let requestId = 1;
+
+    Object.entries(forms).forEach(([unitName, formList]) => {
+
+        formList.forEach(form => {
+
+            batch[requestId] = {
+                Method: "GET",
+                Resource:
+                    `${CONFIG.WEBAPIURL}/elements/${form.WebId}/attributes` +
+                    `?selectedFields=Items.Name;Items.WebId;Items.Links.Value`
+            };
+
+            requestMap[requestId] = {
+                unitName,
+                form
+            };
+
+            requestId++;
+
+        });
+
+    });
+
+    const response = await fetch(
+        `${CONFIG.WEBAPIURL}/batch`,
+        {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(batch)
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error("Unable to retrieve form attributes.");
+    }
+
+    const batchData = await response.json();
+
+    //----------------------------------------
+    // 2. Build batch to retrieve attribute values
+    //----------------------------------------
+
+    const valueBatch = {};
+    const valueRequestMap = {};
+
+    requestId = 1;
+
+    Object.entries(batchData).forEach(([batchId, result]) => {
+
+        const info = requestMap[batchId];
+
+        const items = result.Content.Items || [];
+
+        items.forEach(attribute => {
+
+            if (!attribute.Links?.Value)
+                return;
+
+            valueBatch[requestId] = {
+
+                Method: "GET",
+                Resource: attribute.Links.Value
+
+            };
+
+            valueRequestMap[requestId] = {
+
+                unitName: info.unitName,
+                form: info.form,
+                attributeName: attribute.Name
+
+            };
+
+            requestId++;
+
+        });
+
+    });
+
+    //----------------------------------------
+    // 3. Retrieve values
+    //----------------------------------------
+
+    const valueResponse = await fetch(
+        `${CONFIG.WEBAPIURL}/batch`,
+        {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(valueBatch)
+        }
+    );
+
+    if (!valueResponse.ok) {
+        throw new Error("Unable to retrieve attribute values.");
+    }
+
+    const valueData = await valueResponse.json();
+
+    //----------------------------------------
+    // 4. Store values inside APP.Forms
+    //----------------------------------------
+
+    Object.entries(valueData).forEach(([batchId, result]) => {
+
+        if (result.Status !== 200)
+            return;
+
+        const info = valueRequestMap[batchId];
+
+        // Create a property to hold form attributes
+        if (!info.form.Attributes) {
+            info.form.Attributes = {};
+        }
+
+        info.form.Attributes[info.attributeName] =
+            result.Content.Value;
+      
+    });
+
+
+    console.log("APP.Forms updated:", APP.Forms);
+
+    return APP.Forms;
+}
+        
+        
+    
 
     
 
@@ -5403,7 +5572,36 @@
             }
 
             if (histLegend) {
-                page.appendChild(histLegend.cloneNode(true));
+              
+                const legendClone = histLegend.cloneNode(true);
+                const ISmultiColors = form?.Attributes?.Multicolors_histo ?? true;
+                if (ISmultiColors) {
+
+                const extraLegend = document.createElement("div");
+
+                extraLegend.innerHTML = `
+                    <div class="leg-item">
+                        <div class="leg-swatch leg-crit-low"></div>
+                        Inférieur au Minimum
+                    </div>
+
+                    <div class="leg-item">
+                        <div class="leg-swatch leg-beyondcrit"></div>
+                        200% du Max
+                    </div>
+
+                    <div class="leg-item">
+                        <div class="leg-swatch leg-th"></div>
+                        80% du Max
+                    </div>
+                `;
+
+                while (extraLegend.firstElementChild) {
+                    legendClone.appendChild(extraLegend.firstElementChild);
+                }
+
+            }
+            page.appendChild(legendClone);
             }
 
             //---------------------------------------
@@ -5544,14 +5742,37 @@
         - value <= TargetValue                    -> "cell-ok"     (green)
         - otherwise                               -> "" (no colour)
       A threshold is only applied when it is a real, finite number. */
-   function histCellClass(value, cfg) {
+   function histCellClass(unitName, formName, value, cfg) {
+
+        //----------------------------------------
+        // Retrieve form configuration
+        //----------------------------------------
+
+        const form =
+            APP.Forms?.[unitName]?.find(f => f.Name === formName);
+
+        const isMultiColors =
+            form?.Attributes?.Multicolors_histo ?? true;
+
+        //----------------------------------------
+        // No configuration
+        //----------------------------------------
 
     if (!cfg)
         return "";
 
+        //----------------------------------------
+        // Parse value
+        //----------------------------------------
+
     const v = parseHistNumber(value);
+
     if (!Number.isFinite(v))
         return "";
+
+        //----------------------------------------
+        // Parse thresholds
+        //----------------------------------------
 
     const maxV   = Number(cfg.MaximumValue);
     const hiHi   = Number(cfg.hiHiValue);
@@ -5559,25 +5780,55 @@
     const hi     = Number(cfg.HiValue);
     const target = Number(cfg.TargetValue);
 
-    if (Number.isFinite(maxV) && v >= maxV)
-        return "cell-max";
+        //----------------------------------------
+        // Multi-color mode
+        //----------------------------------------
 
-    if ((Number.isFinite(loLo) && v < loLo)){
-      return "cell-crit-low";
-    }
+        if (isMultiColors) {
 
-    if ((Number.isFinite(hiHi) && v >= hiHi))
-        return "cell-crit";
+        if (Number.isFinite(maxV) && v >= maxV)
+          return "cell-max";
 
-    if (Number.isFinite(hi) && Number.isFinite(hiHi) && v > hi && v < hiHi)
-        return "cell-orange";
+        if (Number.isFinite(loLo) && v < loLo)
+          return "cell-crit-low";
 
-    if (Number.isFinite(hi) && v <= hi)
-        return "cell-ok";
+        if (Number.isFinite(hiHi) && v > hiHi)
+          return "cell-crit";
 
-    return "";
+        if (
+                Number.isFinite(hi) &&
+                Number.isFinite(hiHi) &&
+                v > hi &&
+                v < hiHi
+            )
+             return "cell-orange";
 
+        if (Number.isFinite(hi) && v <= hi)
+           return "cell-ok";
+
+        }
+
+        //----------------------------------------
+        // Two-color mode
+        //----------------------------------------
+
+        else {
+
+            if (
+                Number.isFinite(loLo) &&
+                Number.isFinite(hiHi) &&
+                v >= loLo &&
+                v <= hiHi
+            ) {
+                return "cell-ok";
+            }
+
+            return "cell-crit";
+        }
+
+        return "";
 }
+
 
    /* Build a delta arrow chip comparing a value to the previous (older) row.
         - delta > 0 -> up arrow   ▲ (class "cell-delta-tag up")
@@ -5731,7 +5982,7 @@
             );
 
             // 1-4) Colour the cell according to the thresholds.
-            const colorClass = histCellClass(rawValue, cfg);
+            const colorClass = histCellClass(unitName, formName, rawValue, cfg);
             if (colorClass)
                 td.classList.add(colorClass);
 
@@ -6997,7 +7248,7 @@ async function loadFormStructure(formWebId) {
 
                   <th style="
               text-align:center">
-                    S.T
+                    Alertes
                   </th>
 
                   <th style="
@@ -7431,39 +7682,83 @@ async function loadFormStructure(formWebId) {
         .trim();
     }
 
-    function handleInputChange(alertFieldValue, loLoValue, hiHiValue) {
+    function handleInputChange(unitName, formName, alertFieldValue, loLoValue, hiHiValue) {
+
+      const ISMulticolors = APP.Forms?.[unitName]?.find(f => f.Name === formName)?.Attributes?.Multicolors_histo ?? true;
+
       console.log("Input changed:", alertFieldValue, loLoValue, hiHiValue);
+      try {
       const field = document.querySelector(`input[attributeName="${alertFieldValue}"]`);
-
-
+        if (!field) {
+          console.warn(`No input field found for attributeName="${alertFieldValue}"`);
+          return;
+        }
       console.log("alert Field found:", field);
       console.log("alert Field value:", field.value);
 
 
       const row = field.closest('tr');
-      const lmtDiv = row.querySelector('.lmt-ind');
+        const lmtDiv = row?.querySelector('.lmt-ind');
 
-      if (field.value === '') {
+        if (!row || !lmtDiv) {
+          console.warn("Could not find row or indicator for alert field:", alertFieldValue);
+          return;
+        }
+
+        const rawValue = field.value;
+        if (rawValue === '') {
         row.classList.remove('lmt-exceed');
-        lmtDiv.classList.remove('ok');
-        lmtDiv.classList.remove('crit');
+          lmtDiv.className = 'lmt-ind';
         return;
+        }
 
+        const numericValue = Number(rawValue);
+        if (Number.isNaN(numericValue)) {
+          row.classList.remove('lmt-exceed');
+          lmtDiv.className = 'lmt-ind';
+          return;
+        }
+
+        const cfg = APP.alertConfigs.find(c => c.alertFieldValue === alertFieldValue);
+        const maxV = Number(cfg?.MaximumValue);
+        const hiHi = Number(cfg?.hiHiValue);
+        const loLo = Number(cfg?.loLoValue);
+        const hi = Number(cfg?.HiValue);
+
+        let className = 'lmt-ind alert-ind-ok';
+        if (ISMulticolors) {
+          if (Number.isFinite(maxV) && numericValue >= maxV) {
+            className = 'lmt-ind alert-ind-max';
+          } else if (Number.isFinite(loLo) && numericValue < loLo) {
+            className = 'lmt-ind alert-ind-crit-low';
+          } else if (Number.isFinite(hiHi) && numericValue >= hiHi) {
+            className = 'lmt-ind alert-ind-crit';
+          } else if (Number.isFinite(hi) && Number.isFinite(hiHi) && numericValue > hi && numericValue < hiHi) {
+            className = 'lmt-ind alert-ind-orange';
+          }
+        } 
+        
+        else {
+
+            if (Number.isFinite(hiHi) && Number.isFinite(loLo) && ((numericValue > hiHi) || (numericValue < loLo))) {
+            className = 'lmt-ind alert-ind-crit';
+
+          } 
+        }
+
+        
+
+        lmtDiv.className = className;
+
+        if (className.includes('alert-ind-crit') || className.includes('alert-ind-crit-low') || className.includes('alert-ind-max')) {
+          row.classList.add('lmt-exceed');
+        } else {
+          row.classList.remove('lmt-exceed');
+        }
+      } catch (error) {
+        console.error("Error finding input field:", error);
+        return;
       }
-
-      console.log(lmtDiv);
-      if (field.value < loLoValue || field.value > hiHiValue) {
-        row.classList.add('lmt-exceed');
-        lmtDiv.classList.remove('ok')
-        lmtDiv.classList.add('crit')
-
-      } else {
-        row.classList.remove('lmt-exceed');
-        lmtDiv.classList.remove('crit');
-        lmtDiv.classList.add('ok');
-      }
-
-
     }
 
 
@@ -7549,6 +7844,8 @@ async function loadFormStructure(formWebId) {
       APP.alertConfigs.forEach(cfg => {
 
         handleInputChange(
+          cfg.unitName,
+          cfg.formname,
           cfg.alertFieldValue,
           cfg.loLoValue,
           cfg.hiHiValue
@@ -7575,6 +7872,7 @@ async function loadFormStructure(formWebId) {
       await GetRootElementWebId()
       await GetUnitsElementsWebId()
       await GetFormsElementsWebId()
+      await GetFormsElementsAttributes()
       await renderEntryDropdown()
       await renderHistoryDropdown();
       await LoadDataForEachForm()
@@ -7622,7 +7920,7 @@ async function loadFormStructure(formWebId) {
         // const FormaDataIDs = document.getElementsByClassName("lmt-fc");
         // console.log(FormaDataIDs)
         //Get DATA FROM AF TABLE - ("HTML-ID",AttributeName)
-        const Table = await fetch(
+        /* const Table = await fetch(
           "https://sekkai-consulting-pivision.com/PIWEBAPI/tables/F1BlOw3wdib9jEOPBIsnP79txQGG4W9ZZMVkKIIs7uUQ4MIARUMyQU1BWi00RjhVUk9MXFlBUkEgTEFCT1JBVE9SWVxUQUJMRVNbVEFCTEUzXQ/data",
           {
             method: "GET",
@@ -7718,7 +8016,7 @@ async function loadFormStructure(formWebId) {
             }
           }
         });
-
+ */
         //console.log("Final sessionStorage:", sessionStorage);
         // const Request = await fetch("https://sekkai-consulting-pivision.com/PIWEBAPI/elements/F1EmOw3wdib9jEOPBIsnP79txQOWCuX8s88RG8nw55u_M6egRUMyQU1BWi00RjhVUk9MXFlBUkEgTEFCT1JBVE9SWVxEQVRBIExBQlxBREJMVUU/attributes?categoryName=rapport&selectedFields=Items.Name;Items.Links.RecordedData", {
 
