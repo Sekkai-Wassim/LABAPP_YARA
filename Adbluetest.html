@@ -3398,6 +3398,19 @@
     background:#f3f3f31c;
 }
     
+
+.hist-tbl tbody tr.selected{
+    background:#dbeafe;
+}
+
+.hist-tbl tbody tr{
+    cursor:pointer;
+}
+
+.certif-table td{
+  text-align:center;
+}
+    
   </style>
 </head>
 
@@ -4320,31 +4333,29 @@
               </div>
 
               <!-- ICP results table -->
-              <div style="margin-bottom:28px">
+              <div style="margin-bottom:28px" class="certif-table">
                 <div
                   style="font-size:9px;text-transform:uppercase;letter-spacing:1.3px;color:#94a3b8;font-weight:700;margin-bottom:10px">
-                  Analyse ICP — Éléments chimiques</div>
+                  </div>
                 <table style="width:100%;border-collapse:collapse;font-size:11px" id="cert-icp-tbl">
                   <thead>
                     <tr style="background:#f1f5f9">
                       <th
                         style="padding:8px 10px;text-align:left;border-bottom:2px solid #e2e8f0;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#64748b">
                         Élément</th>
-                      <th
-                        style="padding:8px 10px;text-align:left;border-bottom:2px solid #e2e8f0;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#64748b">
-                        Nom</th>
-                      <th
-                        style="padding:8px 10px;text-align:right;border-bottom:2px solid #e2e8f0;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#64748b">
-                        Valeur ICP</th>
-                      <th
-                        style="padding:8px 10px;text-align:right;border-bottom:2px solid #e2e8f0;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#64748b">
-                        mg/L</th>
-                      <th
-                        style="padding:8px 10px;text-align:right;border-bottom:2px solid #e2e8f0;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#64748b">
-                        ppm/mg/L</th>
+                      
                       <th
                         style="padding:8px 10px;text-align:center;border-bottom:2px solid #e2e8f0;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#64748b">
-                        Statut</th>
+                        Valeur</th>
+                      <th
+                        style="padding:8px 10px;text-align:center;border-bottom:2px solid #e2e8f0;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#64748b">
+                        Unité de mesure</th>
+                      <th
+                        style="padding:8px 10px;text-align:center;border-bottom:2px solid #e2e8f0;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#64748b">
+                        Limits</th>
+                      <th
+                        style="padding:8px 10px;text-align:center;border-bottom:2px solid #e2e8f0;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#64748b">
+                        Target</th>
                     </tr>
                   </thead>
                   <tbody id="cert-icp-body"><!-- populated by JS --></tbody>
@@ -4552,7 +4563,11 @@
       Formfields: {},
       FactoryUnits : [],
       Forms:{},
-      HistoTableCols:{}
+      HistoTableCols:{},
+      CertifTableRows:{},
+      selectedRecord: null,
+      currentUnit: null,
+      currentForm: null
     };
 
     APP.alertConfigs = []
@@ -5271,6 +5286,10 @@
 
     
 
+    function UpdateAppCurrentPage(formName, unitName) {
+        APP.currentForm = formName;
+        APP.currentUnit = unitName;
+    }
     
     async function renderHistoryDropdown() {
 
@@ -5314,7 +5333,7 @@
 
                         ${forms.map(form => `
                             <div class="history-item"
-                                 onclick="event.stopPropagation();nav('history-${form.Name}', this)">
+                                 onclick="event.stopPropagation();nav('history-${form.Name}', this);UpdateAppCurrentPage('${form.Name}','${unit.Name}')">
 
                                 - ${form.Name}
 
@@ -5374,7 +5393,7 @@
 
                         ${forms.map(form => `
       <div class="entry-item"
-                                 onclick="event.stopPropagation();nav('${form.Name}', this)">
+                                 onclick="event.stopPropagation();nav('${form.Name}', this);UpdateAppCurrentPage('${form.Name}','${unit.Name}')">
 
                                 - ${form.Name}
 
@@ -5927,6 +5946,37 @@
     records.forEach((record, index) => {
 
         const tr = document.createElement("tr");
+        tr.style.cursor = "pointer";
+
+        tr.addEventListener("click", () => {
+
+            // remove previous selection
+            tbody.querySelectorAll("tr").forEach(r =>
+                r.classList.remove("selected")
+            );
+
+            // highlight current row
+            tr.classList.add("selected");
+
+            // remember selected record
+            APP.selectedRecord = record;
+            console.log("Selected record:", APP.selectedRecord);
+            // enable certificate button only for validated records
+            
+            const page = document.getElementById(`page-history-${APP.currentForm}`);
+
+            const btn = page.querySelector(".btn-export-cert");
+            console.log("Certificate button:", btn);
+
+            if (btn) {
+                const validation =
+                    record.validation ?? record.values.Validation;
+                    console.log("Validation value:", validation);
+
+                btn.disabled = validation !== 1;
+            }
+
+        });
 
         //----------------------------------------
         // ID
@@ -6488,7 +6538,7 @@ async function loadFormStructure(formWebId) {
             value: undefined
           };
 
-          if (/^CalcFormula\d+$/i.test(attr.Name)||attr.Name === 'Hi'|| attr.Name === 'Target' || attr.Name === 'HiHi' || attr.Name === 'LoLo' || attr.Name === 'Maximum' || attr.Name === 'UOM' || attr.Name === 'ordre' || attr.Name === 'AlertField' || attr.Name === 'Histo') {
+          if (/^CalcFormula\d+$/i.test(attr.Name)||attr.Name === 'Hi'|| attr.Name === 'Target' || attr.Name === 'HiHi' || attr.Name === 'LoLo' || attr.Name === 'Maximum' || attr.Name === 'UOM' || attr.Name === 'ordre' || attr.Name === 'AlertField' || attr.Name === 'Histo' || attr.Name === 'InclusCertif') {
             parameterObj.formulas[attr.Name] = attributeObj;
           }
 
@@ -6516,7 +6566,7 @@ async function loadFormStructure(formWebId) {
           parameter.attributes.forEach(attr => {
 
             if (
-              attr.name === "Target"|| attr.name === "Hi" ||attr.name === "HiHi" || attr.name === "LoLo"|| attr.name === "Maximum" || /^CalcFormula\d+$/i.test(attr.name) || attr.name === "UOM" || attr.name === "UOM1" || attr.name === "UOM2" || attr.name === "AlertField" || attr.name === "ordre" ||attr.name === "Histo"
+              attr.name === "Target"|| attr.name === "Hi" ||attr.name === "HiHi" || attr.name === "LoLo"|| attr.name === "Maximum" || /^CalcFormula\d+$/i.test(attr.name) || attr.name === "UOM" || attr.name === "UOM1" || attr.name === "UOM2" || attr.name === "AlertField" || attr.name === "ordre" ||attr.name === "Histo" || attr.name === "InclusCertif"
             ) {
 
               limitBatch[batchIndex] = {
@@ -6563,7 +6613,7 @@ async function loadFormStructure(formWebId) {
           ) {
 
             attr.value = item.Content.Value;
-            if (/^CalcFormula\d+$/i.test(attr.name) || attr.name === 'Target' || attr.name === 'HiHi' || attr.name === 'LoLo' || attr.name === 'UOM' || attr.name === 'UOM1' || attr.name === 'UOM2' || attr.name === 'ordre' || attr.name === 'Histo') {
+            if (/^CalcFormula\d+$/i.test(attr.name) || attr.name === 'Target' || attr.name === 'HiHi' || attr.name === 'LoLo' || attr.name === 'UOM' || attr.name === 'UOM1' || attr.name === 'UOM2' || attr.name === 'ordre' || attr.name === 'Histo' || attr.name === 'InclusCertif') {
               const parentParam = formModel.sections
                 .flatMap(s => s.parameters)
                 .find(p => p.attributes.includes(attr));
@@ -6996,6 +7046,10 @@ async function loadFormStructure(formWebId) {
           a => a.name === "Histo"
           );
 
+        const InclusCertif = parameter.attributes.find(
+          a => a.name === "InclusCertif"
+          );
+
         const pointWebId =
           tag?.pointWebId || "";
 
@@ -7016,6 +7070,11 @@ async function loadFormStructure(formWebId) {
         if (Histo && Histo.value === true){
            APP.HistoTableCols[pageName].push(parameter.name);
         }
+
+        if (InclusCertif && InclusCertif.value === true){
+           APP.CertifTableRows[pageName].push(parameter.name);
+        }
+
 
         if (inputType === "Liste") {
 
@@ -7347,10 +7406,22 @@ async function loadFormStructure(formWebId) {
                   a => a.name === "Histo"
                 );
 
+              const InclusCertif =
+                parameter.attributes.find(
+                  a => a.name === "InclusCertif"
+                );
+
               if (Histo && Histo.type == "Boolean") {
                 const histoValue = Histo.value;
                 if (histoValue === true) {
                   APP.HistoTableCols[pageName].push(parameter.name);
+                }
+              }
+
+              if (InclusCertif && InclusCertif.type == "Boolean") {
+                const certifValue = InclusCertif.value;
+                if (certifValue === true) {
+                  APP.CertifTableRows[pageName].push(parameter.name);
                 }
               }
 
@@ -7581,6 +7652,7 @@ async function loadFormStructure(formWebId) {
 
             pageNametoData[unitName][form.Name] = data;
             APP.HistoTableCols[form.Name] = []; // Initialize the HistoTableCols for this form
+            APP.CertifTableRows[form.Name] = []; // Initialize the CertifTableRows for this form
             APP.entryPages.push({
               Name:      form.Name,
               WebId:     form.WebId,
@@ -10009,62 +10081,207 @@ async function loadFormStructure(formWebId) {
 
     /* ── Certificate of Analysis ── */
     function exportCert() {
-      // Find record: selected row, or most recent Conforme record
-      let rec = null;
-      if (_selectedRowId) {
-        rec = APP.records.find(r => r.id === _selectedRowId && r.validation === 1);
-      }
+
+        //----------------------------------------
+        // Get records for current form
+        //----------------------------------------
+        console.log('[exportCert] currentUnit:', APP.currentUnit, 'currentForm:', APP.currentForm);
+        const records = APP.records?.[APP.currentUnit]?.[APP.currentForm] || [];
+
+        if (!records || records.length === 0) {
+            notify("Aucun enregistrement.", "warn");
+            return;
+        }
+
+        //----------------------------------------
+        // Find selected or latest validated record
+        //----------------------------------------
+
+        const rec = APP.selectedRecord;
+
+        if (!rec || rec.validation !== 1) {
+
+            rec = APP.records[APP.currentUnit][APP.currentForm]
+                .find(r => r.validation === 1);
+
+        }
+
       if (!rec) {
-        rec = APP.records.find(r => r.validation === 1);
-      }
-      if (!rec) { notify('Aucun lot Conforme disponible.', 'warn'); return; }
+            notify("Aucun lot Conforme disponible.","warn");
+            return;
+        }
 
-      // Populate cert fields
-      document.getElementById('cert-lot').textContent = rec.lot;
-      document.getElementById('cert-date').textContent = rec.date;
-      document.getElementById('cert-time').textContent = rec.time;
-      document.getElementById('cert-op').textContent = rec.operator;
-      document.getElementById('cert-prodcode').textContent = rec.prodcode || '—';
-      document.getElementById('cert-bac').textContent = rec.bac || '—';
-      document.getElementById('cert-conc').textContent = rec.conc + '%';
-      document.getElementById('cert-vessel').textContent = rec.vessel || '—';
-      document.getElementById('cert-tonnage').textContent = rec.tonnage ? rec.tonnage + ' MT' : '—';
-      document.getElementById('cert-order').textContent = rec.order || '—';
-      document.getElementById('cert-analyst-sig').textContent = rec.operator;
-      document.getElementById('cert-sign-date').textContent = rec.date;
-      document.getElementById('cert-print-ts').textContent = 'Généré le ' + nowIso();
+        //----------------------------------------
+        // Populate certificate
+        //----------------------------------------
 
-      // ICP table in cert
-      const tbody = document.getElementById('cert-icp-body');
-      const icpData = rec.icpData || {};
-      tbody.innerHTML = HIST_ICP_KEYS1.map(k => {
-        const elCfg = ICP_ELEMENTS2.find(e => e.key === k);
-        const d = icpData[k] || {};
-        const isTh = d.threshold;
-        //const icp = d.icp !== null && d.icp !== undefined ? parseFloat(d.icp).toFixed(3) : '—';
-        const icp = d.icp;
-        const mgl = d.mgl ? parseFloat(d.mgl).toFixed(3) : '—';
-        const ppm = d.ppm ? parseFloat(d.ppm).toFixed(3) : '—';
-        const thresh = HIST_ICP_THRESHOLDS1[k];
-        const exceeds = !isTh && d.icp !== null && parseFloat(d.icp) > thresh;
-        const statusColor = isTh ? '#94a3b8' : exceeds ? '#dc2626' : '#16a34a';
-        const statusLbl = isTh ? 'Seuil détect.' : exceeds ? '⚠ Dépassé' : '✓ OK';
-        const rowBg = exceeds ? '#fef2f2' : isTh ? '#f8fafc' : 'transparent';
-        return `<tr style="background:${rowBg}">
-      <td style="padding:6px 10px;font-family:monospace;font-weight:700;color:var(--text-h)">${k}</td>
-      <td style="padding:6px 10px;color:#64748b">${elCfg ? elCfg.name : k}</td>
-      <td style="padding:6px 10px;text-align:right;font-family:monospace">${isTh ? '< seuil' : icp}</td>
-      <td style="padding:6px 10px;text-align:right;font-family:monospace">${isTh ? '—' : mgl}</td>
-      <td style="padding:6px 10px;text-align:right;font-family:monospace">${isTh ? '—' : ppm}</td>
-      <td style="padding:6px 10px;text-align:center;font-size:10px;font-weight:700;color:${statusColor}">${statusLbl}</td>
-    </tr>`;
-      }).join('');
+        document.getElementById("cert-lot").textContent =
+            rec.values["N°Lot"] ?? "—";
 
-      // Show overlay, hide cert close/print row from print
-      document.getElementById('cert-area').classList.add('show');
-      document.getElementById('cert-close-row').style.display = 'flex'; // ensure visible
+        document.getElementById("cert-date").textContent =
+            rec.date;
 
-      addEvent('ok', `Certificat généré pour Lot ${rec.lot}`, nowIso());
+        document.getElementById("cert-time").textContent =
+            rec.time;
+
+        document.getElementById("cert-op").textContent =
+            rec.values["Opérateur"] ?? "—";
+
+        document.getElementById("cert-prodcode").textContent =
+            rec.values["Code du Produit"] ?? "—";
+
+        document.getElementById("cert-bac").textContent =
+            rec.values["Type de Stockage"] ?? "—";
+
+        document.getElementById("cert-conc").textContent =
+            rec.values["Concentration"] ?? "—";
+
+        document.getElementById("cert-vessel").textContent =
+            rec.values["Nom Navire"] ?? "—";
+
+        document.getElementById("cert-tonnage").textContent =
+            rec.values["Tonnage"]
+                ? rec.values["Tonnage"] + " MT"
+                : "—";
+
+        document.getElementById("cert-order").textContent =
+            rec.values["N° Commande"] ?? "—";
+
+        document.getElementById("cert-analyst-sig").textContent =
+            rec.values["Opérateur"] ?? "—";
+
+        document.getElementById("cert-sign-date").textContent =
+            rec.date;
+
+        document.getElementById("cert-print-ts").textContent =
+            "Généré le " + nowIso();
+
+        //----------------------------------------
+        // Build analysis table
+        //----------------------------------------
+
+        const tbody =
+            document.getElementById("cert-icp-body");
+
+        tbody.innerHTML = "";
+
+        const cols =
+            APP.CertifTableRows?.[APP.currentForm] || [];
+
+        cols.forEach(parameter => {
+
+            const value =
+                rec.values[parameter];
+
+            //------------------------------------
+            // Skip empty values
+            //------------------------------------
+
+            if (value === undefined )
+                return;
+
+            //------------------------------------
+            // Configuration
+            //------------------------------------
+
+            const cfg = APP.alertConfigs.find(c =>
+            c.parameterName === parameter &&
+            c.unitName === APP.currentUnit);
+            const page = document.getElementById(`page-${APP.currentForm}`);
+            const VC2 = page?.querySelector(`input[attributeName="VC2 ${parameter}"]`);
+            const VC1 = page?.querySelector(`input[attributeName="VC1 ${parameter}"]`);
+            const VS = page?.querySelector(`input[attributeName="${parameter}"]`);
+            let hasdescription = false;
+            let row;
+            if (VC2) {
+              const spanText = VC2.nextElementSibling.textContent;
+              cfg.uom = spanText;
+              row = VC2.closest("tr");
+
+              
+            }
+            else if (VC1) {
+              const spanText = VC1.nextElementSibling.textContent;
+              cfg.uom = spanText;
+              row = VC1.closest("tr");
+
+            }
+            else if (VS) {
+              const spanText = VS.nextElementSibling.textContent;
+              cfg.uom = spanText;
+              row = VS.closest("tr");
+            }
+
+            if(row){
+              const tipSpan = row.querySelector(".tip-btn");
+              const tip = tipSpan?.getAttribute("data-tip");
+              cfg.tip = tip;
+            }
+            
+
+            if(cfg.tip !="undefined" && cfg.tip != null && cfg.tip != ""){
+              hasdescription = true;
+            }
+
+
+            const css =
+                histCellClass(
+                    APP.currentUnit,
+                    APP.currentForm,
+                    value,
+                    cfg
+                );
+
+            //------------------------------------
+            // Row
+            //------------------------------------
+
+            const tr =
+                document.createElement("tr");
+
+            if (css)
+                tr.classList.add(css);
+
+            tr.innerHTML = `
+                <td>${hasdescription ? parameter + ' (' + cfg.tip + ')' : parameter}</td>
+                <td>${value}</td>
+                <td>${cfg?.uom ?? "—"}</td>
+                <td>${cfg?.loLoValue} - ${cfg?.hiHiValue ?? "—"}</td>
+                <td>${cfg?.TargetValue ?? "—"}</td>
+            `;
+
+            tbody.appendChild(tr);
+
+        });
+
+        //----------------------------------------
+        // Show certificate
+        //----------------------------------------
+
+        document
+            .getElementById("cert-area")
+            .classList.add("show");
+
+        document
+            .getElementById("cert-close-row")
+            .style.display = "flex";
+
+        //----------------------------------------
+        // Log
+        //----------------------------------------
+
+        addEvent(
+
+            "ok",
+
+            `Certificat généré pour le lot ${
+                rec.values["N°Lot"] ?? ""
+            }`,
+
+            nowIso()
+
+        );
+
     }
 
     /* ── Close certificate overlay ── */
@@ -10106,7 +10323,7 @@ async function loadFormStructure(formWebId) {
       padding: 32px 40px;
     }
     table { border-collapse: collapse; }
-    td    { vertical-align: top; }
+    td    { vertical-align: top; text-align: center;}
 
     table, tr, td {page-break-inside: avoid;}
   </style>
