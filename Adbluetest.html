@@ -2808,6 +2808,36 @@
       color: #1d231f;
     }
 
+    .hist-tbl th.hc-actions,
+    .hist-tbl td.hc-actions {
+      width: 56px;
+      text-align: center;
+      border-left: 2px solid var(--border-hi);
+    }
+
+    .hist-edit-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      padding: 0;
+      border: 1px solid var(--border-hi);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+
+    .hist-edit-btn svg { width: 14px; height: 14px; }
+
+    .hist-edit-btn:hover {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #2563eb;
+    }
+
     /* Validation cell */
     .hist-tbl td.hc-valid {
       border-left: 2px solid var(--border-hi);
@@ -2954,6 +2984,8 @@
       display: block;
       line-height: 1.15;
     }
+
+
 
     /* ── PDF / Print styles ── */
     @media print {
@@ -4477,7 +4509,12 @@
             <div class="leg-item">
               <div class="leg-swatch leg-norm"></div>Normal (dans seuil)
             </div>
+            <!--
+            <div class="leg-item">
+              <div class="leg-swatch leg-warn"></div>Attention (70–100% seuil)
+            </div>
             
+            -->
 
             <div class="leg-item">
               <div class="leg-swatch leg-crit"></div>En dehors des limites (Min/Max)
@@ -4850,6 +4887,7 @@
       FactoryUnits : [],
       Forms:{},
       HistoTableCols:{},
+      editContext: null,
       CertifTableRows:{},
       selectedRecord: null,
       currentUnit: null,
@@ -6085,6 +6123,11 @@
 
             });
 
+            const thActions = document.createElement("th");
+            thActions.textContent = "Actions";
+            thActions.className = "hc-actions";
+            tr.appendChild(thActions);
+
             const validationHeader = document.createElement("th");
             validationHeader.textContent = "Validation";
             tr.appendChild(validationHeader);
@@ -6443,6 +6486,26 @@
         });
 
         td = document.createElement("td");
+        td.className = "hc-actions";
+
+        const editBtn = document.createElement("button");
+        editBtn.type = "button";
+        editBtn.className = "hist-edit-btn";
+        editBtn.title = "Modifier cette saisie";
+        editBtn.setAttribute("aria-label", "Modifier cette saisie");
+        editBtn.innerHTML =
+            `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+               <path d="M12 20h9"/>
+               <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+             </svg>`;
+        editBtn.onclick = () =>
+            editHistoryRecord(unitName, formName, record.timestamp);
+
+        td.appendChild(editBtn);
+        tr.appendChild(td);
+
+        td = document.createElement("td");
         td.classList.add("hc-valid");
 
         const validationValue = record.validation ?? record.values.Validation;
@@ -6460,6 +6523,236 @@
         tbody.appendChild(tr);
 
     });
+
+}
+
+
+    async function editHistoryRecord(unitName, formName, timestamp) {
+      const pageEl = document.getElementById(`page-${formName}`);
+      if (!pageEl) { notify("Formulaire introuvable.", "warn"); return; }
+
+      
+      const clone = pageEl.cloneNode(true);
+
+      
+      clone.querySelectorAll('[oninput], [onclick], [onchange]').forEach(el => {
+        el.removeAttribute('oninput');
+        el.removeAttribute('onclick');
+        el.removeAttribute('onchange');
+      });
+
+      
+      const css = [...document.querySelectorAll('style')]
+        .map(s => s.textContent).join('\n');
+
+      
+      const win = window.open('', '_blank', 'width=1100,height=800');
+      if (!win) { notify("La fenêtre a été bloquée par le navigateur.", "warn"); return; }
+
+      win.document.write(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Modification — ${formName}</title>
+  <style>${css}</style>
+  <style>
+    html, body { 
+      height: auto !important;
+      overflow: auto !important;
+      margin:0; 
+      background:#f8fafc; }
+    .page { display:block !important; }
+    .eo-bar {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:12px 20px; background:#fdf6e3;
+      border-bottom:1px solid #e0c56e; color:#7a5c00;
+      position:sticky; top:0; z-index:100;
+    }
+    .eo-body { padding:20px; }
+    .eo-btn {
+      padding:7px 16px; border-radius:6px; font-size:13px; cursor:pointer;
+      border:1px solid #e0c56e; background:#fff; color:#7a5c00;
+    }
+  </style>
+</head>
+<body>
+  <div class="eo-bar">
+    <div>
+      <div style="font-size:13px;font-weight:700">Modification d'une saisie</div>
+      <div style="font-size:12px;opacity:.85">${formName} — ${timestamp.replace('T', ' ').substring(0, 19)}</div>
+    </div>
+    <button class="eo-btn" id="eo-close">Fermer</button>
+  </div>
+  <div class="eo-body">${clone.innerHTML}</div>
+</body>
+</html>`);
+
+        win.document.querySelectorAll('input[attributeName]').forEach(el => {
+        if (el.disabled) return;
+        el.addEventListener('input', () => {
+          recalculateAllFormulas(win.document);
+        });
+      });
+
+      win.document.querySelectorAll('input[type="checkbox"][attributename^="Seuil "]')
+        .forEach(cb => {
+          const paramName = cb.getAttribute('attributename').replace(/^Seuil\s+/, '');
+          cb.addEventListener('change', () => {
+            handleSeuilChange(cb, paramName);
+          });
+        });
+
+      win.document.close();
+      win.focus();
+
+      win.document.getElementById('eo-close').onclick = () => win.close();
+
+      const submitBtn = [...win.document.querySelectorAll('button')]
+        .find(b => b.textContent.trim().toLowerCase() === 'soumettre');
+
+      if (submitBtn) {
+        submitBtn.onclick = async () => {
+          const ok = await submitEditedRecord(win, timestamp);
+          if (ok) win.close();
+        };
+      }
+
+      APP.editContext = { unitName, formName, timestamp, win };
+      await filleditpagefields(win, timestamp);
+    }
+
+async function filleditpagefields(win, timestamp) {
+    
+  const doc = win.document;
+  const sub = doc.querySelector('.eo-bar div div:nth-child(2)');
+  if (sub) sub.textContent = 'Chargement des données...';
+
+   const fields = [...doc.querySelectorAll('input[id], select[id]')]
+        .filter(el => /^F1/.test(el.id) && el.id.length > 20);
+
+      const batch = {};
+      fields.forEach((el, i) => {
+        batch[`i${i}`] = {
+          Method:   'GET',
+          Resource: `${CONFIG.WEBAPIURL}/streams/${el.id}/value`
+                  + `?time=${encodeURIComponent(timestamp)}`
+        };
+      });
+
+      const res = await fetch(`${CONFIG.WEBAPIURL}/batch`, {
+        method:      'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type':     'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(batch)
+      });
+
+      const data = await res.json();
+
+      fields.forEach((el, i) => {
+        const item = data[`i${i}`];
+        if (!item  || item.Content?.Value === undefined) return;
+        
+          if (el.type === 'radio') return;
+        
+       const v = item.Content.Value;
+       if (el.type === 'checkbox') {
+         el.checked = (v === true || v === 'true' || v === 1 || v === '1');
+       } else {
+         el.value = (v ?? '');
+       }
+      });
+    
+
+     console.log('timestamp reçu dans filleditpagefields :', timestamp);
+     const dateEl = doc.getElementById('f-date');
+     const timeEl = doc.getElementById('f-time');
+
+    if(dateEl) {
+      dateEl.value = timestamp.split('T')[0];
+      dateEl.disabled = true;
+      dateEl.style.background = '#f1f5f9';
+      dateEl.style.color      = '#64748b';
+    }
+    if(timeEl) {
+      timeEl.value = timestamp.split('T')[1]?.substring(0, 8);
+      timeEl.readOnly = true;
+      timeEl.disabled = true;
+      timeEl.style.background = '#f1f5f9';
+    }
+  
+
+    const validationEl = doc.querySelector('input[type="radio"][name^="validation_"]')?.id;
+
+    if (validationEl) {
+      const batchKey = Object.keys(batch).find(key => batch[key].Resource.includes(validationEl));
+      const validationItem = batchKey ? data[batchKey] : null;
+      const val = validationItem?.Content?.Value;  
+
+      if (val !== undefined) {
+        doc.querySelectorAll(`input[type="radio"][name^="validation_"]`).forEach(radio => {
+          radio.checked = (String(radio.value) === String(val));
+        });
+      }
+   }
+  }
+   
+  async function submitEditedRecord(win, timestamp){
+    const doc = win.document;
+    const fields = [...doc.querySelectorAll('input[id], select[id]')]
+        .filter(el => /^F1/.test(el.id) && el.id.length > 20);
+    
+    if (!fields.length) {
+      console.warn('Aucun champ à soumettre.');
+      return;
+    }
+    const batch={};
+    const seen = new Set();
+    fields.forEach((el, i) => {
+      if (el.type === 'radio' && !el.checked) return;
+      if (seen.has(el.id)) return;
+      seen.add(el.id);
+      let value;
+      if (el.type === 'checkbox') {
+        value = el.checked ? true : false;
+      } else {
+        value = el.value;
+      }
+      batch[`i${i}`] = {
+        Method:   'POST',
+        Resource: `${CONFIG.WEBAPIURL}/streams/${el.id}/value`,
+        Content:  JSON.stringify({ 
+                       Value: 
+                       typeof value === 'boolean' ? value 
+                       : (isNaN(value) ? value : parseFloat(value)), 
+                       Timestamp: timestamp })
+      };
+    });
+    console.log("Batch d'édition :", batch);
+
+      const res = await fetch(`${CONFIG.WEBAPIURL}/batch`, {
+        method:      "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type":     "application/json",
+          "X-Requested-With": "XMLHttpRequest"
+        },
+        body: JSON.stringify(batch)
+      });
+
+      const result = await res.json();
+      console.log("Réponse PI :", result);
+
+
+      const total = Object.keys(batch).length;
+      const ok = Object.values(result)
+        .filter(r => r.Status >= 200 && r.Status < 300).length;
+
+      alert(`${ok} valeur(s) écrite(s) sur ${total}.`);
+
+      return ok === total;
 
 }
 
@@ -8233,15 +8526,15 @@ async function loadFormStructure(formWebId) {
     }
 
 
-    function recalculateAllFormulas() {
+    function recalculateAllFormulas(scope = document) {
 
       const formulaFields =
-        Array.from(document.querySelectorAll('input[data-formula]'));
+        Array.from(scope.querySelectorAll('input[data-formula]'));
 
       const buildValues = () => {
         const values = {};
 
-        document.querySelectorAll('[attributeName]')
+        scope.querySelectorAll('[attributeName]')
           .forEach(el => {
 
             const attr = el.getAttribute('attributeName');
