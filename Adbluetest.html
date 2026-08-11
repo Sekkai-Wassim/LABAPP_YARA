@@ -2531,8 +2531,8 @@
     }
 
     .cell-crit-low {
-      background: #3aa8e7 !important;
-      color: #ffff !important;
+      background: #eff6ff !important;
+      color: #1d4ed8 !important;
       font-weight: 700;
     }
 
@@ -2546,8 +2546,8 @@
 
     /* MAX: value reached / exceeded the maximum allowed value */
     .cell-max {
-      background: #272525c9 !important;
-      color: #ffffff !important;
+      background: #e2e8f0 !important;
+      color: #334155 !important;
       font-weight: 700;
     }
 
@@ -2556,42 +2556,6 @@
       background: #fafafa !important;
       color: #94a3b8 !important;
       font-style: italic;
-    }
-
-    /* Alert indicator classes for the form limit widget */
-    .alert-ind-ok {
-      background: #0be15c  !important;
-      color: #166534 !important;
-      font-weight: 700;
-      border-radius: 999px;
-    }
-
-    .alert-ind-orange {
-      background: #ff980e !important;
-      color: #9a2c00 !important;
-      font-weight: 700;
-      border-radius: 999px;
-    }
-
-    .alert-ind-crit {
-      background: #ff1655 !important;
-      color: #b91c1c !important;
-      font-weight: 700;
-      border-radius: 999px;
-    }
-
-    .alert-ind-crit-low {
-      background: #65a7ff !important;
-      color: #1d4ed8 !important;
-      font-weight: 700;
-      border-radius: 999px;
-    }
-
-    .alert-ind-max {
-      background: #111827 !important;
-      color: #ffffff !important;
-      font-weight: 700;
-      border-radius: 999px;
     }
 
     /* DELTA UP: value increased from previous row */
@@ -2630,6 +2594,36 @@
     .cell-delta-tag.dn {
       background: #dcfce7;
       color: #1d231f;
+    }
+
+    .hist-tbl th.hc-actions,
+    .hist-tbl td.hc-actions {
+      width: 56px;
+      text-align: center;
+      border-left: 2px solid var(--border-hi);
+    }
+
+    .hist-edit-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      padding: 0;
+      border: 1px solid var(--border-hi);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+
+    .hist-edit-btn svg { width: 14px; height: 14px; }
+
+    .hist-edit-btn:hover {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #2563eb;
     }
 
     /* Validation cell */
@@ -2778,6 +2772,8 @@
       display: block;
       line-height: 1.15;
     }
+
+
 
     /* ── PDF / Print styles ── */
     @media print {
@@ -4173,24 +4169,40 @@
             <strong
               style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-right:4px">Légende
              :</strong>
-
             <div class="leg-item">
               <div class="leg-swatch leg-norm"></div>Normal (dans seuil)
             </div>
+            <!--
+            <div class="leg-item">
+              <div class="leg-swatch leg-warn"></div>Attention (70–100% seuil)
+            </div>
             
+            -->
 
             <div class="leg-item">
-              <div class="leg-swatch leg-crit"></div>En dehors des limites (Min/Max)
+              <div class="leg-swatch leg-crit"></div>Supérieur au Maximum
             </div>
 
+            <div class="leg-item">
+              <div class="leg-swatch leg-crit-low"></div>Inférieur au Minimum
+            </div>
+
+            <div class="leg-item">
+              <div class="leg-swatch leg-beyondcrit"></div>200% du Max
+            </div>
+
+            <div class="leg-item">
+              <div class="leg-swatch leg-th"></div>80% du Max
+            </div>
+            <!--
+            
+            -->
             <div class="leg-item">
               <div class="leg-delta-up"></div>▲ Hausse vs précédent
             </div>
-
             <div class="leg-item">
               <div class="leg-delta-down"></div>▼ Baisse vs précédent
             </div>
-
           </div>
 
           <!-- Table -->
@@ -4552,7 +4564,8 @@
       Formfields: {},
       FactoryUnits : [],
       Forms:{},
-      HistoTableCols:{}
+      HistoTableCols:{},
+      editContext: null
     };
 
     APP.alertConfigs = []
@@ -5119,155 +5132,6 @@
         //renderHistoryPages();
         return forms;
 }
-    async function GetFormsElementsAttributes() {
-
-    const forms = APP.Forms;
-
-    if (!forms || Object.keys(forms).length === 0) {
-        throw new Error("Forms not found.");
-    }
-
-    //----------------------------------------
-    // 1. Retrieve all form attributes
-    //----------------------------------------
-
-    const batch = {};
-    const requestMap = {};
-
-    let requestId = 1;
-
-    Object.entries(forms).forEach(([unitName, formList]) => {
-
-        formList.forEach(form => {
-
-            batch[requestId] = {
-                Method: "GET",
-                Resource:
-                    `${CONFIG.WEBAPIURL}/elements/${form.WebId}/attributes` +
-                    `?selectedFields=Items.Name;Items.WebId;Items.Links.Value`
-            };
-
-            requestMap[requestId] = {
-                unitName,
-                form
-            };
-
-            requestId++;
-
-        });
-
-    });
-
-    const response = await fetch(
-        `${CONFIG.WEBAPIURL}/batch`,
-        {
-            method: "POST",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(batch)
-        }
-    );
-
-    if (!response.ok) {
-        throw new Error("Unable to retrieve form attributes.");
-    }
-
-    const batchData = await response.json();
-
-    //----------------------------------------
-    // 2. Build batch to retrieve attribute values
-    //----------------------------------------
-
-    const valueBatch = {};
-    const valueRequestMap = {};
-
-    requestId = 1;
-
-    Object.entries(batchData).forEach(([batchId, result]) => {
-
-        const info = requestMap[batchId];
-
-        const items = result.Content.Items || [];
-
-        items.forEach(attribute => {
-
-            if (!attribute.Links?.Value)
-                return;
-
-            valueBatch[requestId] = {
-
-                Method: "GET",
-                Resource: attribute.Links.Value
-
-            };
-
-            valueRequestMap[requestId] = {
-
-                unitName: info.unitName,
-                form: info.form,
-                attributeName: attribute.Name
-
-            };
-
-            requestId++;
-
-        });
-
-    });
-
-    //----------------------------------------
-    // 3. Retrieve values
-    //----------------------------------------
-
-    const valueResponse = await fetch(
-        `${CONFIG.WEBAPIURL}/batch`,
-        {
-            method: "POST",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(valueBatch)
-        }
-    );
-
-    if (!valueResponse.ok) {
-        throw new Error("Unable to retrieve attribute values.");
-    }
-
-    const valueData = await valueResponse.json();
-
-    //----------------------------------------
-    // 4. Store values inside APP.Forms
-    //----------------------------------------
-
-    Object.entries(valueData).forEach(([batchId, result]) => {
-
-        if (result.Status !== 200)
-            return;
-
-        const info = valueRequestMap[batchId];
-
-        // Create a property to hold form attributes
-        if (!info.form.Attributes) {
-            info.form.Attributes = {};
-        }
-
-        info.form.Attributes[info.attributeName] =
-            result.Content.Value;
-      
-    });
-
-
-    console.log("APP.Forms updated:", APP.Forms);
-
-    return APP.Forms;
-}
-        
-        
-    
 
     
 
@@ -5572,36 +5436,7 @@
             }
 
             if (histLegend) {
-              
-                const legendClone = histLegend.cloneNode(true);
-                const ISmultiColors = form?.Attributes?.Multicolors_histo ?? true;
-                if (ISmultiColors) {
-
-                const extraLegend = document.createElement("div");
-
-                extraLegend.innerHTML = `
-                    <div class="leg-item">
-                        <div class="leg-swatch leg-crit-low"></div>
-                        Inférieur au Minimum
-                    </div>
-
-                    <div class="leg-item">
-                        <div class="leg-swatch leg-beyondcrit"></div>
-                        200% du Max
-                    </div>
-
-                    <div class="leg-item">
-                        <div class="leg-swatch leg-th"></div>
-                        80% du Max
-                    </div>
-                `;
-
-                while (extraLegend.firstElementChild) {
-                    legendClone.appendChild(extraLegend.firstElementChild);
-                }
-
-            }
-            page.appendChild(legendClone);
+                page.appendChild(histLegend.cloneNode(true));
             }
 
             //---------------------------------------
@@ -5671,6 +5506,11 @@
                 tr.appendChild(th);
 
             });
+
+            const thActions = document.createElement("th");
+            thActions.textContent = "Actions";
+            thActions.className = "hc-actions";
+            tr.appendChild(thActions);
 
             const validationHeader = document.createElement("th");
             validationHeader.textContent = "Validation";
@@ -5742,37 +5582,14 @@
         - value <= TargetValue                    -> "cell-ok"     (green)
         - otherwise                               -> "" (no colour)
       A threshold is only applied when it is a real, finite number. */
-   function histCellClass(unitName, formName, value, cfg) {
-
-        //----------------------------------------
-        // Retrieve form configuration
-        //----------------------------------------
-
-        const form =
-            APP.Forms?.[unitName]?.find(f => f.Name === formName);
-
-        const isMultiColors =
-            form?.Attributes?.Multicolors_histo ?? true;
-
-        //----------------------------------------
-        // No configuration
-        //----------------------------------------
+   function histCellClass(value, cfg) {
 
     if (!cfg)
         return "";
 
-        //----------------------------------------
-        // Parse value
-        //----------------------------------------
-
     const v = parseHistNumber(value);
-
     if (!Number.isFinite(v))
         return "";
-
-        //----------------------------------------
-        // Parse thresholds
-        //----------------------------------------
 
     const maxV   = Number(cfg.MaximumValue);
     const hiHi   = Number(cfg.hiHiValue);
@@ -5780,55 +5597,25 @@
     const hi     = Number(cfg.HiValue);
     const target = Number(cfg.TargetValue);
 
-        //----------------------------------------
-        // Multi-color mode
-        //----------------------------------------
+    if (Number.isFinite(maxV) && v >= maxV)
+        return "cell-max";
 
-        if (isMultiColors) {
+    if ((Number.isFinite(loLo) && v < loLo)){
+      return "cell-crit-low";
+    }
 
-        if (Number.isFinite(maxV) && v >= maxV)
-          return "cell-max";
+    if ((Number.isFinite(hiHi) && v >= hiHi))
+        return "cell-crit";
 
-        if (Number.isFinite(loLo) && v < loLo)
-          return "cell-crit-low";
+    if (Number.isFinite(hi) && Number.isFinite(hiHi) && v > hi && v < hiHi)
+        return "cell-orange";
 
-        if (Number.isFinite(hiHi) && v > hiHi)
-          return "cell-crit";
+    if (Number.isFinite(hi) && v <= hi)
+        return "cell-ok";
 
-        if (
-                Number.isFinite(hi) &&
-                Number.isFinite(hiHi) &&
-                v > hi &&
-                v < hiHi
-            )
-             return "cell-orange";
+    return "";
 
-        if (Number.isFinite(hi) && v <= hi)
-           return "cell-ok";
-
-        }
-
-        //----------------------------------------
-        // Two-color mode
-        //----------------------------------------
-
-        else {
-
-            if (
-                Number.isFinite(loLo) &&
-                Number.isFinite(hiHi) &&
-                v >= loLo &&
-                v <= hiHi
-            ) {
-                return "cell-ok";
-            }
-
-            return "cell-crit";
-        }
-
-        return "";
 }
-
 
    /* Build a delta arrow chip comparing a value to the previous (older) row.
         - delta > 0 -> up arrow   ▲ (class "cell-delta-tag up")
@@ -5982,7 +5769,7 @@
             );
 
             // 1-4) Colour the cell according to the thresholds.
-            const colorClass = histCellClass(unitName, formName, rawValue, cfg);
+            const colorClass = histCellClass(rawValue, cfg);
             if (colorClass)
                 td.classList.add(colorClass);
 
@@ -5998,6 +5785,26 @@
 
         });
 
+        td = document.createElement("td");
+        td.className = "hc-actions";
+
+        const editBtn = document.createElement("button");
+        editBtn.type = "button";
+        editBtn.className = "hist-edit-btn";
+        editBtn.title = "Modifier cette saisie";
+        editBtn.setAttribute("aria-label", "Modifier cette saisie");
+        editBtn.innerHTML =
+            `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+               <path d="M12 20h9"/>
+               <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+             </svg>`;
+        editBtn.onclick = () =>
+            editHistoryRecord(unitName, formName, record.timestamp);
+
+        td.appendChild(editBtn);
+        tr.appendChild(td);
+        
         td = document.createElement("td");
         td.classList.add("hc-valid");
 
@@ -6019,7 +5826,237 @@
 
 }
 
-   /* Refresh button on a history page.
+
+    async function editHistoryRecord(unitName, formName, timestamp) {
+      const pageEl = document.getElementById(`page-${formName}`);
+      if (!pageEl) { notify("Formulaire introuvable.", "warn"); return; }
+
+      
+      const clone = pageEl.cloneNode(true);
+
+      
+      clone.querySelectorAll('[oninput], [onclick], [onchange]').forEach(el => {
+        el.removeAttribute('oninput');
+        el.removeAttribute('onclick');
+        el.removeAttribute('onchange');
+      });
+
+      
+      const css = [...document.querySelectorAll('style')]
+        .map(s => s.textContent).join('\n');
+
+      
+      const win = window.open('', '_blank', 'width=1100,height=800');
+      if (!win) { notify("La fenêtre a été bloquée par le navigateur.", "warn"); return; }
+
+      win.document.write(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Modification — ${formName}</title>
+  <style>${css}</style>
+  <style>
+    html, body { 
+      height: auto !important;
+      overflow: auto !important;
+      margin:0; 
+      background:#f8fafc; }
+    .page { display:block !important; }
+    .eo-bar {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:12px 20px; background:#fdf6e3;
+      border-bottom:1px solid #e0c56e; color:#7a5c00;
+      position:sticky; top:0; z-index:100;
+    }
+    .eo-body { padding:20px; }
+    .eo-btn {
+      padding:7px 16px; border-radius:6px; font-size:13px; cursor:pointer;
+      border:1px solid #e0c56e; background:#fff; color:#7a5c00;
+    }
+  </style>
+</head>
+<body>
+  <div class="eo-bar">
+    <div>
+      <div style="font-size:13px;font-weight:700">Modification d'une saisie</div>
+      <div style="font-size:12px;opacity:.85">${formName} — ${timestamp.replace('T', ' ').substring(0, 19)}</div>
+    </div>
+    <button class="eo-btn" id="eo-close">Fermer</button>
+  </div>
+  <div class="eo-body">${clone.innerHTML}</div>
+</body>
+</html>`);
+
+        win.document.querySelectorAll('input[attributeName]').forEach(el => {
+        if (el.disabled) return;
+        el.addEventListener('input', () => {
+          recalculateAllFormulas(win.document);
+        });
+      });
+
+      win.document.querySelectorAll('input[type="checkbox"][attributename^="Seuil "]')
+        .forEach(cb => {
+          const paramName = cb.getAttribute('attributename').replace(/^Seuil\s+/, '');
+          cb.addEventListener('change', () => {
+            handleSeuilChange(cb, paramName);
+          });
+        });
+
+      win.document.close();
+      win.focus();
+
+      win.document.getElementById('eo-close').onclick = () => win.close();
+
+      const submitBtn = [...win.document.querySelectorAll('button')]
+        .find(b => b.textContent.trim().toLowerCase() === 'soumettre');
+
+      if (submitBtn) {
+        submitBtn.onclick = async () => {
+          const ok = await submitEditedRecord(win, timestamp);
+          if (ok) win.close();
+        };
+      }
+
+      APP.editContext = { unitName, formName, timestamp, win };
+      await filleditpagefields(win, timestamp);
+    }
+
+async function filleditpagefields(win, timestamp) {
+    
+  const doc = win.document;
+  const sub = doc.querySelector('.eo-bar div div:nth-child(2)');
+  if (sub) sub.textContent = 'Chargement des données...';
+
+   const fields = [...doc.querySelectorAll('input[id], select[id]')]
+        .filter(el => /^F1/.test(el.id) && el.id.length > 20);
+
+      const batch = {};
+      fields.forEach((el, i) => {
+        batch[`i${i}`] = {
+          Method:   'GET',
+          Resource: `${CONFIG.WEBAPIURL}/streams/${el.id}/value`
+                  + `?time=${encodeURIComponent(timestamp)}`
+        };
+      });
+
+      const res = await fetch(`${CONFIG.WEBAPIURL}/batch`, {
+        method:      'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type':     'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(batch)
+      });
+
+      const data = await res.json();
+
+      fields.forEach((el, i) => {
+        const item = data[`i${i}`];
+        if (!item  || item.Content?.Value === undefined) return;
+        
+          if (el.type === 'radio') return;
+        
+       const v = item.Content.Value;
+       if (el.type === 'checkbox') {
+         el.checked = (v === true || v === 'true' || v === 1 || v === '1');
+       } else {
+         el.value = (v ?? '');
+       }
+      });
+    
+
+     console.log('timestamp reçu dans filleditpagefields :', timestamp);
+     const dateEl = doc.getElementById('f-date');
+     const timeEl = doc.getElementById('f-time');
+
+    if(dateEl) {
+      dateEl.value = timestamp.split('T')[0];
+      dateEl.disabled = true;
+      dateEl.style.background = '#f1f5f9';
+      dateEl.style.color      = '#64748b';
+    }
+    if(timeEl) {
+      timeEl.value = timestamp.split('T')[1]?.substring(0, 8);
+      timeEl.readOnly = true;
+      timeEl.disabled = true;
+      timeEl.style.background = '#f1f5f9';
+    }
+  
+
+    const validationEl = doc.querySelector('input[type="radio"][name^="validation_"]')?.id;
+
+    if (validationEl) {
+      const batchKey = Object.keys(batch).find(key => batch[key].Resource.includes(validationEl));
+      const validationItem = batchKey ? data[batchKey] : null;
+      const val = validationItem?.Content?.Value;  
+
+      if (val !== undefined) {
+        doc.querySelectorAll(`input[type="radio"][name^="validation_"]`).forEach(radio => {
+          radio.checked = (String(radio.value) === String(val));
+        });
+      }
+   }
+  }
+   
+  async function submitEditedRecord(win, timestamp){
+    const doc = win.document;
+    const fields = [...doc.querySelectorAll('input[id], select[id]')]
+        .filter(el => /^F1/.test(el.id) && el.id.length > 20);
+    
+    if (!fields.length) {
+      console.warn('Aucun champ à soumettre.');
+      return;
+    }
+    const batch={};
+    const seen = new Set();
+    fields.forEach((el, i) => {
+      if (el.type === 'radio' && !el.checked) return;
+      if (seen.has(el.id)) return;
+      seen.add(el.id);
+      let value;
+      if (el.type === 'checkbox') {
+        value = el.checked ? true : false;
+      } else {
+        value = el.value;
+      }
+      batch[`i${i}`] = {
+        Method:   'POST',
+        Resource: `${CONFIG.WEBAPIURL}/streams/${el.id}/value`,
+        Content:  JSON.stringify({ 
+                       Value: 
+                       typeof value === 'boolean' ? value 
+                       : (isNaN(value) ? value : parseFloat(value)), 
+                       Timestamp: timestamp })
+      };
+    });
+    console.log("Batch d'édition :", batch);
+
+      const res = await fetch(`${CONFIG.WEBAPIURL}/batch`, {
+        method:      "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type":     "application/json",
+          "X-Requested-With": "XMLHttpRequest"
+        },
+        body: JSON.stringify(batch)
+      });
+
+      const result = await res.json();
+      console.log("Réponse PI :", result);
+
+
+      const total = Object.keys(batch).length;
+      const ok = Object.values(result)
+        .filter(r => r.Status >= 200 && r.Status < 300).length;
+
+      alert(`${ok} valeur(s) écrite(s) sur ${total}.`);
+
+      return ok === total;
+    
+  }
+
+  /* Refresh button on a history page.
       The toolbar is cloned onto every history page, so the filter inputs share
       the same ids across pages. To read the correct ones we scope our lookups
       to the page that actually contains the clicked button. */
@@ -7248,7 +7285,7 @@ async function loadFormStructure(formWebId) {
 
                   <th style="
               text-align:center">
-                    Alertes
+                    S.T
                   </th>
 
                   <th style="
@@ -7682,95 +7719,51 @@ async function loadFormStructure(formWebId) {
         .trim();
     }
 
-    function handleInputChange(unitName, formName, alertFieldValue, loLoValue, hiHiValue) {
-
-      const ISMulticolors = APP.Forms?.[unitName]?.find(f => f.Name === formName)?.Attributes?.Multicolors_histo ?? true;
-
+    function handleInputChange(alertFieldValue, loLoValue, hiHiValue) {
       console.log("Input changed:", alertFieldValue, loLoValue, hiHiValue);
-      try {
       const field = document.querySelector(`input[attributeName="${alertFieldValue}"]`);
-        if (!field) {
-          console.warn(`No input field found for attributeName="${alertFieldValue}"`);
-          return;
-        }
+
+
       console.log("alert Field found:", field);
       console.log("alert Field value:", field.value);
 
 
       const row = field.closest('tr');
-        const lmtDiv = row?.querySelector('.lmt-ind');
+      const lmtDiv = row.querySelector('.lmt-ind');
 
-        if (!row || !lmtDiv) {
-          console.warn("Could not find row or indicator for alert field:", alertFieldValue);
-          return;
-        }
-
-        const rawValue = field.value;
-        if (rawValue === '') {
+      if (field.value === '') {
         row.classList.remove('lmt-exceed');
-          lmtDiv.className = 'lmt-ind';
+        lmtDiv.classList.remove('ok');
+        lmtDiv.classList.remove('crit');
         return;
-        }
 
-        const numericValue = Number(rawValue);
-        if (Number.isNaN(numericValue)) {
-          row.classList.remove('lmt-exceed');
-          lmtDiv.className = 'lmt-ind';
-          return;
-        }
-
-        const cfg = APP.alertConfigs.find(c => c.alertFieldValue === alertFieldValue);
-        const maxV = Number(cfg?.MaximumValue);
-        const hiHi = Number(cfg?.hiHiValue);
-        const loLo = Number(cfg?.loLoValue);
-        const hi = Number(cfg?.HiValue);
-
-        let className = 'lmt-ind alert-ind-ok';
-        if (ISMulticolors) {
-          if (Number.isFinite(maxV) && numericValue >= maxV) {
-            className = 'lmt-ind alert-ind-max';
-          } else if (Number.isFinite(loLo) && numericValue < loLo) {
-            className = 'lmt-ind alert-ind-crit-low';
-          } else if (Number.isFinite(hiHi) && numericValue >= hiHi) {
-            className = 'lmt-ind alert-ind-crit';
-          } else if (Number.isFinite(hi) && Number.isFinite(hiHi) && numericValue > hi && numericValue < hiHi) {
-            className = 'lmt-ind alert-ind-orange';
-          }
-        } 
-        
-        else {
-
-            if (Number.isFinite(hiHi) && Number.isFinite(loLo) && ((numericValue > hiHi) || (numericValue < loLo))) {
-            className = 'lmt-ind alert-ind-crit';
-
-          } 
-        }
-
-        
-
-        lmtDiv.className = className;
-
-        if (className.includes('alert-ind-crit') || className.includes('alert-ind-crit-low') || className.includes('alert-ind-max')) {
-          row.classList.add('lmt-exceed');
-        } else {
-          row.classList.remove('lmt-exceed');
-        }
-      } catch (error) {
-        console.error("Error finding input field:", error);
-        return;
       }
+
+      console.log(lmtDiv);
+      if (field.value < loLoValue || field.value > hiHiValue) {
+        row.classList.add('lmt-exceed');
+        lmtDiv.classList.remove('ok')
+        lmtDiv.classList.add('crit')
+
+      } else {
+        row.classList.remove('lmt-exceed');
+        lmtDiv.classList.remove('crit');
+        lmtDiv.classList.add('ok');
+      }
+
+
     }
 
 
-    function recalculateAllFormulas() {
+    function recalculateAllFormulas(scope = document) {
 
       const formulaFields =
-        Array.from(document.querySelectorAll('input[data-formula]'));
+        Array.from(scope.querySelectorAll('input[data-formula]'));
 
       const buildValues = () => {
         const values = {};
 
-        document.querySelectorAll('[attributeName]')
+        scope.querySelectorAll('[attributeName]')
           .forEach(el => {
 
             const attr = el.getAttribute('attributeName');
@@ -7844,8 +7837,6 @@ async function loadFormStructure(formWebId) {
       APP.alertConfigs.forEach(cfg => {
 
         handleInputChange(
-          cfg.unitName,
-          cfg.formname,
           cfg.alertFieldValue,
           cfg.loLoValue,
           cfg.hiHiValue
@@ -7872,7 +7863,6 @@ async function loadFormStructure(formWebId) {
       await GetRootElementWebId()
       await GetUnitsElementsWebId()
       await GetFormsElementsWebId()
-      await GetFormsElementsAttributes()
       await renderEntryDropdown()
       await renderHistoryDropdown();
       await LoadDataForEachForm()
@@ -7920,7 +7910,7 @@ async function loadFormStructure(formWebId) {
         // const FormaDataIDs = document.getElementsByClassName("lmt-fc");
         // console.log(FormaDataIDs)
         //Get DATA FROM AF TABLE - ("HTML-ID",AttributeName)
-        /* const Table = await fetch(
+        const Table = await fetch(
           "https://sekkai-consulting-pivision.com/PIWEBAPI/tables/F1BlOw3wdib9jEOPBIsnP79txQGG4W9ZZMVkKIIs7uUQ4MIARUMyQU1BWi00RjhVUk9MXFlBUkEgTEFCT1JBVE9SWVxUQUJMRVNbVEFCTEUzXQ/data",
           {
             method: "GET",
@@ -8016,7 +8006,7 @@ async function loadFormStructure(formWebId) {
             }
           }
         });
- */
+
         //console.log("Final sessionStorage:", sessionStorage);
         // const Request = await fetch("https://sekkai-consulting-pivision.com/PIWEBAPI/elements/F1EmOw3wdib9jEOPBIsnP79txQOWCuX8s88RG8nw55u_M6egRUMyQU1BWi00RjhVUk9MXFlBUkEgTEFCT1JBVE9SWVxEQVRBIExBQlxBREJMVUU/attributes?categoryName=rapport&selectedFields=Items.Name;Items.Links.RecordedData", {
 
