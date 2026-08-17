@@ -2296,6 +2296,12 @@
       display: flex;
     }
 
+    #access-denied.show button{
+      margin-top: 10px;
+    }
+
+
+
     .denied-box {
       background: var(--bg-card);
       border: 1px solid #fecaca;
@@ -3750,11 +3756,17 @@
       <div class="denied-title">Accès Refusé</div>
       <div class="denied-sub">Votre compte Windows ne dispose pas des permissions nécessaires.<br>Contactez votre
         administrateur système.</div>
-      <div class="denied-code">HTTP 403 — Kerberos delegation failed<br>SPN: HTTP/pi-lab-server.corp.local<br>User:
-        <span id="denied-user">—</span>
+      
+      <div class="overlay-buttons">
+           
+            <button id="close-button" class="btn btn-primary" onclick="HideAccessDeniedOverlay()">
+                Fermer
+            </button>
       </div>
     </div>
+    
   </div>
+
   <div id="toast"></div>
 
   <!-- ══════ APP SHELL ══════ -->
@@ -3862,12 +3874,14 @@
           </div>
         </div>
         <div class="role-lbl">Rôle simulé</div>
-        <select class="role-sel" id="role-sel" onchange="applyRole(this.value)">
+        <!-- <select class="role-sel" id="role-sel" onchange="applyRole(this.value)">
           <option value="admin">Administrateur</option>
           <option value="operator">Opérateur (Écriture)</option>
           <option value="viewer">Observateur (Lecture)</option>
           <option value="none">Aucun accès</option>
-        </select>
+        </select> -->
+
+        <div class="role-sel"></div>
         <div class="role-badge role-op" id="role-badge">
           <div class="rb-dot dot-op"></div><span id="rb-text">OPÉRATEUR</span>
         </div>
@@ -4893,7 +4907,10 @@
       currentUnit: null,
       currentForm: null,
       PagefieldAlert :{},
-      FormData:{}
+      FormData:{},
+      hasAdminAccess: false,
+      hasWriteAccess: false,
+      hasReadAccess: false,
     };
 
     APP.alertConfigs = []
@@ -5210,6 +5227,68 @@
 
 }
 
+async function GetSecurityAccess() {
+    const webId = sessionStorage.getItem("AF_DATABASE_WEBID");
+
+    const url = `${CONFIG.WEBAPIURL}/assetdatabases/${webId}/security`;
+
+    try {
+
+        const response = await fetch(url, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Accept": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+
+            const errorText = await response.text();
+
+            throw new Error(
+                `PI Web API request failed: ${response.status} ${response.statusText}\n${errorText}`
+            );
+        }
+
+        const data = await response.json();
+        let Role = document.getElementsByClassName("role-sel")[0];
+        if (data.Items){
+          if (data.Items[0]["HasAdmin"]=== true){
+            APP.hasAdminAccess = true;
+            APP.hasWriteAccess = true;
+            APP.hasReadAccess = true;
+            Role.textContent = "Administrateur";
+            applyRole("admin");
+          } else if (data.Items[0]["CanWrite"] === true){
+            APP.hasAdminAccess = false;
+            APP.hasWriteAccess = true;
+            APP.hasReadAccess = true;
+            Role.textContent = "Opérateur";
+            applyRole("operator");
+          } else if (data.Items[0]["CanRead"]){
+            APP.hasAdminAccess = false;
+            APP.hasWriteAccess = false;
+            APP.hasReadAccess = true;
+            Role.textContent = "Observateur";
+            applyRole("viewer");
+          } 
+        }
+        console.log("Asset Database Security:", data);
+
+        return data;
+
+    } catch (error) {
+
+        console.error(
+            "Error retrieving Asset Database security:",
+            error
+        );
+
+        throw error;
+    }
+}
+
 
     function hideSendingErrorOverlay() {
 
@@ -5249,6 +5328,10 @@
 
     function HideConfirmSendOverlay() {
         document.getElementById("confirm-send-overlay").classList.remove("show");
+    }
+
+    function HideAccessDeniedOverlay() {
+        document.getElementById("access-denied").classList.remove("show");
     }
 
     function ShowConfirmDuplicateSendOverlay() {
@@ -5710,7 +5793,10 @@
 
     
 
-    function UpdateAppCurrentPage(formName, unitName) {
+    function UpdateAppCurrentPage(formName, unitName,instance,source) {
+        if (source === 'entry'){
+            if ((APP.hasAdminAccess || APP.hasWriteAccess)){
+              nav(formName, instance);
         APP.currentForm = formName;
         APP.currentUnit = unitName;
         let now = new Date();
@@ -5721,6 +5807,28 @@
           page.querySelector("#f-time").value = now.toTimeString().slice(0, 8);
 
         }
+            }
+
+            else{
+              document.getElementById("access-denied").classList.add("show");
+            }
+
+        }
+
+        else if (source === 'history'){
+          if (APP.hasReadAccess){
+            nav(`history-${formName}`, instance);
+            APP.currentForm = formName;
+            APP.currentUnit = unitName;
+            return
+          }
+
+          else{
+            document.getElementById("access-denied").classList.add("show");
+          }
+
+        }
+        
     }
     
     async function renderHistoryDropdown() {
@@ -5765,7 +5873,7 @@
 
                         ${forms.map(form => `
                             <div class="history-item"
-                                 onclick="event.stopPropagation();nav('history-${form.Name}', this);UpdateAppCurrentPage('${form.Name}','${unit.Name}')">
+                                 onclick="event.stopPropagation();/*nav('history-${form.Name}', this)*/;UpdateAppCurrentPage('${form.Name}','${unit.Name}', this, 'history')">
 
                                 - ${form.Name}
 
@@ -5825,7 +5933,7 @@
 
                         ${forms.map(form => `
       <div class="entry-item"
-                                 onclick="event.stopPropagation();nav('${form.Name}', this);UpdateAppCurrentPage('${form.Name}','${unit.Name}')">
+                                 onclick="event.stopPropagation();/*nav('${form.Name}', this)*/;UpdateAppCurrentPage('${form.Name}','${unit.Name}',this, 'entry')">
 
                                 - ${form.Name}
 
@@ -6528,6 +6636,12 @@
 
 
     async function editHistoryRecord(unitName, formName, timestamp) {
+
+      if (!APP.hasWriteAccess){
+        document.getElementById("access-denied").classList.add("show");
+        return;
+      }
+
       const pageEl = document.getElementById(`page-${formName}`);
       if (!pageEl) { notify("Formulaire introuvable.", "warn"); return; }
 
@@ -8644,6 +8758,7 @@ async function loadFormStructure(formWebId) {
       await renderHistoryPages()
       
       await renderAllHistoryTables();
+      await GetSecurityAccess();
       //const values = getAttributeValues();
       //const formula = "[Concentration]-[Biuret]"
       
@@ -10844,7 +10959,7 @@ async function loadFormStructure(formWebId) {
       // Update print-header date
       document.getElementById('print-date-str').textContent = nowIso();
 
-      saveLogs("",APP.currentUnit,APP.currentForm,APP.username,"Export Historique PDF","User Exported History PDF");
+      saveLogs(null,APP.currentUnit,APP.currentForm,APP.username,"Export","User Exported History PDF");
       
       
        const currentPage = document.querySelector('.page.active');
@@ -10858,7 +10973,7 @@ async function loadFormStructure(formWebId) {
 
     /* ── Certificate of Analysis ── */
     function exportCert() {
-        saveLogs("",APP.currentUnit,APP.currentForm,APP.username,"Generated Analysis Certificate","User Generated Analysis Certificate");
+        saveLogs(null,APP.currentUnit,APP.currentForm,APP.username,"Generate","User Generated Analysis Certificate");
         //----------------------------------------
         // Get records for current form
         //----------------------------------------
