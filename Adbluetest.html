@@ -4831,7 +4831,7 @@
           <span id="cfg-limits-save-status" style="font-size:11px;color:var(--text-muted)"></span>
         </div>
         <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:16px;font-size:11px;color:#1e40af">
-          Modifiez les seuils <strong>HiHi</strong> (limite haute) et <strong>LoLo</strong> (limite basse) directement.
+          Modifiez les seuils <strong>HiHi</strong> (limite haute), <strong>LoLo</strong> (limite basse) et <strong>Target</strong> directement.
           La sauvegarde écrit dans l'attribut PI AF correspondant.
         </div>
         <div class="tbl-scroll-wrap">
@@ -4845,6 +4845,7 @@
               <th>Paramètre</th>
               <th style="width:150px">LoLo</th>
               <th style="width:150px">HiHi</th>
+              <th style="width:150px">Target</th>
               <th style="width:160px">Cible des limites</th>
             </tr></thead>
             <tbody id="cfg-limits-body"></tbody>
@@ -5324,12 +5325,15 @@ async function GetSecurityAccess() {
     document.getElementById("sending-error-overlay").classList.remove("show");
 }
 
-    function showSendingErrorOverlay() {
-
+    function showSendingErrorOverlay(message) {
+    const messageEl = document.getElementById("sending-error-message");
+    if (messageEl) messageEl.textContent = message || "Impossible d'envoyer les données.";
     document.getElementById("sending-error-overlay").classList.add("show");
 }
 
-    function showSendingSuccessOverlay() {
+    function showSendingSuccessOverlay(message) {
+        const messageEl = document.getElementById("sending-success-message");
+        if (messageEl) messageEl.textContent = message || 'Les données ont été envoyées avec succès.';
         document.getElementById("sending-success-overlay").classList.add("show");
     }
 
@@ -5823,6 +5827,13 @@ async function GetSecurityAccess() {
     
 
     function UpdateAppCurrentPage(formName, unitName,instance,source) {
+        // Configuration selectors need the same audit context as entry/history,
+        // but must not navigate away from the Configuration page.
+        if (source === 'config-limits') {
+          APP.currentForm = formName;
+          APP.currentUnit = unitName;
+          return;
+        }
         if (source === 'entry'){
             if ((APP.hasAdminAccess || APP.hasWriteAccess)){
               nav(formName, instance);
@@ -12693,6 +12704,10 @@ async function cfgEnsureUomCache(cardId) {
       if (!formName) { if (section) section.style.display = 'none'; _currentLimitsForm = null; return; }
 
       _currentLimitsForm = formName;
+      const limitsPage = (APP.entryPages || []).find(page => page.Name === formName);
+      const limitsUnit = limitsPage?.GroupName ||
+        Object.entries(APP.pageNametoData || {}).find(([, forms]) => forms?.[formName])?.[0] || null;
+      UpdateAppCurrentPage(formName, limitsUnit, null, 'config-limits');
       //const formModel = APP.pageNametoData && APP.pageNametoData[formName];
       const formModel = getFormModel(formName);
       _limitRows = [];
@@ -12710,6 +12725,7 @@ async function cfgEnsureUomCache(cardId) {
               sectionName:   sec.name,
               lolo:          f.LoLo && f.LoLo.value != null ? f.LoLo.value : '',
               hihi:          f.HiHi && f.HiHi.value != null ? f.HiHi.value : '',
+              target:        f.Target && f.Target.value != null ? f.Target.value : '',
               //uom:           f.UOM  && f.UOM.value  != null ? f.UOM.value  : '—',
               alertFieldValue: (() => {
                 const af = f.AlertField;
@@ -12720,6 +12736,7 @@ async function cfgEnsureUomCache(cardId) {
               _alertFieldAttrWebId: f.AlertField ? f.AlertField.attributeWebId : '',
               _loloAttrWebId: f.LoLo ? f.LoLo.attributeWebId : '',
               _hihiAttrWebId: f.HiHi ? f.HiHi.attributeWebId : '',
+              _targetAttrWebId: f.Target ? f.Target.attributeWebId : '',
               _dirty:        false
             });
           });
@@ -12728,6 +12745,32 @@ async function cfgEnsureUomCache(cardId) {
 
       if (section) section.style.display = _limitRows.length ? 'block' : 'none';
       cfgRenderLimitRows();
+    }
+
+    function cfgAlertFieldOptions(paramName, alertFieldValue) {
+      const value = String(alertFieldValue ?? '').trim();
+      const normalised = value.toLowerCase();
+      const input = paramName;
+      const vc1 = `VC1 ${paramName}`;
+      const vc2 = `VC2 ${paramName}`;
+      const selected = /^vc\s*1\b/i.test(value) || value === '1' ? vc1
+        : /^vc\s*2\b/i.test(value) || value === '2' ? vc2
+        : input;
+
+      return `
+        <option value="${esc(input)}" ${selected === input ? 'selected' : ''}>Valeur Saisie</option>
+        <option value="${esc(vc1)}" ${selected === vc1 ? 'selected' : ''}>Valeur Calculée 1</option>
+        <option value="${esc(vc2)}" ${selected === vc2 ? 'selected' : ''}>Valeur Calculée 2</option>`;
+    }
+
+    // AlertField is stored in PI AF as an EnumerationValue: 0 = input,
+    // 1 = calculated value 1, 2 = calculated value 2.  The UI uses the
+    // readable field names, so convert the selected label back on save.
+    function cfgAlertFieldEnumValue(alertFieldValue) {
+      const value = String(alertFieldValue ?? '').trim();
+      if (/^vc\s*1\b/i.test(value) || value === '1') return 1;
+      if (/^vc\s*2\b/i.test(value) || value === '2') return 2;
+      return 0;
     }
 
     function cfgRenderLimitRows() {
@@ -12790,13 +12833,19 @@ async function cfgEnsureUomCache(cardId) {
                 oninput="cfgUpdateLimitField(${idx},'hihi',this.value)">
             </td>
             <td>
-              <select class="fc" style="font-size:11px;height:32px"
+              <input class="fc" type="text" inputmode="decimal"
+                style="font-size:12px;height:32px;width:120px"
+                value="${esc(String(row.target))}"
+                placeholder="${row._targetAttrWebId ? '0.000' : 'non écrivable'}"
+                ${row._targetAttrWebId ? '' : 'disabled'}
+                oninput="cfgUpdateLimitField(${idx},'target',this.value)">
+            </td>
+            <td>
+              <select class="fc" style="font-size:11px;height:32px;width:160px;min-width:160px"
                 onchange="cfgUpdateLimitField(${idx},'alertFieldValue',this.value)"
                 ${row._alertFieldAttrWebId ? '' : 'disabled'}> 
 
-                <option value="0" ${row.alertFieldValue==='0'?'selected':''}>Valeur Saisie</option>
-                <option value="1" ${row.alertFieldValue==='1'?'selected':''}>Valeur Calculée 1</option>
-                <option value="2" ${row.alertFieldValue==='2'?'selected':''}>Valeur Calculée 2</option>
+                ${cfgAlertFieldOptions(row.paramName, row.alertFieldValue)}
               </select>
             </td>
           </tr>`).join('');
@@ -12822,6 +12871,15 @@ async function cfgEnsureUomCache(cardId) {
 
     function cfgUpdateLimitField(idx, field, value) {
       const row = _limitRows[idx]; if (!row) return;
+      // Retain the state that was loaded so the edit can be audited after save.
+      if (!row._dirty) {
+        row._original = {
+          lolo: row.lolo,
+          hihi: row.hihi,
+          target: row.target,
+          alertFieldValue: row.alertFieldValue
+        };
+      }
       row[field] = value;
       if (!row._dirty) {
         row._dirty = true;
@@ -12843,7 +12901,7 @@ async function cfgEnsureUomCache(cardId) {
     /* Write-back PI AF : PUT /streams/{attributeWebId}/value pour chaque
        seuil modifié, puis mise à jour de APP.pageNametoData en mémoire —
        cohérent avec cfgSaveAllFormulas(). */
-    async function cfgSaveAllLimits() {
+    async function cfgSaveAllLimitsPiAfLegacy() {
       if (!_currentLimitsForm) { notify('Sélectionnez un formulaire.', 'warn'); return; }
       const st = document.getElementById('cfg-limits-save-status');
 
@@ -12900,19 +12958,35 @@ async function cfgEnsureUomCache(cardId) {
             }).catch(e => { cfgDiagLog('err', `PUT HiHi ${row.paramName}: ${e.message}`); fail++; })
           );
         }
+        if (row._targetAttrWebId) {
+          const val = toNum(row.target);
+          if (!isNaN(val)) calls.push(
+            fetch(`${PI.base}/streams/${row._targetAttrWebId}/value`, {
+              method: 'POST', credentials: 'include',
+              headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+              body: JSON.stringify({ Value: val })
+            }).then(resp => {
+              if (!resp.ok) throw new Error(`HTTP ${resp.status} (Target)`);
+              if (pageModel) pageModel.sections.forEach(s => s.parameters.forEach(p => {
+                if (p.name === row.paramName && p.formulas.Target) p.formulas.Target.value = val;
+              }));
+              ok++;
+            }).catch(e => { cfgDiagLog('err', `PUT Target ${row.paramName}: ${e.message}`); fail++; })
+          );
+        }
         // Écriture de la cible (AlertField) en PI AF
 if (row._alertFieldAttrWebId) {
   calls.push(
     fetch(`${PI.base}/streams/${row._alertFieldAttrWebId}/value`, {
       method: 'POST', credentials: 'include',
       headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-      body: JSON.stringify({ Value: parseInt(row.alertFieldValue, 10) })
+      body: JSON.stringify({ Value: cfgAlertFieldEnumValue(row.alertFieldValue) })
     }).then(resp => {
       if (!resp.ok) throw new Error(`HTTP ${resp.status} (AlertField)`);
       // Mise à jour mémoire
       if (pageModel) pageModel.sections.forEach(s => s.parameters.forEach(p => {
         if (p.name === row.paramName && p.formulas.AlertField)
-          p.formulas.AlertField.value = parseInt(row.alertFieldValue, 10);
+          p.formulas.AlertField.value = row.alertFieldValue;
       }));
     }).catch(e => { cfgDiagLog('err', `POST AlertField ${row.paramName}: ${e.message}`); })
   );
@@ -12939,6 +13013,90 @@ if (row._alertFieldAttrWebId) {
     /* ══════════════════════════════════════════════════════════════
        TAB 4 — DIAGNOSTICS
     ══════════════════════════════════════════════════════════════ */
+    // Saves one SQL record per changed limit row.  The API receives the SQL
+    // column names directly, rather than PI AF attribute WebIds.
+    async function cfgSaveAllLimits() {
+      if (!_currentLimitsForm) { notify('Sélectionnez un formulaire.', 'warn'); return; }
+      const st = document.getElementById('cfg-limits-save-status');
+      const anySelected = _limitRows.some(r => r._selected);
+      const toSave = _limitRows.filter(r => r._dirty && (anySelected ? r._selected : true));
+
+      if (!toSave.length) {
+        notify(anySelected ? 'Aucune ligne sélectionnée n\'a été modifiée.' : 'Aucune modification à sauvegarder.', 'warn');
+        return;
+      }
+
+      st.textContent = '⏳ Sauvegarde en cours…';
+      st.style.color = 'var(--text-muted)';
+      const timestamp = new Date().toISOString();
+      const toNumberOrNull = value => {
+        const number = Number.parseFloat(String(value ?? '').trim().replace(',', '.'));
+        return Number.isFinite(number) ? number : null;
+      };
+      const results = await Promise.all(toSave.map(async row => {
+        const record = {
+          Timestamp: timestamp,
+          Formulaire: _currentLimitsForm,
+          Element: row.paramName,
+          LoLo: toNumberOrNull(row.lolo),
+          HiHi: toNumberOrNull(row.hihi),
+          Target: toNumberOrNull(row.target),
+          AlertField: cfgAlertFieldEnumValue(row.alertFieldValue)
+        };
+
+        try {
+          const response = await fetch('https://sekkai-consulting-pivision.com/api/limites', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(record)
+          });
+          if (!response.ok) {
+            const detail = await response.text();
+            throw new Error(`HTTP ${response.status}${detail ? `: ${detail}` : ''}`);
+          }
+          return { row, ok: true };
+        } catch (error) {
+          cfgDiagLog('err', `SQL limites ${row.paramName}: ${error.message}`);
+          return { row, ok: false };
+        }
+      }));
+
+      const succeeded = results.filter(result => result.ok);
+      const failed = results.length - succeeded.length;
+      const formatLimitValues = state =>
+        `LoLo=${state.lolo ?? ''}, HiHi=${state.hihi ?? ''}, Target=${state.target ?? ''}, AlertField=${cfgAlertFieldEnumValue(state.alertFieldValue)}`;
+      const changes = succeeded.map(({ row }) =>
+        `${row.paramName} (${formatLimitValues(row._original || row)}) -> ${row.paramName} (${formatLimitValues(row)})`
+      ).join('; ');
+
+      succeeded.forEach(({ row }) => { row._dirty = false; row._selected = false; delete row._original; });
+      cfgRenderLimitRows();
+
+      if (failed) {
+        st.textContent = `⚠ ${succeeded.length} ligne(s) sauvegardée(s) · ${failed} échec(s)`;
+        st.style.color = 'var(--warn)';
+        notify(`${failed} ligne(s) non sauvegardée(s) — voir Diagnostics`, 'warn');
+        showSendingErrorOverlay(`${failed} limite(s) n'ont pas pu être sauvegardée(s).`);
+      } else {
+        st.textContent = `✅ ${succeeded.length} ligne(s) sauvegardée(s) en SQL`;
+        st.style.color = 'var(--ok)';
+        notify(`Limites sauvegardées pour "${_currentLimitsForm}"`, 'ok');
+        showSendingSuccessOverlay(`${succeeded.length} limite(s) ont été sauvegardée(s) avec succès.`);
+        cfgDiagLog('ok', `Limites SQL: ${succeeded.length} ligne(s) pour ${_currentLimitsForm}`);
+      }
+
+      if (changes) {
+        try {
+          await saveLogs(null, APP.currentUnit || '', _currentLimitsForm, APP.username || '', 'Edit',
+            `Limites has been modified: ${changes}`);
+        } catch (error) {
+          cfgDiagLog('warn', `Journalisation des limites: ${error.message}`);
+        }
+      }
+      setTimeout(() => { st.textContent = ''; }, 4000);
+    }
+
     const _diagLines=[];
     function cfgDiagLog(lv,msg) {
       const ts=new Date().toLocaleTimeString('fr-FR');
