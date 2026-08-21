@@ -4910,6 +4910,7 @@
       hasWriteAccess: false,
       hasReadAccess: false,
       logs: [],
+      ParametreObligatoire: {}
     };
 
     APP.alertConfigs = []
@@ -7407,7 +7408,7 @@ async function loadFormStructure(formWebId) {
           parameter.attributes.forEach(attr => {
 
             if (
-              attr.name === "Target"|| attr.name === "Hi" ||attr.name === "HiHi" || attr.name === "LoLo"|| attr.name === "Maximum" || /^CalcFormula\d+$/i.test(attr.name) || attr.name === "UOM" || attr.name === "UOM1" || attr.name === "UOM2" || attr.name === "AlertField" || attr.name === "ordre" ||attr.name === "Histo" || attr.name === "InclusCertif"
+              attr.name === "Target"|| attr.name === "Hi" ||attr.name === "HiHi" || attr.name === "LoLo"|| attr.name === "Maximum" || /^CalcFormula\d+$/i.test(attr.name) || attr.name === "UOM" || attr.name === "UOM1" || attr.name === "UOM2" || attr.name === "AlertField" || attr.name === "ordre" ||attr.name === "Histo" || attr.name === "InclusCertif"|| attr.name === "Obligatoire"
             ) {
 
               limitBatch[batchIndex] = {
@@ -7454,7 +7455,7 @@ async function loadFormStructure(formWebId) {
           ) {
 
             attr.value = item.Content.Value;
-            if (/^CalcFormula\d+$/i.test(attr.name) || attr.name === 'Target' || attr.name === 'HiHi' || attr.name === 'LoLo' || attr.name === 'UOM' || attr.name === 'UOM1' || attr.name === 'UOM2' || attr.name === 'ordre' || attr.name === 'Histo' || attr.name === 'InclusCertif') {
+            if (/^CalcFormula\d+$/i.test(attr.name) || attr.name === 'Target' || attr.name === 'HiHi' || attr.name === 'LoLo' || attr.name === 'UOM' || attr.name === 'UOM1' || attr.name === 'UOM2' || attr.name === 'ordre' || attr.name === 'Histo' || attr.name === 'InclusCertif' || attr.name === 'Obligatoire') {
               const parentParam = formModel.sections
                 .flatMap(s => s.parameters)
                 .find(p => p.attributes.includes(attr));
@@ -7890,6 +7891,9 @@ async function loadFormStructure(formWebId) {
         const InclusCertif = parameter.attributes.find(
           a => a.name === "InclusCertif"
           );
+        const Obligatoire = parameter.attributes.find(
+          a => a.name === "Obligatoire"
+          );
 
         const pointWebId =
           tag?.pointWebId || "";
@@ -7916,6 +7920,9 @@ async function loadFormStructure(formWebId) {
            APP.CertifTableRows[pageName].push(parameter.name);
         }
 
+        if (Obligatoire && Obligatoire.value === true){
+           APP.ParametreObligatoire[pageName][parameter.name] = true;
+        }
 
         if (inputType === "Liste") {
 
@@ -7977,7 +7984,7 @@ async function loadFormStructure(formWebId) {
             style="
               min-width:220px;
               font-weight:600;">
-            ${nom}
+            ${nom} ${APP.ParametreObligatoire[pageName][parameter.name] ? '<span class="fg-req" >*</span>' : ''}
           </label>
 
           ${controlHtml}
@@ -8252,6 +8259,23 @@ async function loadFormStructure(formWebId) {
                   a => a.name === "InclusCertif"
                 );
 
+              const Obligatoire =
+                parameter.attributes.find(
+                  a => a.name === "Obligatoire"
+                );
+
+              if (seuil){
+                  APP.ParametreObligatoire[pageName]["Seuil " +parameter.name] = true;
+              }
+
+              if (Obligatoire && Obligatoire.type == "Boolean") {
+                const obligatoireValue = Obligatoire.value;
+                if (obligatoireValue === true) {
+                  APP.ParametreObligatoire[pageName][parameter.name] = true;
+                }
+              }
+
+
               if (Histo && Histo.type == "Boolean") {
                 const histoValue = Histo.value;
                 if (histoValue === true) {
@@ -8313,10 +8337,12 @@ async function loadFormStructure(formWebId) {
               if (calc1){
                 
                 APP.Formfields[pageName].push("VC1 " + parameter.name);
+                APP.ParametreObligatoire[pageName]["VC1 " + parameter.name] = true;
               }
 
               if (calc2){
                 APP.Formfields[pageName].push("VC2 " + parameter.name);
+                APP.ParametreObligatoire[pageName]["VC2 " + parameter.name] = true;
               }
               
 
@@ -8333,7 +8359,7 @@ async function loadFormStructure(formWebId) {
               tr.innerHTML = `
 
             <td>
-              ${parameter.name}
+              ${parameter.name} ${APP.ParametreObligatoire[pageName][parameter.name] ? '<span class="fg-req" >*</span>' : ''}
             </td>
 
             <!-- SEUIL -->
@@ -8496,6 +8522,7 @@ async function loadFormStructure(formWebId) {
             APP.CertifTableRows[form.Name] = []; // Initialize the CertifTableRows for this form
             APP.PagefieldAlert[form.Name] = {}; // Initialize the PagefieldAlert for this form
             APP.FormData[form.Name] = []; // Initialize the FormData for this form
+            APP.ParametreObligatoire[form.Name] = {}; // Initialize the ParametreObligatoire for this form
             APP.entryPages.push({
               Name:      form.Name,
               WebId:     form.WebId,
@@ -9320,10 +9347,9 @@ async function loadFormStructure(formWebId) {
       container.querySelectorAll('input, select').forEach(el => {
 
         const key = el.getAttribute('attributeName') || el.getAttribute('id');
-
+        if((key && APP.ParametreObligatoire[APP.currentForm][key]) || (!APP.ParametreObligatoire[APP.currentForm][key] && el.value !== "" && el.value !== null && el.value !== undefined)){
         if (el.type === 'checkbox') {
-          values[key]= { value: el.checked, WebId: el.getAttribute('id'),element:el };
-        }
+                 values[key]= { value: el.checked, WebId: el.getAttribute('id'),element:el };}
 
         // Radio buttons
         else if (el.type === 'radio') {
@@ -9342,6 +9368,9 @@ async function loadFormStructure(formWebId) {
         else {
           values[key] = { value: el.value, WebId: el.getAttribute('id'),element:el};
         }
+
+        }
+        
 
 
       });
