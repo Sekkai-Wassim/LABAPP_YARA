@@ -4742,6 +4742,7 @@
     <button class="cfg-tab active" onclick="cfgTab('af',this)">▤ AF Structure</button>
     <button class="cfg-tab" onclick="cfgTab('formulas',this)">ƒ Formules</button>
     <button class="cfg-tab" onclick="cfgTab('limits',this)">⚠ Limites</button>
+    <button class="cfg-tab" onclick="cfgTab('required',this)">* Champs obligatoires</button>
     <button class="cfg-tab" onclick="cfgTab('diag',this)">◎ Diagnostics</button>
   </div>
 
@@ -4859,6 +4860,45 @@
     </div>
   </div>
 
+  <!-- Tab Champs obligatoires -->
+  <div class="cfg-panel" id="cfg-required">
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-hdr">
+        <span class="card-title">① Sélectionner un formulaire</span>
+        <button class="cfg-btn-sm" onclick="cfgInitRequiredTab()">↻ Actualiser</button>
+      </div>
+      <select class="fc" id="cfg-required-form-select" onchange="cfgSelectRequiredForm(this.value)" style="max-width:460px;font-size:13px;height:42px">
+        <option value="">— Select a form —</option>
+      </select>
+    </div>
+    <div id="cfg-required-section" style="display:none">
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">② Champs du formulaire — <span id="cfg-required-count">0 champ(s)</span></span>
+          <span id="cfg-required-save-status" style="font-size:11px;color:var(--text-muted)"></span>
+        </div>
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:16px;font-size:11px;color:#1e40af">
+          Définissez si chaque champ est obligatoire. Les modifications sont enregistrées dans l'attribut PI AF <strong>Obligatoire</strong> du champ.
+        </div>
+        <div class="tbl-scroll-wrap">
+          <table class="dt" style="font-size:12px;width:100%">
+            <thead><tr>
+              <th style="width:36px;text-align:center"><input type="checkbox" title="Tout sélectionner / désélectionner" style="width:15px;height:15px;cursor:pointer" onchange="cfgToggleAllRequired(this.checked)"></th>
+              <th>Section</th>
+              <th>Champ</th>
+              <th style="width:180px">Obligatoire</th>
+            </tr></thead>
+            <tbody id="cfg-required-body"></tbody>
+          </table>
+        </div>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center">
+          <button class="btn btn-primary" style="padding:9px 20px" onclick="cfgSaveAllRequired()">💾 Save selected fields</button>
+          <span style="font-size:11px;color:var(--text-muted)">Si aucune case cochée → sauvegarde tous les champs modifiés</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Tab Diagnostics -->
   <div class="cfg-panel" id="cfg-diag">
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px">
@@ -4910,6 +4950,7 @@
       hasWriteAccess: false,
       hasReadAccess: false,
       logs: [],
+      ParametreObligatoire: {}
     };
 
     APP.alertConfigs = []
@@ -7407,7 +7448,7 @@ async function loadFormStructure(formWebId) {
           parameter.attributes.forEach(attr => {
 
             if (
-              attr.name === "Target"|| attr.name === "Hi" ||attr.name === "HiHi" || attr.name === "LoLo"|| attr.name === "Maximum" || /^CalcFormula\d+$/i.test(attr.name) || attr.name === "UOM" || attr.name === "UOM1" || attr.name === "UOM2" || attr.name === "AlertField" || attr.name === "ordre" ||attr.name === "Histo" || attr.name === "InclusCertif"
+              attr.name === "Target"|| attr.name === "Hi" ||attr.name === "HiHi" || attr.name === "LoLo"|| attr.name === "Maximum" || /^CalcFormula\d+$/i.test(attr.name) || attr.name === "UOM" || attr.name === "UOM1" || attr.name === "UOM2" || attr.name === "AlertField" || attr.name === "ordre" ||attr.name === "Histo" || attr.name === "InclusCertif"|| attr.name === "Obligatoire"
             ) {
 
               limitBatch[batchIndex] = {
@@ -7454,7 +7495,7 @@ async function loadFormStructure(formWebId) {
           ) {
 
             attr.value = item.Content.Value;
-            if (/^CalcFormula\d+$/i.test(attr.name) || attr.name === 'Target' || attr.name === 'HiHi' || attr.name === 'LoLo' || attr.name === 'UOM' || attr.name === 'UOM1' || attr.name === 'UOM2' || attr.name === 'ordre' || attr.name === 'Histo' || attr.name === 'InclusCertif') {
+            if (/^CalcFormula\d+$/i.test(attr.name) || attr.name === 'Target' || attr.name === 'HiHi' || attr.name === 'LoLo' || attr.name === 'UOM' || attr.name === 'UOM1' || attr.name === 'UOM2' || attr.name === 'ordre' || attr.name === 'Histo' || attr.name === 'InclusCertif' || attr.name === 'Obligatoire') {
               const parentParam = formModel.sections
                 .flatMap(s => s.parameters)
                 .find(p => p.attributes.includes(attr));
@@ -7890,6 +7931,9 @@ async function loadFormStructure(formWebId) {
         const InclusCertif = parameter.attributes.find(
           a => a.name === "InclusCertif"
           );
+        const Obligatoire = parameter.attributes.find(
+          a => a.name === "Obligatoire"
+          );
 
         const pointWebId =
           tag?.pointWebId || "";
@@ -7916,6 +7960,9 @@ async function loadFormStructure(formWebId) {
            APP.CertifTableRows[pageName].push(parameter.name);
         }
 
+        if (Obligatoire && Obligatoire.value === true){
+           APP.ParametreObligatoire[pageName][parameter.name] = true;
+        }
 
         if (inputType === "Liste") {
 
@@ -7977,7 +8024,7 @@ async function loadFormStructure(formWebId) {
             style="
               min-width:220px;
               font-weight:600;">
-            ${nom}
+            ${nom} ${APP.ParametreObligatoire[pageName][parameter.name] ? '<span class="fg-req" >*</span>' : ''}
           </label>
 
           ${controlHtml}
@@ -8252,6 +8299,23 @@ async function loadFormStructure(formWebId) {
                   a => a.name === "InclusCertif"
                 );
 
+              const Obligatoire =
+                parameter.attributes.find(
+                  a => a.name === "Obligatoire"
+                );
+
+              if (seuil){
+                  APP.ParametreObligatoire[pageName]["Seuil " +parameter.name] = true;
+              }
+
+              if (Obligatoire && Obligatoire.type == "Boolean") {
+                const obligatoireValue = Obligatoire.value;
+                if (obligatoireValue === true) {
+                  APP.ParametreObligatoire[pageName][parameter.name] = true;
+                }
+              }
+
+
               if (Histo && Histo.type == "Boolean") {
                 const histoValue = Histo.value;
                 if (histoValue === true) {
@@ -8313,10 +8377,12 @@ async function loadFormStructure(formWebId) {
               if (calc1){
                 
                 APP.Formfields[pageName].push("VC1 " + parameter.name);
+                APP.ParametreObligatoire[pageName]["VC1 " + parameter.name] = true;
               }
 
               if (calc2){
                 APP.Formfields[pageName].push("VC2 " + parameter.name);
+                APP.ParametreObligatoire[pageName]["VC2 " + parameter.name] = true;
               }
               
 
@@ -8333,7 +8399,7 @@ async function loadFormStructure(formWebId) {
               tr.innerHTML = `
 
             <td>
-              ${parameter.name}
+              ${parameter.name} ${APP.ParametreObligatoire[pageName][parameter.name] ? '<span class="fg-req" >*</span>' : ''}
             </td>
 
             <!-- SEUIL -->
@@ -8496,6 +8562,7 @@ async function loadFormStructure(formWebId) {
             APP.CertifTableRows[form.Name] = []; // Initialize the CertifTableRows for this form
             APP.PagefieldAlert[form.Name] = {}; // Initialize the PagefieldAlert for this form
             APP.FormData[form.Name] = []; // Initialize the FormData for this form
+            APP.ParametreObligatoire[form.Name] = {}; // Initialize the ParametreObligatoire for this form
             APP.entryPages.push({
               Name:      form.Name,
               WebId:     form.WebId,
@@ -9320,10 +9387,9 @@ async function loadFormStructure(formWebId) {
       container.querySelectorAll('input, select').forEach(el => {
 
         const key = el.getAttribute('attributeName') || el.getAttribute('id');
-
+        if((key && APP.ParametreObligatoire[APP.currentForm][key]) || (!APP.ParametreObligatoire[APP.currentForm][key] && el.value !== "" && el.value !== null && el.value !== undefined)){
         if (el.type === 'checkbox') {
-          values[key]= { value: el.checked, WebId: el.getAttribute('id'),element:el };
-        }
+                 values[key]= { value: el.checked, WebId: el.getAttribute('id'),element:el };}
 
         // Radio buttons
         else if (el.type === 'radio') {
@@ -9342,6 +9408,9 @@ async function loadFormStructure(formWebId) {
         else {
           values[key] = { value: el.value, WebId: el.getAttribute('id'),element:el};
         }
+
+        }
+        
 
 
       });
@@ -9683,7 +9752,7 @@ async function loadFormStructure(formWebId) {
       document.getElementById('page-' + pid).classList.add('active');
       document.getElementById('bc').textContent = PAGE_LABELS[pid];
       if (pid === 'history') renderHistory();
-      if (pid === 'config') {cfgLoadAFTree(); cfgInitFormulasTab(); cfgInitLimitsTab();}
+      if (pid === 'config') {cfgLoadAFTree(); cfgInitFormulasTab(); cfgInitLimitsTab(); cfgInitRequiredTab();}
     }
 
     /* ══════════════════════════════════════════════════════
@@ -11414,6 +11483,7 @@ async function loadFormStructure(formWebId) {
       if (id === 'af')       cfgLoadAFTree();
       if (id === 'formulas') cfgInitFormulasTab();
       if (id === 'limits')   cfgInitLimitsTab();
+      if (id === 'required') cfgInitRequiredTab();
       if (id === 'diag')     cfgRunDiagnostics();
     }
 
@@ -12676,7 +12746,184 @@ async function cfgEnsureUomCache(cardId) {
     }
 
     /* ══════════════════════════════════════════════════════════════
-       TAB 3 — LIMITES (HiHi / LoLo) — write-back PI AF
+       TAB 3 — CHAMPS OBLIGATOIRES — write-back PI AF
+       ─────────────────────────────────────────────────────────────
+       All parameters are shown, including fields that are currently optional.
+    ══════════════════════════════════════════════════════════════ */
+    let _currentRequiredForm = null;
+    let _requiredRows = [];
+
+    function cfgInitRequiredTab() {
+      const sel = document.getElementById('cfg-required-form-select');
+      if (!sel) return;
+      const pages = APP.entryPages || [];
+      if (!pages.length) {
+        sel.innerHTML = '<option value="">— Données non encore chargées —</option>';
+        return;
+      }
+      // Build from entryPages itself. This is the source loaded for the entry
+      // screens and remains available even when APP.Forms has not been rebuilt.
+      const formsByUnit = pages.reduce((groups, page) => {
+        (groups[page.GroupName || 'Forms'] ||= []).push(page);
+        return groups;
+      }, {});
+      sel.innerHTML = '<option value="">— Select a form —</option>' +
+        Object.entries(formsByUnit).map(([unitName, forms]) =>
+          `<optgroup label="${esc(unitName)}">` +
+          forms.map(form => `<option value="${esc(form.Name)}">${esc(form.Name)}</option>`).join('') +
+          '</optgroup>'
+        ).join('');
+      if (pages.length === 1) {
+        sel.value = pages[0].Name;
+        cfgSelectRequiredForm(pages[0].Name);
+      }
+    }
+
+    function cfgSelectRequiredForm(formName) {
+      const section = document.getElementById('cfg-required-section');
+      if (!formName) {
+        if (section) section.style.display = 'none';
+        _currentRequiredForm = null;
+        _requiredRows = [];
+        return;
+      }
+
+      _currentRequiredForm = formName;
+      const page = (APP.entryPages || []).find(item => item.Name === formName);
+      APP.currentForm = formName;
+      APP.currentUnit = page?.GroupName || APP.currentUnit;
+      _requiredRows = [];
+
+      const formModel = getFormModel(formName);
+      if (formModel && Array.isArray(formModel.sections)) {
+        formModel.sections.forEach(formSection => {
+          (formSection.parameters || []).forEach(parameter => {
+            const obligatory = (parameter.attributes || []).find(attr => attr.name === 'Obligatoire') || parameter.formulas?.Obligatoire;
+            const rawValue = obligatory?.value;
+            const isRequired = rawValue === true || rawValue === 1 || String(rawValue).toLowerCase() === 'true';
+            _requiredRows.push({
+              paramName: parameter.name,
+              sectionName: formSection.name,
+              required: isRequired,
+              _attribute: obligatory || null,
+              _attributeWebId: obligatory?.attributeWebId || '',
+              _dirty: false,
+              _selected: false
+            });
+          });
+        });
+      }
+
+      if (section) section.style.display = 'block';
+      cfgRenderRequiredRows();
+    }
+
+    function cfgRenderRequiredRows() {
+      const body = document.getElementById('cfg-required-body');
+      const count = document.getElementById('cfg-required-count');
+      if (!body) return;
+      const selected = _requiredRows.filter(row => row._selected).length;
+      const dirty = _requiredRows.filter(row => row._dirty).length;
+      if (count) count.textContent = `${_requiredRows.length} champ(s) · ${dirty || selected} ${dirty ? 'modifié(s)' : 'sélectionné(s)'}`;
+
+      if (!_requiredRows.length) {
+        body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-faint);padding:20px">Aucun champ trouvé pour ce formulaire.</td></tr>';
+        return;
+      }
+
+      const sections = {};
+      _requiredRows.forEach((row, index) => {
+        (sections[row.sectionName] ||= []).push({ row, index });
+      });
+      body.innerHTML = Object.entries(sections).map(([sectionName, entries]) => `
+        <tr style="background:var(--surface-2,#f1f5f9)"><td colspan="4" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--cyan);padding:8px 10px;border-bottom:1px solid var(--border)">${esc(sectionName)}</td></tr>
+        ${entries.map(({ row, index }) => `
+          <tr ${row._dirty ? 'style="background:#fffbeb"' : ''}>
+            <td style="text-align:center;width:36px"><input type="checkbox" ${row._selected ? 'checked' : ''} onchange="cfgToggleRequiredSelect(${index}, this.checked)" style="width:15px;height:15px;cursor:pointer"></td>
+            <td>${esc(row.sectionName)}</td>
+            <td style="font-weight:700;color:var(--cyan)">${esc(row.paramName)}${row._dirty ? '<span style="font-size:9px;font-weight:700;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:3px;padding:1px 5px;margin-left:4px">modifié</span>' : ''}</td>
+            <td><select class="fc" style="font-size:12px;height:32px;width:150px" ${row._attributeWebId ? '' : 'disabled'} onchange="cfgUpdateRequiredField(${index}, this.value)"><option value="true" ${row.required ? 'selected' : ''}>True</option><option value="false" ${!row.required ? 'selected' : ''}>False</option></select>${row._attributeWebId ? '' : '<div style="font-size:9px;color:var(--warn);margin-top:3px">Attribut Obligatoire absent</div>'}</td>
+          </tr>`).join('')}`).join('');
+    }
+
+    function cfgToggleRequiredSelect(index, checked) {
+      if (_requiredRows[index]) _requiredRows[index]._selected = checked;
+      cfgRenderRequiredRows();
+    }
+
+    function cfgToggleAllRequired(checked) {
+      _requiredRows.forEach(row => { row._selected = checked; });
+      cfgRenderRequiredRows();
+    }
+
+    function cfgUpdateRequiredField(index, value) {
+      const row = _requiredRows[index];
+      if (!row) return;
+      const required = value === 'true';
+      if (!row._dirty) row._original = row.required;
+      row.required = required;
+      row._dirty = row.required !== row._original;
+      if (!row._dirty) delete row._original;
+      cfgRenderRequiredRows();
+    }
+
+    async function cfgSaveAllRequired() {
+      if (!_currentRequiredForm) { notify('Sélectionnez un formulaire.', 'warn'); return; }
+      const status = document.getElementById('cfg-required-save-status');
+      const anySelected = _requiredRows.some(row => row._selected);
+      const toSave = _requiredRows.filter(row => row._dirty && (anySelected ? row._selected : true));
+      if (!toSave.length) {
+        notify(anySelected ? 'Aucun champ sélectionné n’a été modifié.' : 'Aucune modification à sauvegarder.', 'warn');
+        return;
+      }
+
+      status.textContent = '⏳ Sauvegarde en cours…';
+      status.style.color = 'var(--text-muted)';
+      const results = await Promise.all(toSave.map(async row => {
+        try {
+          const response = await fetch(`${PI.base}/streams/${row._attributeWebId}/value`, {
+            method: 'POST', credentials: 'include',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({ Value: row.required })
+          });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return { row, ok: true };
+        } catch (error) {
+          cfgDiagLog('err', `Obligatoire ${row.paramName}: ${error.message}`);
+          return { row, ok: false };
+        }
+      }));
+
+      const succeeded = results.filter(result => result.ok);
+      succeeded.forEach(({ row }) => {
+        row._dirty = false;
+        row._selected = false;
+        delete row._original;
+        if (row._attribute) row._attribute.value = row.required;
+        const formRequired = APP.ParametreObligatoire[_currentRequiredForm] ||= {};
+        if (row.required) formRequired[row.paramName] = true;
+        else delete formRequired[row.paramName];
+      });
+      cfgRenderRequiredRows();
+
+      const failed = results.length - succeeded.length;
+      if (failed) {
+        status.textContent = `⚠ ${succeeded.length} champ(s) sauvegardé(s) · ${failed} échec(s)`;
+        status.style.color = 'var(--warn)';
+        notify(`${failed} champ(s) n'ont pas pu être sauvegardé(s).`, 'warn');
+        showSendingErrorOverlay(`${failed} champ(s) obligatoire(s) n'ont pas pu être sauvegardé(s).`);
+      } else {
+        status.textContent = `✅ ${succeeded.length} champ(s) sauvegardé(s) dans PI AF`;
+        status.style.color = 'var(--ok)';
+        notify(`Champs obligatoires sauvegardés pour "${_currentRequiredForm}"`, 'ok');
+        showSendingSuccessOverlay(`${succeeded.length} champ(s) obligatoire(s) ont été sauvegardé(s) avec succès.`);
+        cfgDiagLog('ok', `Obligatoire: ${succeeded.length} champ(s) sauvegardé(s) pour ${_currentRequiredForm}`);
+      }
+      setTimeout(() => { status.textContent = ''; }, 4000);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       TAB 4 — LIMITES (HiHi / LoLo) — write-back PI AF
        ─────────────────────────────────────────────────────────────
        Même architecture que la tab Formules : PI AF (APP.pageNametoData)
        est la seule source de vérité. Aucune copie locale persistée.
