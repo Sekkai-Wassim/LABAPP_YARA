@@ -6779,13 +6779,56 @@ async function GetSecurityAccess() {
     <button class="eo-btn" id="eo-close">Fermer</button>
   </div>
   <div class="eo-body">${clone.innerHTML}</div>
+  <div id="confirm-send-overlay" class="">
+    <div class="overlay-card">
+      <div class="overlay-icon">
+        <svg viewBox="0 0 640 640"><path d="M320 576C178.6 576 64 461.4 64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576zM320 384C302.3 384 288 398.3 288 416C288 433.7 302.3 448 320 448C337.7 448 352 433.7 352 416C352 398.3 337.7 384 320 384zM320 192C301.8 192 287.3 207.5 288.6 225.7L296 329.7C296.9 342.3 307.4 352 319.9 352C332.5 352 342.9 342.3 343.8 329.7L351.2 225.7C352.5 207.5 338.1 192 319.8 192z"/></svg>
+      </div>
+      <h3>Confirmer la modification</h3>
+      <p id="ce-message"></p>
+      <span id="ce-changes"></span>
+      <div class="overlay-buttons">
+        <button id="ce-yes" class="btn btn-primary">Confirmer</button>
+        <button id="ce-no"  class="btn btn-secondary">Annuler</button>
+      </div>
+    </div>
+  </div>
+  <div id="sending-overlay" class="">
+    <div class="lo-ring"></div>
+    <div class="lo-lbl" id="lo-lbl">Enregistrement de la modification …</div>
+    <div class="lo-dot-row">
+      <div class="lo-dot"></div>
+      <div class="lo-dot"></div>
+      <div class="lo-dot"></div>
+    </div>
+  </div>
+  <div id="sending-success-overlay" class="">
+    <div class="overlay-card">
+        <div class="sucess-icon">
+            <svg viewBox="0 0 640 640"> 
+              <path d="M320 576C178.6 576 64 461.4 64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576zM438 209.7C427.3 201.9 412.3 204.3 404.5 215L285.1 379.2L233 327.1C223.6 317.7 208.4 317.7 199.1 327.1C189.8 336.5 189.7 351.7 199.1 361L271.1 433C276.1 438 282.9 440.5 289.9 440C296.9 439.5 303.3 435.9 307.4 430.2L443.3 243.2C451.1 232.5 448.7 217.5 438 209.7z" fill="#49c949cc"/>
+            </svg>
+        </div>
+
+        <h3>Envoi réussi</h3>
+
+        <p id="sending-success-message">
+            Les données ont été envoyées avec succès.
+        </p>
+
+        <button class="btn btn-primary" onclick="hideSendingSuccessOverlay()">
+            Fermer
+        </button>
+    </div>
+  </div>
 </body>
 </html>`);
 
         win.document.querySelectorAll('input[attributeName]').forEach(el => {
         if (el.disabled) return;
         el.addEventListener('input', () => {
-          recalculateAllFormulas(win.document);
+          //recalculateAllFormulas(win.document);
+          refreshAll(win.document);
         });
       });
 
@@ -6793,7 +6836,7 @@ async function GetSecurityAccess() {
         .forEach(cb => {
           const paramName = cb.getAttribute('attributename').replace(/^Seuil\s+/, '');
           cb.addEventListener('change', () => {
-            handleSeuilChange(cb, paramName);
+            handleSeuilChange(cb, paramName, win.document);
           });
         });
 
@@ -6802,13 +6845,28 @@ async function GetSecurityAccess() {
 
       win.document.getElementById('eo-close').onclick = () => win.close();
 
+      const successOverlay = win.document.getElementById('sending-success-overlay');
+      if (successOverlay) {
+        const ssCloseBtn = successOverlay.querySelector('button'); 
+        
+        if (ssCloseBtn) {
+          ssCloseBtn.removeAttribute('onclick');
+          ssCloseBtn.onclick = () => {
+            successOverlay.classList.remove('show');
+            win.close();
+          };
+        }
+      }
+
       const submitBtn = [...win.document.querySelectorAll('button')]
         .find(b => b.textContent.trim().toLowerCase() === 'soumettre');
 
       if (submitBtn) {
-        submitBtn.onclick = async () => {
-          const ok = await submitEditedRecord(win, timestamp);
-          if (ok) win.close();
+        submitBtn.onclick = () => {
+        EditConfirmationQst(win, timestamp, async () => {
+          await submitEditedRecord(win, timestamp);
+          
+          });
         };
       }
 
@@ -6892,10 +6950,31 @@ async function filleditpagefields(win, timestamp) {
         });
       }
    }
+   refreshAll(win.document);
   }
-   
+  function EditConfirmationQst(win, timestamp, onConfirm) {
+
+      const doc     = win.document;
+      const overlay = doc.getElementById('confirm-send-overlay');
+      if (!overlay) { onConfirm(); return; }
+
+      doc.getElementById('ce-message').textContent =
+        `Vous allez modifier l'enregistrement du `
+        + `${timestamp.replace('T', ' ').substring(0, 19)}. `;
+
+      doc.getElementById('ce-yes').onclick = () => {
+        overlay.classList.remove('show');
+        onConfirm();
+      };
+      doc.getElementById('ce-no').onclick = () => {
+        overlay.classList.remove('show');
+      };
+
+      overlay.classList.add('show');
+    }
   async function submitEditedRecord(win, timestamp){
     const doc = win.document;
+    doc.getElementById('sending-overlay')?.classList.add('show');
     const fields = [...doc.querySelectorAll('input[id], select[id]')]
         .filter(el => /^F1/.test(el.id) && el.id.length > 20);
     
@@ -6945,7 +7024,17 @@ async function filleditpagefields(win, timestamp) {
       const ok = Object.values(result)
         .filter(r => r.Status >= 200 && r.Status < 300).length;
 
-      alert(`${ok} valeur(s) écrite(s) sur ${total}.`);
+            doc.getElementById('sending-overlay')?.classList.remove('show');
+
+      const success = doc.getElementById('sending-success-overlay');
+      if (success) {
+        doc.getElementById('sending-success-message').textContent =
+          (ok === total)
+            ? `Les nouvelles valeurs ont remplacé l'enregistrement du `
+              + `${timestamp.replace('T', ' ').substring(0, 19)}.`
+            : `${ok} valeur(s) enregistrée(s) sur ${total}. Consultez la console.`;
+        success.classList.add('show');
+      }
 
       return ok === total;
 
@@ -8046,7 +8135,7 @@ async function loadFormStructure(formWebId) {
 
     }
 
-    function handleSeuilChange(checkbox) {
+    function handleSeuilChange(checkbox, paramName, scope=document) {
 
       const row = checkbox.closest('tr');
 
@@ -8072,7 +8161,7 @@ async function loadFormStructure(formWebId) {
 
       }
 
-      refreshAll();
+      refreshAll(scope);
 }
     async function renderForm2() {
 
@@ -8664,13 +8753,13 @@ async function loadFormStructure(formWebId) {
         .trim();
     }
 
-    function handleInputChange(unitName, formName, alertFieldValue, loLoValue, hiHiValue) {
+    function handleInputChange(unitName, formName, alertFieldValue, loLoValue, hiHiValue, scope = document) {
 
       const ISMulticolors = APP.Forms?.[unitName]?.find(f => f.Name === formName)?.Attributes?.Multicolors_histo ?? true;
 
       console.log("Input changed:", alertFieldValue, loLoValue, hiHiValue);
       try {
-      const field = document.querySelector(`input[attributeName="${alertFieldValue}"]`);
+      const field = scope.querySelector(`input[attributeName="${alertFieldValue}"]`);
         if (!field) {
           console.warn(`No input field found for attributeName="${alertFieldValue}"`);
           return;
@@ -8824,7 +8913,7 @@ async function loadFormStructure(formWebId) {
       }
     }
 
-    function refreshAllAlerts() {
+    function refreshAllAlerts(scope = document) {
 
       APP.alertConfigs.forEach(cfg => {
 
@@ -8833,18 +8922,19 @@ async function loadFormStructure(formWebId) {
           cfg.formname,
           cfg.alertFieldValue,
           cfg.loLoValue,
-          cfg.hiHiValue
+          cfg.hiHiValue,
+          scope
         );
 
       });
 
     }
 
-    function refreshAll() {
+    function refreshAll(scope = document) {
 
-      recalculateAllFormulas();
+      recalculateAllFormulas(scope);
 
-      refreshAllAlerts();
+      refreshAllAlerts(scope);
 
     }
     window.onload = async function () {
