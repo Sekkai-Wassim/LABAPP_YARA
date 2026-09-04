@@ -3859,13 +3859,7 @@
         </div>
       </div>
       <div class="sb-sec">Système</div>
-      <div class="nav-item" onclick="notify('Module alarmes — non disponible dans ce prototype.','info')">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-        </svg>
-        <span class="nav-lbl">Alarmes</span>
-      </div>
+      
       <div class="nav-item" id="nav-config" style="display:none" onclick="nav('config',this)">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="3" />
@@ -3895,7 +3889,7 @@
           <div class="rb-dot dot-op"></div><span id="rb-text">OPÉRATEUR</span>
         </div>
         <div class="sb-conn">
-          <div class="conn-dot"></div>PI Server: LAB-SRV-01
+          <div class="conn-dot"></div>YARA LABORATORY
         </div>
       </div>
     </nav>
@@ -3903,13 +3897,14 @@
     <!-- ══════ MAIN ══════ -->
     <div id="main">
       <div id="topbar">
-        <div class="tb-bc"><span>AVEVA PI</span><span>›</span><span>PLANT\LAB\UNIT-03</span><span>›</span><span
+        <div class="tb-bc"><span>AVEVA PI</span><span>›</span><span
             class="bc-cur" id="bc">Tableau de bord</span></div>
         <div class="tb-right">
           <div class="tb-refresh">
             <div class="spin-sm"></div><span id="ref-cd">Actualisation: 10s</span>
           </div>
-          <span class="tb-badge bdg-blue">PI Vision</span>
+          <a id="pi-vision-link" target="_blank" rel="noopener" style="text-decoration: none;cursor: pointer" onclick="window.open(CONFIG.PI_VISION_URL, '_blank')">
+            <span class="tb-badge bdg-blue" style="cursor:pointer" title="Ouvrir PI Vision">PI Vision ↗</span></a>
           <span class="tb-badge bdg-green" id="live-badge">● EN DIRECT</span>
           <span class="tb-clock" id="clock">--:--:-- UTC</span>
         </div>
@@ -3925,7 +3920,7 @@
               <div class="pg-h1">Vue d'ensemble</div>
               <div class="pg-sub">Synthèse données labo — Réacteur Baie B · Actualisation auto 10 s</div>
             </div>
-            <div class="pi-lbl">PLANT\LAB\UNIT-03</div>
+            <!--div class="pi-lbl">PLANT\LAB\UNIT-03</div-->
           </div>
           <div class="refresh-bar-wrap">
             <div class="rbar-bg">
@@ -4002,9 +3997,9 @@
           <div class="pg-hdr">
             <div>
               <div class="pg-h1">Saisie de données laboratoire</div>
-              <div class="pg-sub">Enregistrement mesures → PI Historian — PLANT\LAB\UNIT-03</div>
+              <div class="pg-sub">Enregistrement mesures → PI Historian</div>
             </div>
-            <div class="pi-lbl">SOP-LAB-042 · ISO 9001:2015</div>
+            <!-- <div class="pi-lbl">SOP-LAB-042 · ISO 9001:2015</div> -->
           </div>
 
           <!-- Banners -->
@@ -4287,7 +4282,11 @@
 
                   </button>
                   <button class="btn btn-ghost" id="btn-reset" onclick="resetForm()">Réinitialiser</button>
-                  <span class="btn-hint" id="submit-hint">PLANT\LAB\UNIT-03 · SOP-LAB-042</span>
+                  <span class="btn-hint" id="submit-hint">
+  YARA LAB · <span id="hint-form">—</span> · Saisie en cours · 
+  <span id="hint-date">—</span> · <span id="hint-time">—</span> · 
+  <span id="auth-user">—</span>
+</span>
                 </div>
               </div>
 
@@ -4743,9 +4742,7 @@
     <button class="cfg-tab" onclick="cfgTab('formulas',this)">ƒ Formules</button>
     <button class="cfg-tab" onclick="cfgTab('limits',this)">⚠ Limites</button>
     <button class="cfg-tab" onclick="cfgTab('required',this)">* Champs obligatoires</button>
-    <button class="cfg-tab" onclick="cfgTab('histo-columns',this)">Histo Table Columns</button>
     <button class="cfg-tab" onclick="cfgTab('diag',this)">◎ Diagnostics</button>
-    
   </div>
 
   <!-- Tab AF Structure -->
@@ -4901,45 +4898,6 @@
     </div>
   </div>
 
-  <!-- Tab Histo Table Columns: writes the Boolean Histo AF attribute. -->
-  <div class="cfg-panel" id="cfg-histo-columns">
-  <!-- Histo Table Columns: values are read from, and saved to, each parameter's
-       Boolean PI AF attribute named "Histo". -->
-  <div class="card">
-    <div class="card-hdr">
-      <span class="card-title">① Sélectionner un formulaire</span>
-      <button class="cfg-btn-sm" onclick="initHistoTableColumnsPage()">Refresh</button>
-    </div>
-    <select class="fc" id="histo-columns-form-select" onchange="selectHistoTableColumnsForm(this.value)" style="max-width:460px;font-size:13px;height:42px">
-      <option value="">-- Select a form --</option>
-    </select>
-  </div>
-  <div class="card" id="histo-columns-section" style="display:none;margin-top:16px">
-    <div class="card-hdr">
-      <span class="card-title"><span id="histo-columns-form-title">--</span> - <span id="histo-columns-count">0</span> field(s)</span>
-      <span id="histo-columns-save-status" style="font-size:11px;color:var(--text-muted)"></span>
-    </div>
-    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:16px;font-size:11px;color:#1e40af">
-      Choose <strong>True</strong> to include a field in the Histo table, or <strong>False</strong> to exclude it. Changes are saved in the field's PI AF <strong>Histo</strong> attribute.
-    </div>
-    <div class="tbl-scroll-wrap"><table class="dt" style="font-size:12px;width:100%">
-      <thead><tr>
-        <th style="width:36px;text-align:center">
-          <input type="checkbox" title="Tout sélectionner / désélectionner" style="width:15px;height:15px;cursor:pointer" onchange="cfgToggleAllHisto(this.checked)">
-        </th>
-        <th>Section</th>
-        <th>Field</th>
-        <th style="width:180px">Included In Histo Table</th>
-      </tr></thead>
-      <tbody id="histo-columns-body"></tbody>
-    </table></div>
-    <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center">
-      <button class="btn btn-primary" style="padding:9px 20px" onclick="saveHistoTableColumns()">Save changes</button>
-      <span style="font-size:11px;color:var(--text-muted)">Only changed values are written to PI AF.</span>
-    </div>
-  </div>
-  </div><!-- /cfg-histo-columns -->
-
   <!-- Tab Diagnostics -->
   <div class="cfg-panel" id="cfg-diag">
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px">
@@ -4997,9 +4955,6 @@
     APP.alertConfigs = []
 
     const PAGE_LABELS = { dashboard: 'Tableau de bord', entry: 'Saisie de données', history: 'Historique & Analyse', config: 'Configuration' };
-
-    // Label displayed in the breadcrumb when the Histo Table Columns page opens.
-    PAGE_LABELS['histo-table-columns'] = 'Histo Table Columns';
 
     function toggleUnit(header) {
 
@@ -5975,7 +5930,13 @@ async function GetSecurityAccess() {
                 <div class="history-unit-header"
                      ${hasChildren ? 'onclick="event.stopPropagation();toggleUnit(this)"' : ""}>
 
-                    <span class="history-unit-name">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+        style="width:14px;height:14px;flex-shrink:0;vertical-align:middle;margin-right:6px">
+     <path d="M9 3h6m-3 0v6l-5 8h12l-5-8V3"/>
+   </svg>
+                    
+                     <span class="history-unit-name">
                         ${unit.Name}
                     </span>
 
@@ -5999,6 +5960,13 @@ async function GetSecurityAccess() {
                         ${forms.map(form => `
                             <div class="history-item"
                                  onclick="event.stopPropagation();/*nav('history-${form.Name}', this)*/;UpdateAppCurrentPage('${form.Name}','${unit.Name}', this, 'history')">
+
+                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+        style="width:12px;height:12px;flex-shrink:0;vertical-align:middle;margin-right:6px;opacity:0.7">
+     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+     <polyline points="14 2 14 8 20 8"/>
+   </svg>
 
                                 - ${form.Name}
 
@@ -6035,7 +6003,12 @@ async function GetSecurityAccess() {
                 <div class="entry-unit-header"
                      ${hasChildren ? 'onclick="event.stopPropagation();toggleUnit(this)"' : ""}>
 
-                    <span class="entry-unit-name">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+        style="width:14px;height:14px;flex-shrink:0;vertical-align:middle;margin-right:6px">
+     <path d="M9 3h6m-3 0v6l-5 8h12l-5-8V3"/>
+   </svg>
+                     <span class="entry-unit-name">
                         ${unit.Name}
                     </span>
 
@@ -6059,6 +6032,12 @@ async function GetSecurityAccess() {
                         ${forms.map(form => `
       <div class="entry-item"
                                  onclick="event.stopPropagation();/*nav('${form.Name}', this)*/;UpdateAppCurrentPage('${form.Name}','${unit.Name}',this, 'entry')">
+                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+        style="width:12px;height:12px;flex-shrink:0;vertical-align:middle;margin-right:6px;opacity:0.7">
+     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+     <polyline points="14 2 14 8 20 8"/>
+   </svg>
 
                                 - ${form.Name}
 
@@ -7078,6 +7057,8 @@ async function filleditpagefields(win, timestamp) {
               + `${timestamp.replace('T', ' ').substring(0, 19)}.`
             : `${ok} valeur(s) enregistrée(s) sur ${total}. Consultez la console.`;
         success.classList.add('show');
+
+        await saveLogs(timestamp,APP.currentUnit,APP.currentForm,APP.username,"Edit",`Formulaire modifié : ${ok}/${total} valeur(s) enregistrée.s`);
       }
 
       return ok === total;
@@ -9003,6 +8984,7 @@ async function loadFormStructure(formWebId) {
       //const values = getAttributeValues();
       //const formula = "[Concentration]-[Biuret]"
       
+      
       console.log("Those are the entry pages:",APP.entryPages)
 
       console.log("map page to data",pageNametoData)
@@ -9874,174 +9856,6 @@ async function loadFormStructure(formWebId) {
        NAVIGATION
     ══════════════════════════════════════════════════════ */
     // const PAGE_LABELS = { dashboard: 'Tableau de bord', entry: 'Saisie de données', history: 'Historique & Analyse', entryADblue: 'Saisie de données'};
-    /*
-      Histo Table Columns uses the form model loaded at startup. Each matching
-      Histo object contains its current value and AF attribute WebId.
-    */
-    let _histoColumnsForm = null;
-    let _histoColumnRows = [];
-
-    function initHistoTableColumnsPage() {
-      const select = document.getElementById('histo-columns-form-select');
-      if (!select) return;
-      const formsLoaded = APP.entryPages || [];
-      if (!formsLoaded.length) {
-        select.innerHTML = '<option value="">-- Forms are still loading --</option>';
-        return;
-      }
-      const selectedForm = _histoColumnsForm || select.value;
-      select.innerHTML = '<option value="">-- Select a form --</option>' + buildFormOptgroups('Name');
-      if (selectedForm) {
-        select.value = selectedForm;
-        selectHistoTableColumnsForm(selectedForm);
-      }
-    }
-
-    function selectHistoTableColumnsForm(formName) {
-      const pageSection = document.getElementById('histo-columns-section');
-      if (!formName) {
-        _histoColumnsForm = null;
-        _histoColumnRows = [];
-        if (pageSection) pageSection.style.display = 'none';
-        return;
-      }
-      _histoColumnsForm = formName;
-      _histoColumnRows = [];
-      const formModel = getFormModel(formName);
-
-      // Exclude legacy fields that do not have an Histo AF attribute.
-      formModel?.sections?.forEach(section => section.parameters?.forEach(parameter => {
-        const histo = parameter.formulas?.Histo ||
-          parameter.attributes?.find(attribute => attribute.name === 'Histo');
-        if (!histo?.attributeWebId) return;
-        _histoColumnRows.push({
-            sectionName: section.name,
-            fieldName: parameter.name,
-            attribute: histo,
-            value: histo.value === true,
-            originalValue: histo.value === true,
-            dirty: false,
-            _selected: false
-          });
-      }));
-
-      document.getElementById('histo-columns-form-title').textContent = formName;
-      document.getElementById('histo-columns-count').textContent = _histoColumnRows.length;
-      if (pageSection) pageSection.style.display = '';
-      renderHistoTableColumnsRows();
-    }
-
-    function renderHistoTableColumnsRows() {
-      const body = document.getElementById('histo-columns-body');
-      if (!body) return;
-      if (!_histoColumnRows.length) {
-        body.innerHTML = '<tr><td colspan="3" class="dt-empty">No field with an Histo attribute was found for this form.</td></tr>';
-        return;
-      }
-      body.innerHTML = _histoColumnRows.map((row, index) => `
-        <tr${row.dirty ? ' style="background:#fffbeb"' : ''}>
-          <td style="text-align:center;width:36px"><input type="checkbox" ${row._selected ? 'checked' : ''} onchange="cfgToggleHistoSelect(${index}, this.checked)" style="width:15px;height:15px;cursor:pointer"></td>
-          <td>${esc(row.sectionName || '-')}</td>
-          <td>${esc(row.fieldName || '-')}</td>
-          <td><select class="fc" style="height:32px;min-width:120px" onchange="updateHistoTableColumn(${index}, this.value)">
-            <option value="true"${row.value ? ' selected' : ''}>True</option>
-            <option value="false"${row.value ? '' : ' selected'}>False</option>
-          </select></td>
-        </tr>`).join('');
-    }
-
-    function updateHistoTableColumn(index, rawValue) {
-      const row = _histoColumnRows[index];
-      if (!row) return;
-      row.value = rawValue === 'true';
-      row.dirty = row.value !== row.originalValue;
-      renderHistoTableColumnsRows();
-    }
-
-    function cfgToggleHistoSelect(index, checked) {
-      if (_histoColumnRows[index]) _histoColumnRows[index]._selected = checked;
-      // update count display (keeps simple)
-      const cnt = document.getElementById('histo-columns-count');
-      if (cnt) {
-        const selected = _histoColumnRows.filter(r => r._selected).length;
-        cnt.textContent = `${_histoColumnRows.length} field(s) · ${selected} selected`;
-      }
-    }
-
-    function cfgToggleAllHisto(checked) {
-      _histoColumnRows.forEach(r => { r._selected = checked; });
-      renderHistoTableColumnsRows();
-    }
-
-    async function saveHistoTableColumns() {
-      const status = document.getElementById('histo-columns-save-status');
-      const anySelected = _histoColumnRows.some(row => row._selected);
-      const toSave = _histoColumnRows.filter(row => row.dirty && (anySelected ? row._selected : true));
-      if (!toSave.length) {
-        notify(anySelected ? 'No selected Histo rows were modified.' : 'No Histo Table Columns changes to save.', 'warn');
-        return;
-      }
-      status.textContent = 'Saving changes to PI AF...';
-      status.style.color = 'var(--text-muted)';
-      const results = await Promise.all(toSave.map(async row => {
-        try {
-          const response = await fetch(`${CONFIG.WEBAPIURL}/streams/${row.attribute.attributeWebId}/value`, {
-            method: 'POST', credentials: 'include',
-            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            body: JSON.stringify({ Value: row.value })
-          });
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          return { row, ok: true };
-        } catch (error) {
-          console.error(`Unable to save Histo for ${row.fieldName}:`, error);
-          return { row, ok: false };
-        }
-      }));
-
-      const succeeded = results.filter(result => result.ok);
-
-      // Build a human-readable changes summary BEFORE updating row-originals
-      const formatBool = v => (v ? 'True' : 'False');
-      const changes = succeeded.map(({ row }) =>
-        `${row.fieldName} (${formatBool(row.originalValue)}) -> ${row.fieldName} (${formatBool(row.value)})`
-      ).join('; ');
-
-      succeeded.forEach(({ row }) => {
-        row.originalValue = row.value;
-        row.dirty = false;
-        row._selected = false;
-        row.attribute.value = row.value; // Keep the loaded form model current.
-        const certificateRows = APP.CertifTableRows[_histoColumnsForm] ||= [];
-        const position = certificateRows.indexOf(row.fieldName);
-        if (row.value && position === -1) certificateRows.push(row.fieldName);
-        if (!row.value && position !== -1) certificateRows.splice(position, 1);
-      });
-
-      const failed = results.length - succeeded.length;
-      renderHistoTableColumnsRows();
-      if (failed) {
-        status.textContent = `${succeeded.length} saved, ${failed} failed.`;
-        status.style.color = 'var(--warn)';
-        notify(`${failed} Histo value(s) could not be saved.`, 'warn');
-        showSendingErrorOverlay(`${failed} Histo value(s) could not be saved.`);
-        cfgDiagLog('err', `Histo: ${failed} save failure(s) for ${_histoColumnsForm}`);
-      } else {
-        status.textContent = `${succeeded.length} field(s) saved in PI AF.`;
-        status.style.color = 'var(--ok)';
-        notify('Histo Table Columns saved.', 'ok');
-        showSendingSuccessOverlay(`${succeeded.length} Histo field(s) saved successfully.`);
-        cfgDiagLog('ok', `Histo: ${succeeded.length} field(s) saved for ${_histoColumnsForm}`);
-      }
-      if (changes) {
-        try {
-          await saveLogs(null, APP.currentUnit || '', _histoColumnsForm, APP.username || '', 'Edit', `Histo has been modified: ${changes}`);
-        } catch (error) {
-          cfgDiagLog('warn', `Histo logging: ${error.message}`);
-        }
-      }
-      setTimeout(() => { status.textContent = ''; }, 4000);
-    }
-
     function nav(pid, el) {
       if (pid === 'config' && !ROLES[APP.role]?.isAdmin) {
          notify('Configuration restreinte — accès administrateur requis.', 'warn');
@@ -11786,7 +11600,6 @@ async function loadFormStructure(formWebId) {
       if (id === 'formulas') cfgInitFormulasTab();
       if (id === 'limits')   cfgInitLimitsTab();
       if (id === 'required') cfgInitRequiredTab();
-      if (id === 'histo-columns') initHistoTableColumnsPage();
       if (id === 'diag')     cfgRunDiagnostics();
     }
 
@@ -13198,13 +13011,6 @@ async function cfgEnsureUomCache(cardId) {
       }));
 
       const succeeded = results.filter(result => result.ok);
-
-      // Build a human-readable changes summary BEFORE updating row-originals
-      const formatBool = v => (v ? 'True' : 'False');
-      const changes = succeeded.map(({ row }) =>
-        `${row.paramName} (${formatBool(row._original)}) -> ${row.paramName} (${formatBool(row.required)})`
-      ).join('; ');
-
       succeeded.forEach(({ row }) => {
         row._dirty = false;
         row._selected = false;
@@ -13222,21 +13028,12 @@ async function cfgEnsureUomCache(cardId) {
         status.style.color = 'var(--warn)';
         notify(`${failed} champ(s) n'ont pas pu être sauvegardé(s).`, 'warn');
         showSendingErrorOverlay(`${failed} champ(s) obligatoire(s) n'ont pas pu être sauvegardé(s).`);
-        cfgDiagLog('err', `Obligatoire: ${failed} échec(s) pour ${_currentRequiredForm}`);
       } else {
         status.textContent = `✅ ${succeeded.length} champ(s) sauvegardé(s) dans PI AF`;
         status.style.color = 'var(--ok)';
         notify(`Champs obligatoires sauvegardés pour "${_currentRequiredForm}"`, 'ok');
         showSendingSuccessOverlay(`${succeeded.length} champ(s) obligatoire(s) ont été sauvegardé(s) avec succès.`);
         cfgDiagLog('ok', `Obligatoire: ${succeeded.length} champ(s) sauvegardé(s) pour ${_currentRequiredForm}`);
-      }
-
-      if (changes) {
-        try {
-          await saveLogs(null, APP.currentUnit || '', _currentRequiredForm, APP.username || '', 'Edit', `Champs obligatoires modifiés: ${changes}`);
-        } catch (error) {
-          cfgDiagLog('warn', `Journalisation Obligatoire: ${error.message}`);
-        }
       }
       setTimeout(() => { status.textContent = ''; }, 4000);
     }
