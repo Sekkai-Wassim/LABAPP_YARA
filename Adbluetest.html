@@ -3859,13 +3859,7 @@
         </div>
       </div>
       <div class="sb-sec">Système</div>
-      <div class="nav-item" onclick="notify('Module alarmes — non disponible dans ce prototype.','info')">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-        </svg>
-        <span class="nav-lbl">Alarmes</span>
-      </div>
+      
       <div class="nav-item" id="nav-config" style="display:none" onclick="nav('config',this)">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="3" />
@@ -3895,7 +3889,7 @@
           <div class="rb-dot dot-op"></div><span id="rb-text">OPÉRATEUR</span>
         </div>
         <div class="sb-conn">
-          <div class="conn-dot"></div>PI Server: LAB-SRV-01
+          <div class="conn-dot"></div>YARA LABORATORY
         </div>
       </div>
     </nav>
@@ -3903,13 +3897,14 @@
     <!-- ══════ MAIN ══════ -->
     <div id="main">
       <div id="topbar">
-        <div class="tb-bc"><span>AVEVA PI</span><span>›</span><span>PLANT\LAB\UNIT-03</span><span>›</span><span
+        <div class="tb-bc"><span>AVEVA PI</span><span>›</span><span
             class="bc-cur" id="bc">Tableau de bord</span></div>
         <div class="tb-right">
           <div class="tb-refresh">
             <div class="spin-sm"></div><span id="ref-cd">Actualisation: 10s</span>
           </div>
-          <span class="tb-badge bdg-blue">PI Vision</span>
+          <a id="pi-vision-link" target="_blank" rel="noopener" style="text-decoration: none;cursor: pointer" onclick="window.open(CONFIG.PI_VISION_URL, '_blank')">
+            <span class="tb-badge bdg-blue" style="cursor:pointer" title="Ouvrir PI Vision">PI Vision ↗</span></a>
           <span class="tb-badge bdg-green" id="live-badge">● EN DIRECT</span>
           <span class="tb-clock" id="clock">--:--:-- UTC</span>
         </div>
@@ -3925,7 +3920,7 @@
               <div class="pg-h1">Vue d'ensemble</div>
               <div class="pg-sub">Synthèse données labo — Réacteur Baie B · Actualisation auto 10 s</div>
             </div>
-            <div class="pi-lbl">PLANT\LAB\UNIT-03</div>
+            <!--div class="pi-lbl">PLANT\LAB\UNIT-03</div-->
           </div>
           <div class="refresh-bar-wrap">
             <div class="rbar-bg">
@@ -4002,9 +3997,9 @@
           <div class="pg-hdr">
             <div>
               <div class="pg-h1">Saisie de données laboratoire</div>
-              <div class="pg-sub">Enregistrement mesures → PI Historian — PLANT\LAB\UNIT-03</div>
+              <div class="pg-sub">Enregistrement mesures → PI Historian</div>
             </div>
-            <div class="pi-lbl">SOP-LAB-042 · ISO 9001:2015</div>
+            <!-- <div class="pi-lbl">SOP-LAB-042 · ISO 9001:2015</div> -->
           </div>
 
           <!-- Banners -->
@@ -4287,7 +4282,11 @@
 
                   </button>
                   <button class="btn btn-ghost" id="btn-reset" onclick="resetForm()">Réinitialiser</button>
-                  <span class="btn-hint" id="submit-hint">PLANT\LAB\UNIT-03 · SOP-LAB-042</span>
+                  <span class="btn-hint" id="submit-hint">
+  YARA LAB · <span id="hint-form">—</span> · Saisie en cours · 
+  <span id="hint-date">—</span> · <span id="hint-time">—</span> · 
+  <span id="auth-user">—</span>
+</span>
                 </div>
               </div>
 
@@ -5975,7 +5974,13 @@ async function GetSecurityAccess() {
                 <div class="history-unit-header"
                      ${hasChildren ? 'onclick="event.stopPropagation();toggleUnit(this)"' : ""}>
 
-                    <span class="history-unit-name">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+        style="width:14px;height:14px;flex-shrink:0;vertical-align:middle;margin-right:6px">
+     <path d="M9 3h6m-3 0v6l-5 8h12l-5-8V3"/>
+   </svg>
+                    
+                     <span class="history-unit-name">
                         ${unit.Name}
                     </span>
 
@@ -5999,6 +6004,13 @@ async function GetSecurityAccess() {
                         ${forms.map(form => `
                             <div class="history-item"
                                  onclick="event.stopPropagation();/*nav('history-${form.Name}', this)*/;UpdateAppCurrentPage('${form.Name}','${unit.Name}', this, 'history')">
+
+                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+        style="width:12px;height:12px;flex-shrink:0;vertical-align:middle;margin-right:6px;opacity:0.7">
+     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+     <polyline points="14 2 14 8 20 8"/>
+   </svg>
 
                                 - ${form.Name}
 
@@ -6035,7 +6047,12 @@ async function GetSecurityAccess() {
                 <div class="entry-unit-header"
                      ${hasChildren ? 'onclick="event.stopPropagation();toggleUnit(this)"' : ""}>
 
-                    <span class="entry-unit-name">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+        style="width:14px;height:14px;flex-shrink:0;vertical-align:middle;margin-right:6px">
+     <path d="M9 3h6m-3 0v6l-5 8h12l-5-8V3"/>
+   </svg>
+                     <span class="entry-unit-name">
                         ${unit.Name}
                     </span>
 
@@ -6059,6 +6076,12 @@ async function GetSecurityAccess() {
                         ${forms.map(form => `
       <div class="entry-item"
                                  onclick="event.stopPropagation();/*nav('${form.Name}', this)*/;UpdateAppCurrentPage('${form.Name}','${unit.Name}',this, 'entry')">
+                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+        style="width:12px;height:12px;flex-shrink:0;vertical-align:middle;margin-right:6px;opacity:0.7">
+     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+     <polyline points="14 2 14 8 20 8"/>
+   </svg>
 
                                 - ${form.Name}
 
@@ -7078,6 +7101,8 @@ async function filleditpagefields(win, timestamp) {
               + `${timestamp.replace('T', ' ').substring(0, 19)}.`
             : `${ok} valeur(s) enregistrée(s) sur ${total}. Consultez la console.`;
         success.classList.add('show');
+
+        await saveLogs(timestamp,APP.currentUnit,APP.currentForm,APP.username,"Edit",`Formulaire modifié : ${ok}/${total} valeur(s) enregistrée.s`);
       }
 
       return ok === total;
@@ -9002,6 +9027,7 @@ async function loadFormStructure(formWebId) {
       await GetSecurityAccess();
       //const values = getAttributeValues();
       //const formula = "[Concentration]-[Biuret]"
+      
       
       console.log("Those are the entry pages:",APP.entryPages)
 
