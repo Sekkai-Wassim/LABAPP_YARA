@@ -5184,6 +5184,7 @@
     <button class="cfg-tab" onclick="cfgTab('limits',this)">⚠ Limites</button>
     <button class="cfg-tab" onclick="cfgTab('required',this)">* Champs obligatoires</button>
     <button class="cfg-tab" onclick="cfgTab('histo-columns',this)">Histo Table Columns</button>
+    <button class="cfg-tab" onclick="cfgTab('certif-columns',this)">Certif Table Columns</button>
     <button class="cfg-tab" onclick="cfgTab('diag',this)">◎ Diagnostics</button>
     
   </div>
@@ -5368,7 +5369,7 @@
           <input type="checkbox" title="Tout sélectionner / désélectionner" style="width:15px;height:15px;cursor:pointer" onchange="cfgToggleAllHisto(this.checked)">
         </th>
         <th>Section</th>
-        <th>Field</th>
+        <th>Element</th>
         <th style="width:180px">Included In Histo Table</th>
       </tr></thead>
       <tbody id="histo-columns-body"></tbody>
@@ -5379,6 +5380,46 @@
     </div>
   </div>
   </div><!-- /cfg-histo-columns -->
+
+  <!-- Tab Certif Table Columns: writes the Boolean InclusCertif AF attribute. -->
+  <div class="cfg-panel" id="cfg-certif-columns">
+    <!-- Certif Table Columns: values are read from, and saved to, each parameter's
+         Boolean PI AF attribute named "InclusCertif". -->
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">① Sélectionner un formulaire</span>
+        <button class="cfg-btn-sm" onclick="initCertifTableColumnsPage()">Refresh</button>
+      </div>
+      <select class="fc" id="certif-columns-form-select" onchange="selectCertifTableColumnsForm(this.value)" style="max-width:460px;font-size:13px;height:42px">
+        <option value="">-- Select a form --</option>
+      </select>
+    </div>
+    <div class="card" id="certif-columns-section" style="display:none;margin-top:16px">
+      <div class="card-hdr">
+        <span class="card-title"><span id="certif-columns-form-title">--</span> - <span id="certif-columns-count">0</span> field(s)</span>
+        <span id="certif-columns-save-status" style="font-size:11px;color:var(--text-muted)"></span>
+      </div>
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:16px;font-size:11px;color:#1e40af">
+        Choose <strong>True</strong> to include a field in the certification table, or <strong>False</strong> to exclude it. Changes are saved in the field's PI AF <strong>InclusCertif</strong> attribute.
+      </div>
+      <div class="tbl-scroll-wrap"><table class="dt" style="font-size:12px;width:100%">
+        <thead><tr>
+          <th style="width:36px;text-align:center">
+            <input type="checkbox" title="Tout sélectionner / désélectionner" style="width:15px;height:15px;cursor:pointer" onchange="cfgToggleAllCertif(this.checked)">
+          </th>
+          <th>Section</th>
+          <th>Element</th>
+          <th style="width:240px">Name In Certificate</th>
+          <th style="width:180px">Included In Certif Table</th>
+        </tr></thead>
+        <tbody id="certif-columns-body"></tbody>
+      </table></div>
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center">
+        <button class="btn btn-primary" style="padding:9px 20px" onclick="saveCertifTableColumns()">Save changes</button>
+        <span style="font-size:11px;color:var(--text-muted)">Only changed values are written to PI AF.</span>
+      </div>
+    </div>
+  </div><!-- /cfg-certif-columns -->
 
   <!-- Tab Diagnostics -->
   <div class="cfg-panel" id="cfg-diag">
@@ -5431,7 +5472,8 @@
       hasWriteAccess: false,
       hasReadAccess: false,
       logs: [],
-      ParametreObligatoire: {}
+      ParametreObligatoire: {},
+      NamesInCertificate:{}
     };
 
     APP.alertConfigs = []
@@ -5440,6 +5482,7 @@
 
     // Label displayed in the breadcrumb when the Histo Table Columns page opens.
     PAGE_LABELS['histo-table-columns'] = 'Histo Table Columns';
+    PAGE_LABELS['certif-table-columns'] = 'Certif Table Columns';
 
     function toggleUnit(header) {
 
@@ -7223,6 +7266,212 @@ async function GetSecurityAccess() {
 
 }
 
+    async function triggerAnalysisRecalculation(win, timestamp) {
+
+    const doc = win.document;
+
+    try {
+
+        // ============================================================
+        // 1. GET ELEMENT PATHS FROM THE POPUP FORM
+        // ============================================================
+
+        const elements = [
+            ...doc.querySelectorAll('input[path]')
+        ];
+
+        const elementPaths = [];
+
+        elements.forEach(el => {
+
+            const fullPath = el.getAttribute("path");
+
+            if (!fullPath)
+                return;
+
+            // Ignore everything belonging to Meta Data
+            if (/\\Meta Data(\\|$)/i.test(fullPath))
+                return;
+
+            /*
+             * Example:
+             *
+             * \\EC2AMAZ-4F8UROL\Yara Laboratory\Data Lab 2\Urée\AdBlue\Mesure Visuelle\Concentration
+             *
+             * becomes:
+             *
+             * \\Data Lab 2\Urée\AdBlue\Mesure Visuelle\Concentration
+             */
+
+            const match = fullPath.match(
+                /^\\\\[^\\]+\\Yara Laboratory(\\Data Lab 2.*)$/i
+            );
+
+            if (!match)
+                return;
+
+            const elementPath = match[1];
+
+            if (!elementPaths.includes(elementPath)) {
+                elementPaths.push(elementPath);
+            }
+        });
+
+
+        // ============================================================
+        // 2. CHECK THAT WE FOUND ELEMENTS
+        // ============================================================
+
+        if (elementPaths.length === 0) {
+
+            console.warn(
+                "Aucun élément PI AF trouvé pour le recalcul."
+            );
+
+            return {
+                success: false,
+                reason: "NO_ELEMENTS"
+            };
+        }
+
+
+        // ============================================================
+        // 3. CALCULATE START / END TIME
+        // ============================================================
+
+        const date = new Date(timestamp);
+
+        if (isNaN(date.getTime())) {
+
+            console.error(
+                "Timestamp invalide pour le recalcul :",
+                timestamp
+            );
+
+            return {
+                success: false,
+                reason: "INVALID_TIMESTAMP"
+            };
+        }
+
+        const startDate = new Date(
+            date.getTime() - 10 * 60 * 1000
+        );
+
+        const endDate = new Date(
+            date.getTime() + 10 * 60 * 1000
+        );
+
+
+        function formatAnalysisDate(d) {
+
+            return [
+                d.getUTCFullYear(),
+                String(d.getUTCMonth() + 1).padStart(2, "0"),
+                String(d.getUTCDate()).padStart(2, "0")
+            ].join("-")
+            + " "
+            + [
+                String(d.getUTCHours()).padStart(2, "0"),
+                String(d.getUTCMinutes()).padStart(2, "0"),
+                String(d.getUTCSeconds()).padStart(2, "0")
+            ].join(":");
+        }
+
+
+        const startTime = formatAnalysisDate(startDate);
+        const endTime = formatAnalysisDate(endDate);
+
+
+        // ============================================================
+        // 4. BUILD REQUEST
+        // ============================================================
+
+        const payload = {
+
+            element_paths: elementPaths,
+
+            analysis_name: "Analysis Valuer Histo",
+
+            start_time: startTime,
+
+            end_time: endTime,
+
+            calculation_mode: "DeleteExistingData"
+        };
+
+
+        console.log(
+            "Recalcul de l'analyse PI :",
+            payload
+        );
+
+
+        // ============================================================
+        // 5. CALL BACKEND
+        // ============================================================
+
+        const response = await fetch(
+            "/api/analyses/recalculate",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                credentials: "include",
+
+                body: JSON.stringify(payload)
+            }
+        );
+
+
+        if (!response.ok) {
+
+            const errorText = await response.text();
+
+            console.error(
+                "Erreur recalcul PI :",
+                response.status,
+                errorText
+            );
+
+            return {
+                success: false,
+                reason: "HTTP_ERROR",
+                status: response.status
+            };
+        }
+
+
+        const result = await response.json();
+
+        console.log(
+            "Recalcul PI déclenché avec succès :",
+            result
+        );
+
+
+        return {
+            success: true,
+            result
+        };
+
+    } catch (error) {
+
+        console.error(
+            "Erreur lors du déclenchement du recalcul PI :",
+            error
+        );
+
+        return {
+            success: false,
+            reason: "NETWORK_ERROR",
+            error
+        };
+    }
+} 
 
     async function editHistoryRecord(unitName, formName, timestamp) {
 
@@ -7371,10 +7620,62 @@ async function GetSecurityAccess() {
 
       if (submitBtn) {
         submitBtn.onclick = () => {
+
         EditConfirmationQst(win, timestamp, async () => {
+
+        const saveSuccess =
           await submitEditedRecord(win, timestamp);
           
-          });
+
+        // ============================================================
+        // RECORD SAVED SUCCESSFULLY
+        // ============================================================
+
+        if (saveSuccess) {
+
+            const recalculation =
+                await triggerAnalysisRecalculation(
+                    win,
+                    timestamp
+                );
+
+
+            if (recalculation.success) {
+
+                console.log(
+                    "Enregistrement sauvegardé et analyse recalculée."
+                );
+
+                notify(
+                    "Enregistrement sauvegardé. Le recalcul PI a été déclenché.",
+                    "success"
+                );
+
+            } else {
+
+                console.error(
+                    "Enregistrement sauvegardé, mais le recalcul PI a échoué.",
+                    recalculation
+                );
+
+                notify(
+                    "Enregistrement sauvegardé, mais le recalcul PI n'a pas pu être déclenché.",
+                    "warn"
+                );
+            }
+
+        } else {
+
+            // Le save a échoué :
+            // surtout PAS de recalcul.
+
+            console.warn(
+                "L'enregistrement n'a pas été sauvegardé. Recalcul non déclenché."
+            );
+        }
+
+    });
+
         };
       }
 
@@ -7660,64 +7961,6 @@ async function filleditpagefields(win, timestamp) {
       }
     }
 
-    
-
-    /* async function GetEntryDataPages() {
-      try {
-
-        // Get DB WebId from localStorage
-        const dbWebId = sessionStorage.getItem(
-          'AF_DATABASE_WEBID'
-        );
-
-        if (!dbWebId) {
-
-          throw new Error(
-            'Database WebId not found'
-          );
-        }
-
-        console.log(
-          'Loading elements using template:',
-          CONFIG.Level1_Template
-        );
-
-        const response = await fetch(
-
-          `${CONFIG.WEBAPIURL}/assetdatabases/${dbWebId}/elements?templateName=${CONFIG.Level1_Template}&searchFullHierarchy=true&selectedFields=Items.Name;Items.WebId;Items.Links.Attributes`,
-
-          {
-            method: 'GET',
-            credentials: 'include'
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        console.log('Elements:#############################################################################################', data.Items);
-        APP.entryPages = data.Items || [];
-        renderEntryDropdown();
-        renderEntryPages();
-        return APP.entryPages;
-
-      } catch (err) {
-
-        console.error(
-          'Error loading EntryDataPages:',
-          err
-        );
-
-        APP.entryPages = [];
-
-        return [];
-      }
-    } */
-
-
     async function getAttributesofSectionparent(formwebId) {
 
       const response = await fetch(
@@ -7865,14 +8108,6 @@ async function loadFormStructure(formWebId) {
 
       });
 
-      /* const sortedSections = Object.values(sectionMap)
-        .sort((a, b) =>
-          Number(a.sectionOrdre || 0) -
-          Number(b.sectionOrdre || 0)
-        ); */
-
-      //console.log(sortedSections);
-
       const parameterResponse = await fetch(
         "https://sekkai-consulting-pivision.com/PIWEBAPI/batch",
         {
@@ -7922,6 +8157,7 @@ async function loadFormStructure(formWebId) {
             name: parameter.Name,
             webId: parameter.WebId,
             description: parameter.Description,
+            path:parameter.Path,
             template: parameter.TemplateName,
             attributes: [],
             formulas: {}
@@ -7981,33 +8217,11 @@ async function loadFormStructure(formWebId) {
 
         attributes.forEach(attr => {
 
-          // parameterObj.attributes.push({
-          //   name: attr.Name,
-          //   webId: attr.WebId,
-          //   type: attr.Type,
-          //   valueUrl: attr.Links?.Value
-          // });
+          
           const pointUrl = attr.Links?.Point;
 
           const pointWebId =
             pointUrl?.split("/points/")[1];
-
-          // parameterObj.attributes.push({
-
-          //   name: attr.Name,
-
-          //   // AF Attribute WebId
-          //   attributeWebId: attr.WebId,
-
-          //   // PI Point WebId
-          //   pointWebId: pointWebId,
-
-          //   // DIRECT WRITE URL (BEST)
-          //   valueUrl: attr.Links?.Value,
-
-          //   type: attr.Type,
-          //   IsExcluded: attr.IsExcluded
-          // });
 
           const attributeObj = {
             name: attr.Name,
@@ -8019,7 +8233,7 @@ async function loadFormStructure(formWebId) {
             value: undefined
           };
 
-          if (/^CalcFormula\d+$/i.test(attr.Name)||attr.Name === 'Hi'|| attr.Name === 'Target' || attr.Name === 'HiHi' || attr.Name === 'LoLo' || attr.Name === 'Maximum' || attr.Name === 'UOM' || attr.Name === 'ordre' || attr.Name === 'AlertField' || attr.Name === 'Histo' || attr.Name === 'InclusCertif') {
+          if (/^CalcFormula\d+$/i.test(attr.Name)||attr.Name === 'Hi'|| attr.Name === 'Target' || attr.Name === 'HiHi' || attr.Name === 'LoLo' || attr.Name === 'Maximum' || attr.Name === 'UOM' || attr.Name === 'ordre' || attr.Name === 'AlertField' || attr.Name === 'Histo' || attr.Name === 'InclusCertif' ) {
             parameterObj.formulas[attr.Name] = attributeObj;
           }
 
@@ -8047,7 +8261,7 @@ async function loadFormStructure(formWebId) {
           parameter.attributes.forEach(attr => {
 
             if (
-              attr.name === "Target"|| attr.name === "Hi" ||attr.name === "HiHi" || attr.name === "LoLo"|| attr.name === "Maximum" || /^CalcFormula\d+$/i.test(attr.name) || attr.name === "UOM" || attr.name === "UOM1" || attr.name === "UOM2" || attr.name === "AlertField" || attr.name === "ordre" ||attr.name === "Histo" || attr.name === "InclusCertif"|| attr.name === "Obligatoire"
+              attr.name === "Target"|| attr.name === "Hi" ||attr.name === "HiHi" || attr.name === "LoLo"|| attr.name === "Maximum" || /^CalcFormula\d+$/i.test(attr.name) || attr.name === "UOM" || attr.name === "UOM1" || attr.name === "UOM2" || attr.name === "AlertField" || attr.name === "ordre" ||attr.name === "Histo" || attr.name === "InclusCertif"|| attr.name === "Obligatoire" || attr.name === "NameInCertificate"
             ) {
 
               limitBatch[batchIndex] = {
@@ -8094,7 +8308,7 @@ async function loadFormStructure(formWebId) {
           ) {
 
             attr.value = item.Content.Value;
-            if (/^CalcFormula\d+$/i.test(attr.name) || attr.name === 'Target' || attr.name === 'HiHi' || attr.name === 'LoLo' || attr.name === 'UOM' || attr.name === 'UOM1' || attr.name === 'UOM2' || attr.name === 'ordre' || attr.name === 'Histo' || attr.name === 'InclusCertif' || attr.name === 'Obligatoire') {
+            if (/^CalcFormula\d+$/i.test(attr.name) || attr.name === 'Target' || attr.name === 'HiHi' || attr.name === 'LoLo' || attr.name === 'UOM' || attr.name === 'UOM1' || attr.name === 'UOM2' || attr.name === 'ordre' || attr.name === 'Histo' || attr.name === 'InclusCertif' || attr.name === 'Obligatoire' || attr.name === 'NameInCertificate') {
               const parentParam = formModel.sections
                 .flatMap(s => s.parameters)
                 .find(p => p.attributes.includes(attr));
@@ -8533,6 +8747,10 @@ async function loadFormStructure(formWebId) {
         const Obligatoire = parameter.attributes.find(
           a => a.name === "Obligatoire"
           );
+        
+        const NameInCertificate = parameter.attributes.find(
+          a => a.name === "NameInCertificate"
+          );
 
         const pointWebId =
           tag?.pointWebId || "";
@@ -8561,6 +8779,10 @@ async function loadFormStructure(formWebId) {
 
         if (Obligatoire && Obligatoire.value === true){
            APP.ParametreObligatoire[pageName][parameter.name] = true;
+        }
+
+        if (NameInCertificate && NameInCertificate.value){
+           APP.NamesInCertificate[pageName][parameter.name] = NameInCertificate?.value || parameter.name;
         }
 
         if (inputType === "Liste") {
@@ -8605,6 +8827,19 @@ async function loadFormStructure(formWebId) {
             `;
         }
 
+        else if (inputType === "Value"){
+          
+          controlHtml = `
+              <input
+                class="fc"
+                type="number"
+                id="${tag?.pointWebId || ''}"
+                data-url="${tag?.valueUrl || ''}"
+                attributename="${parameter.name}"
+                oninput="refreshAll()"
+                >
+            `;
+        }
         else {
 
           controlHtml = `
@@ -8633,15 +8868,12 @@ async function loadFormStructure(formWebId) {
 
       });
 
-      // let SumbitButondiv = document.createElement("div");
 
-      // SumbitButondiv.style.textAlign = "center";
-      // SumbitButondiv.innerHTML = `<button class="btn btn-primary" onclick="sendAllValuesBatch2('page-AdBlue')">Soumettre</button>`;
 
 
       parent.appendChild(card);
       parent.appendChild(card);
-      // parent.appendChild(SumbitButondiv);
+      
 
     }
 
@@ -8714,10 +8946,7 @@ async function loadFormStructure(formWebId) {
             if (isMetadataSection) {
 
               renderMetadataSection(pageName,section, templatePage);
-              /* let SumbitButondiv = document.createElement("div");
-              SumbitButondiv.style.textAlign = "center";
-              SumbitButondiv.innerHTML = `<button class="btn btn-primary" onclick="sendAllValuesBatch2('page-AdBlue')">Soumettre</button>`;
-              templatePage.appendChild(SumbitButondiv); */
+              
 
 
               return;
@@ -8902,6 +9131,11 @@ async function loadFormStructure(formWebId) {
                 parameter.attributes.find(
                   a => a.name === "Obligatoire"
                 );
+              
+              const NameInCertificate =
+                parameter.attributes.find(
+                  a => a.name === "NameInCertificate"
+                );
 
               if (seuil){
                   APP.ParametreObligatoire[pageName]["Seuil " +parameter.name] = true;
@@ -8926,6 +9160,14 @@ async function loadFormStructure(formWebId) {
                 const certifValue = InclusCertif.value;
                 if (certifValue === true) {
                   APP.CertifTableRows[pageName].push(parameter.name);
+                  //APP.NamesInCertificate[pageName][parameter.name] = NameInCertificate?.value || parameter.name;
+                }
+              }
+
+              if (NameInCertificate && NameInCertificate.type == "String") {
+                const nameInCertValue = NameInCertificate.value;
+                if (nameInCertValue) {
+                  APP.NamesInCertificate[pageName][parameter.name] = nameInCertValue;
                 }
               }
 
@@ -9012,6 +9254,7 @@ async function loadFormStructure(formWebId) {
                       id="${seuil.pointWebId}"
                       data-url="${seuil.valueUrl}"
                       attributename = "Seuil ${parameter.name}"
+                      section = "${section.name}"
                        onchange="handleSeuilChange(this, '${parameter.name}')"
                       >
                   `
@@ -9031,6 +9274,8 @@ async function loadFormStructure(formWebId) {
                       type="number"
                       id="${valeurSaisie.pointWebId}"
                       data-url="${valeurSaisie.valueUrl}" 
+                      section = "${section.name}"
+                      path= "${parameter.path}"
                       attributeName="${parameter.name}"
                       ${loLoValue != null ? `min="${loLoValue}"` : ""}
                       ${hiHiValue != null ? `max="${hiHiValue}"` : ""}
@@ -9055,6 +9300,7 @@ async function loadFormStructure(formWebId) {
                       class="fc"
                       type="number"
                       id="${calc1.pointWebId}"
+                      section = "${section.name}"
                       data-url="${calc1.valueUrl}"
                       data-formula="${(calc1Formula || '').replace(/"/g, '&quot;')}"
                       disabled attributeName="VC1 ${parameter.name}"
@@ -9079,6 +9325,7 @@ async function loadFormStructure(formWebId) {
                       type="number"
                       id="${calc2.pointWebId}"
                       data-url="${calc2.valueUrl}"
+                      section = "${section.name}"
                       data-formula="${(calc2Formula || '').replace(/"/g, '&quot;')}"
                       disabled attributeName="VC2 ${parameter.name}"
                     >
@@ -9162,6 +9409,7 @@ async function loadFormStructure(formWebId) {
             APP.PagefieldAlert[form.Name] = {}; // Initialize the PagefieldAlert for this form
             APP.FormData[form.Name] = []; // Initialize the FormData for this form
             APP.ParametreObligatoire[form.Name] = {}; // Initialize the ParametreObligatoire for this form
+            APP.NamesInCertificate[form.Name] = {}; // Initialize the NamesInCertificate for this form
             APP.entryPages.push({
               Name:      form.Name,
               WebId:     form.WebId,
@@ -9230,10 +9478,7 @@ async function loadFormStructure(formWebId) {
       expr = expr.replace(/\[([^\]]+)\]/g, (_match, token) => {
         const key = token.trim();
         const value = values.hasOwnProperty(key) ? values[key] : "";
-        // if (value === undefined || value === null || Number.isNaN(value)) {
-        //   console.warn(`Formula missing value for [${key}]: replacing with 0`);
-        //   return '0';
-        // }
+        
 
         if (value === undefined ||
           value === null ||
@@ -9450,10 +9695,6 @@ async function loadFormStructure(formWebId) {
     window.onload = async function () {
       GetWebIdAFServer()
       GetDBWebId()
-      //await GetEntryDataPages()
-      //loadFormStructure("F1EmOw3wdib9jEOPBIsnP79txQi1w0AAdO8RG8sQ55u_M6egRUMyQU1BWi00RjhVUk9MXFlBUkEgTEFCT1JBVE9SWVxORVcgREFUQV9MQUJcQURCTFVF")
-      //await pagetodata()
-      //await renderForm2() 
       await GetRootElementWebId()
       await GetUnitsElementsWebId()
       await GetFormsElementsWebId()
@@ -9468,7 +9709,6 @@ async function loadFormStructure(formWebId) {
       await GetSecurityAccess();
       //const values = getAttributeValues();
       //const formula = "[Concentration]-[Biuret]"
-      
       
       console.log("Those are the entry pages:",APP.entryPages)
 
@@ -9504,230 +9744,6 @@ async function loadFormStructure(formWebId) {
         Avatar[0].textContent = APP.username.slice(0, 2) //set the avatar on the side bar
 
         sessionStorage.setItem('LabUser', data.Name); //Store username in session storage
-        // const FormaDataIDs = document.getElementsByClassName("lmt-fc");
-        // console.log(FormaDataIDs)
-        //Get DATA FROM AF TABLE - ("HTML-ID",AttributeName)
-        /* const Table = await fetch(
-          "https://sekkai-consulting-pivision.com/PIWEBAPI/tables/F1BlOw3wdib9jEOPBIsnP79txQGG4W9ZZMVkKIIs7uUQ4MIARUMyQU1BWi00RjhVUk9MXFlBUkEgTEFCT1JBVE9SWVxUQUJMRVNbVEFCTEUzXQ/data",
-          {
-            method: "GET",
-            credentials: "include"
-          }
-        );
-
-        const Tabledata = await Table.json();
-
-        const Rows = Tabledata.Rows;
-
-        //console.log("Rows:", Rows);
-
-        // Store rows using ID as key + build mapping
-        const attributeToIdMap = {};
-
-        Rows.forEach(row => {
-          const id = row.ID;
-          const attribute = row.Attribute;
-
-          // Store row with ID as key
-          sessionStorage.setItem(id, JSON.stringify(row));
-
-          // Build mapping Attribute → ID
-          attributeToIdMap[attribute] = id;
-        });
-
-        console.log("Attribute → ID map:", attributeToIdMap);
-
-        // Build batch request
-        const batch = {};
-        const DA = "EC2AMAZ-PB9DJTU";
-        //const Dataserver = "F1DSkvfVBS_Ah0-8xMRKhIjtrgRUMyQU1BWi1QQjlESlRV";
-        const Element = "F1EmOw3wdib9jEOPBIsnP79txQOWCuX8s88RG8nw55u_M6egRUMyQU1BWi00RjhVUk9MXFlBUkEgTEFCT1JBVE9SWVxEQVRBIExBQlxBREJMVUU"
-
-        Object.keys(attributeToIdMap).forEach((attribute, i) => {
-          batch[i + 1] = {
-            Method: "GET",
-            //Resource: `https://sekkai-consulting-pivision.com/PIWEBAPI/points?path=\\\\${DA}\\${attribute}&selectedFields=WebId;Name`
-            //Resource: `https://sekkai-consulting-pivision.com/PIWEBAPI/dataservers/${Dataserver}/points?nameFilter=${attribute}&selectedFields=Items.WebId;Items.Name`
-            Resource: `https://sekkai-consulting-pivision.com/PIWEBAPI/elements/${Element}/Attributes?nameFilter=${attribute}&selectedFields=Items.links.Point;Items.Name`
-          };
-        });
-
-        //console.log("Batch request:", batch);
-
-        // Call batch API
-        const Batchresponse = await fetch("https://sekkai-consulting-pivision.com/PIWEBAPI/batch", {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(batch)
-        });
-
-        const Batchresponse_Data = await Batchresponse.json();
-        //console.log("Batch response:", Batchresponse_Data);
-
-        // Merge WebIds back into sessionStorage
-        Object.values(Batchresponse_Data).forEach(item => {
-
-          if (!item.Content) return;
-          const piPoint = item.Content.Items?.[0];
-
-          if (!piPoint) {
-            console.warn("Aucun PI Point trouvé pour cet item:", item);
-            return;
-          }
-
-          const name = piPoint.Name?.trim();   // ← Items[0].Name  
-          const webId = piPoint.Links?.Point?.replace("points", "streams") + "/value";          // ← Items[0].WebId 
-
-
-          //const name = item.Content.Items.Name.trim();   // PI Point name
-          //const webId = item.Content.Items.WebId;
-
-
-
-          const id = attributeToIdMap[name];       // find ID
-
-          if (id) {
-            const stored = sessionStorage.getItem(id);
-
-            if (stored) {
-              const parsed = JSON.parse(stored);
-
-              // Add WebId
-              parsed.WebId = webId;
-
-              // Save back
-              sessionStorage.setItem(id, JSON.stringify(parsed));
-            }
-          }
-        });
- */
-        //console.log("Final sessionStorage:", sessionStorage);
-        // const Request = await fetch("https://sekkai-consulting-pivision.com/PIWEBAPI/elements/F1EmOw3wdib9jEOPBIsnP79txQOWCuX8s88RG8nw55u_M6egRUMyQU1BWi00RjhVUk9MXFlBUkEgTEFCT1JBVE9SWVxEQVRBIExBQlxBREJMVUU/attributes?categoryName=rapport&selectedFields=Items.Name;Items.Links.RecordedData", {
-
-        //   method: "GET",
-        //   credentials: "include"
-        // });
-
-        // const RequestData = await Request.json();
-        // console.log(RequestData)
-
-        // const items = RequestData.Items;
-
-        // const recordedLinks = items.map(item => ({
-        //   name: item.Name,
-        //   url: item.Links.RecordedData
-        // }));
-
-        // console.log(recordedLinks);
-
-        // const batchBody = {};
-
-        // recordedLinks.forEach((item, index) => {
-        //   batchBody[index] = {
-        //     Method: "GET",
-        //     Resource: item.url + "?startTime=*-2y"
-        //   };
-        // });
-
-        // console.log(batchBody);
-
-        // const batchResponse3 = await fetch(
-        //   "https://sekkai-consulting-pivision.com/PIWEBAPI/batch",
-        //   {
-        //     method: "POST",
-        //     credentials: "include",
-        //     headers: {
-        //       "Content-Type": "application/json"
-        //     },
-        //     body: JSON.stringify(batchBody)
-        //   }
-        // );
-
-        // const batchData = await batchResponse3.json();
-
-        // console.log(batchData);
-
-        // const finalData = RequestData.Items.map((item, index) => ({
-        //   name: item.Name,
-        //   records: batchData[index]?.Content?.Items || []
-        // }));
-
-        // console.log(finalData);
-
-        // function mapPIToRecords(finalData) {
-
-        //   const rowsMap = {};
-
-        //   finalData.forEach(attr => {
-
-        //     //const attrName = attr.name.toLowerCase();
-        //     const attrName = attr.name;
-        //     attr.records.forEach(rec => {
-
-        //       const ts = rec.Timestamp;
-
-        //       if (!rowsMap[ts]) {
-
-        //         rowsMap[ts] = {
-        //           id: Object.keys(rowsMap).length + 1,
-
-        //           date: ts.split('T')[0],
-        //           time: ts.split('T')[1].slice(0, 5),
-
-        //           lot: '',
-        //           operator: '',
-        //           mass: 0,
-        //           bac: '',
-        //           conc: 0,
-        //           validation: '—',
-
-        //           icpData: {}
-        //         };
-        //       }
-
-        //       const row = rowsMap[ts];
-
-        //       switch (attrName) {
-
-        //         case 'N° Lot':
-        //           row.lot = rec.Value;
-        //           break;
-
-        //         case 'Masse d_enfiolage Lu':
-        //           row.mass = parseFloat(rec.Value);
-        //           break;
-
-        //         case 'Concentration (%pds) Réel':
-        //           row.conc = parseFloat(rec.Value);
-        //           break;
-
-        //         case 'Opérateur':
-        //           row.operator = rec.Value;
-        //           break;
-
-
-
-        //         default:
-
-        //         // Treat everything else as ICP
-        //         row.icpData[attrName] = {
-        //           icp: rec.Value,
-        //           threshold: false
-        //         };
-
-
-        //           break;
-        //       }
-
-        //     });
-
-        //   });
-        //   console.log(Object.values(rowsMap));
-        //   return Object.values(rowsMap);
-        // }
 
         //mapPIToRecords()
         console.log("This is the APP====================================================================================================",APP);
@@ -9917,67 +9933,7 @@ async function loadFormStructure(formWebId) {
       console.log("those are the inputs fields with no web id", NO_WEBID_Element)
 
 
-      // if (valid) {
-      //   console.log("Batch to send:", batch);
-      // }
-
-      // else {
-      //   console.warn('[submitForm] validation failed — aborting');
-      //   document.getElementById('form-err').classList.add('show');
-      //   return;
-      // }
-
-      //console.log("Batch to send:", batch);
-
-      // Send batch request
-      // const response = await fetch("APISERVER/batch", {
-      //   method: "POST",
-      //   credentials: "include",
-      //   headers: {
-      //     "Content-Type": "application/json"
-      //   },
-      //   body: JSON.stringify(batch)
-      // });
-
-      // const result = await response.json();
-      // console.log("Batch result:", result);
-    }
-
-    /* function Getformdata(pagename) {
-      const container = document.getElementById(pagename);
-
-      const values = {};
-
-      container.querySelectorAll('input, select').forEach(el => {
-
-        const key = el.getAttribute('attributeName') || el.getAttribute('id');
-
-        if (el.type === 'checkbox') {
-          values[key] = { value: el.checked, WebId: el.getAttribute('id') };
-        }
-
-        // Radio buttons
-        else if (el.type === 'radio') {
-
-          if (el.checked) {
-
-            values[key] = {
-              value: el.value,
-              WebId: el.getAttribute('id')
-            };
-
-          }
-
-        }
-
-        else {
-          values[key] = { value: el.value, WebId: el.getAttribute('id') };
-        }
-
-
-      });
-      return values
-    } */
+}
 
 
         function Getformdata(pagename) {
@@ -10018,42 +9974,6 @@ async function loadFormStructure(formWebId) {
       return values
     }
 
-    /* function Getformdata(pagename) {
-      const container = document.getElementById(pagename);
-
-      const values = [];
-
-      container.querySelectorAll('input, select').forEach(el => {
-
-        //const key = el.getAttribute('attributeName') || el.getAttribute('id');
-
-        if (el.type === 'checkbox') {
-          values.push({ value: el.checked, WebId: el.getAttribute('id'),element:el });
-        }
-
-        // Radio buttons
-        else if (el.type === 'radio') {
-
-          if (el.checked) {
-
-            values.push({
-              value: el.value,
-              WebId: el.getAttribute('id'),element:el
-            });
-
-          }
-
-        }
-
-        else {
-          values.push({ value: el.value, WebId: el.getAttribute('id'),element:el});
-        }
-
-
-      });
-      return values
-    } */
-
 
     function validateValues(values) {
 
@@ -10093,51 +10013,15 @@ async function loadFormStructure(formWebId) {
       return !hasError;
     }
 
-    /* function validateValues(values, pagename) {
-
-      let hasError = false;
-      const container = document.getElementById(pagename);
-      Object.entries(values).forEach(([key, data]) => {
-
-        const value = data.value;
-
-        const empty =
-          value === '' ||
-          value === null ||
-          value === undefined;
-
-        if (empty) {
-
-          // const field = container.querySelector(`[attributeName="${key}"]`) || container.getElementById(`${key}`);
-          const field = data.element
-
-
-          if (field) {
-            field.classList.add('err');
-          }
-
-          hasError = true;
-
-        } else {
-
-          const field = data.element;
-
-          if (field) {
-            field.classList.remove('err');
-          }
-        }
-
-      });
-      return !hasError;
-    } */
-
 
     function CheckAlertFields(){
       let AllAlert= APP.PagefieldAlert[APP.currentForm] || {};
       let reportedAlert = []
       for (const [field, isAlert] of Object.entries(AllAlert)) {
         if (isAlert) {
-          reportedAlert.push(field);
+           reportedAlert.push(
+                field.replace(/^VC[12]/, "")
+            );
         }
       }
       return reportedAlert;
@@ -10478,10 +10362,12 @@ async function loadFormStructure(formWebId) {
         row.dirty = false;
         row._selected = false;
         row.attribute.value = row.value; // Keep the loaded form model current.
-        const certificateRows = APP.CertifTableRows[_histoColumnsForm] ||= [];
-        const position = certificateRows.indexOf(row.fieldName);
-        if (row.value && position === -1) certificateRows.push(row.fieldName);
-        if (!row.value && position !== -1) certificateRows.splice(position, 1);
+
+        // Keep the Histo table list in sync with the PF AF value for this form.
+        const histoRows = APP.HistoTableCols[_histoColumnsForm] ||= [];
+        const position = histoRows.indexOf(row.fieldName);
+        if (row.value && position === -1) histoRows.push(row.fieldName);
+        if (!row.value && position !== -1) histoRows.splice(position, 1);
       });
 
       const failed = results.length - succeeded.length;
@@ -10509,6 +10395,217 @@ async function loadFormStructure(formWebId) {
       setTimeout(() => { status.textContent = ''; }, 4000);
     }
 
+    /* ══════════════════════════════════════════════════════
+       TAB — INCLUS CERTIF / CERTIF TABLE COLUMNS
+       Reads and writes the Boolean PI AF attribute named "InclusCertif".
+       The logic mirrors the Histo Table Columns tab so users can toggle each
+       field on or off in one place without changing any of the form logic.
+    ══════════════════════════════════════════════════════ */
+    let _certifColumnsForm = null;
+    let _certifColumnRows = [];
+
+    function initCertifTableColumnsPage() {
+      const select = document.getElementById('certif-columns-form-select');
+      if (!select) return;
+      const formsLoaded = APP.entryPages || [];
+      if (!formsLoaded.length) {
+        select.innerHTML = '<option value="">-- Forms are still loading --</option>';
+        return;
+      }
+      const selectedForm = _certifColumnsForm || select.value;
+      select.innerHTML = '<option value="">-- Select a form --</option>' + buildFormOptgroups('Name');
+      if (selectedForm) {
+        select.value = selectedForm;
+        selectCertifTableColumnsForm(selectedForm);
+      }
+    }
+
+    function selectCertifTableColumnsForm(formName) {
+      const pageSection = document.getElementById('certif-columns-section');
+      if (!formName) {
+        _certifColumnsForm = null;
+        _certifColumnRows = [];
+        if (pageSection) pageSection.style.display = 'none';
+        return;
+      }
+
+      _certifColumnsForm = formName;
+      _certifColumnRows = [];
+      const formModel = getFormModel(formName);
+
+      // Only fields that actually expose an InclusCertif AF attribute are editable here.
+      formModel?.sections?.forEach(section => section.parameters?.forEach(parameter => {
+        const inclusCertif = parameter.formulas?.InclusCertif ||
+          parameter.attributes?.find(attribute => attribute.name === 'InclusCertif');
+        if (!inclusCertif?.attributeWebId) return;
+        const nameAttr = parameter.attributes?.find(attribute => attribute.name === 'NameInCertificate');
+        const defaultName = (APP.NamesInCertificate[_certifColumnsForm] && APP.NamesInCertificate[_certifColumnsForm][parameter.name]) || nameAttr?.value || parameter.name;
+        _certifColumnRows.push({
+          sectionName: section.name,
+          fieldName: parameter.name,
+          attribute: inclusCertif,
+          value: inclusCertif.value === true,
+          originalValue: inclusCertif.value === true,
+          dirty: false,
+          _selected: false,
+          nameAttribute: nameAttr,
+          nameValue: defaultName,
+          originalNameValue: defaultName,
+          nameDirty: false
+        });
+      }));
+
+      document.getElementById('certif-columns-form-title').textContent = formName;
+      document.getElementById('certif-columns-count').textContent = _certifColumnRows.length;
+      if (pageSection) pageSection.style.display = '';
+      renderCertifTableColumnsRows();
+    }
+
+    function renderCertifTableColumnsRows() {
+      const body = document.getElementById('certif-columns-body');
+      if (!body) return;
+      if (!_certifColumnRows.length) {
+        body.innerHTML = '<tr><td colspan="5" class="dt-empty">No field with an InclusCertif attribute was found for this form.</td></tr>';
+        return;
+      }
+      body.innerHTML = _certifColumnRows.map((row, index) => `
+        <tr${(row.dirty || row.nameDirty) ? ' style="background:#fffbeb"' : ''}>
+          <td style="text-align:center;width:36px"><input type="checkbox" ${row._selected ? 'checked' : ''} onchange="cfgToggleCertifSelect(${index}, this.checked)" style="width:15px;height:15px;cursor:pointer"></td>
+          <td>${esc(row.sectionName || '-')}</td>
+          <td>${esc(row.fieldName || '-')}</td>
+          <td><input type="text" class="fc" style="height:32px;min-width:180px" value="${esc(row.nameValue || '')}" onchange="updateCertifTableColumnName(${index}, this.value)"></td>
+          <td><select class="fc" style="height:32px;min-width:120px" onchange="updateCertifTableColumn(${index}, this.value)">
+            <option value="true"${row.value ? ' selected' : ''}>True</option>
+            <option value="false"${row.value ? '' : ' selected'}>False</option>
+          </select></td>
+        </tr>`).join('');
+    }
+
+    function updateCertifTableColumnName(index, newValue) {
+      const row = _certifColumnRows[index];
+      if (!row) return;
+      row.nameValue = newValue;
+      row.nameDirty = row.nameValue !== row.originalNameValue;
+      renderCertifTableColumnsRows();
+    }
+
+    function updateCertifTableColumn(index, rawValue) {
+      const row = _certifColumnRows[index];
+      if (!row) return;
+      row.value = rawValue === 'true';
+      row.dirty = row.value !== row.originalValue;
+      renderCertifTableColumnsRows();
+    }
+
+    function cfgToggleCertifSelect(index, checked) {
+      if (_certifColumnRows[index]) _certifColumnRows[index]._selected = checked;
+      const cnt = document.getElementById('certif-columns-count');
+      if (cnt) {
+        const selected = _certifColumnRows.filter(r => r._selected).length;
+        cnt.textContent = `${_certifColumnRows.length} field(s) · ${selected} selected`;
+      }
+    }
+
+    function cfgToggleAllCertif(checked) {
+      _certifColumnRows.forEach(r => { r._selected = checked; });
+      renderCertifTableColumnsRows();
+    }
+
+    async function saveCertifTableColumns() {
+      const status = document.getElementById('certif-columns-save-status');
+      const anySelected = _certifColumnRows.some(row => row._selected);
+      const toSave = _certifColumnRows.filter(row => (row.dirty || row.nameDirty) && (anySelected ? row._selected : true));
+      if (!toSave.length) {
+        notify(anySelected ? 'No selected Certif rows were modified.' : 'No Certif Table Columns changes to save.', 'warn');
+        return;
+      }
+
+      status.textContent = 'Saving changes to PI AF...';
+      status.style.color = 'var(--text-muted)';
+
+      const results = await Promise.all(toSave.map(async row => {
+        try {
+          const ops = [];
+          if (row.dirty) {
+            ops.push(fetch(`${CONFIG.WEBAPIURL}/streams/${row.attribute.attributeWebId}/value`, {
+              method: 'POST', credentials: 'include',
+              headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+              body: JSON.stringify({ Value: row.value })
+            }).then(r => r.ok));
+          }
+          if (row.nameDirty && row.nameAttribute?.attributeWebId) {
+            ops.push(fetch(`${CONFIG.WEBAPIURL}/streams/${row.nameAttribute.attributeWebId}/value`, {
+              method: 'POST', credentials: 'include',
+              headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+              body: JSON.stringify({ Value: row.nameValue })
+            }).then(r => r.ok));
+          }
+          const opResults = await Promise.all(ops);
+          const ok = opResults.every(v => v === true);
+          if (!ok) throw new Error('One or more attribute saves failed');
+          return { row, ok: true };
+        } catch (error) {
+          console.error(`Unable to save Certif attributes for ${row.fieldName}:`, error);
+          return { row, ok: false };
+        }
+      }));
+
+      const succeeded = results.filter(result => result.ok);
+      const formatBool = v => (v ? 'True' : 'False');
+      const changes = succeeded.map(({ row }) => {
+        const parts = [];
+        if (row.dirty) parts.push(`${row.fieldName} InclusCertif: ${formatBool(row.originalValue)} -> ${formatBool(row.value)}`);
+        if (row.nameDirty) parts.push(`${row.fieldName} NameInCertificate: ${row.originalNameValue} -> ${row.nameValue}`);
+        return parts.join(' | ');
+      }).join('; ');
+
+      succeeded.forEach(({ row }) => {
+        if (row.dirty) {
+          row.originalValue = row.value;
+          row.dirty = false;
+          row.attribute.value = row.value;
+          // Keep the in-memory list used by the certificate view in sync with the AF value.
+          const certifRows = APP.CertifTableRows[_certifColumnsForm] ||= [];
+          const position = certifRows.indexOf(row.fieldName);
+          if (row.value && position === -1) certifRows.push(row.fieldName);
+          if (!row.value && position !== -1) certifRows.splice(position, 1);
+        }
+        if (row.nameDirty) {
+          row.originalNameValue = row.nameValue;
+          row.nameDirty = false;
+          if (row.nameAttribute) row.nameAttribute.value = row.nameValue;
+          APP.NamesInCertificate[_certifColumnsForm] ||= {};
+          APP.NamesInCertificate[_certifColumnsForm][row.fieldName] = row.nameValue;
+        }
+        row._selected = false;
+      });
+
+      const failed = results.length - succeeded.length;
+      renderCertifTableColumnsRows();
+      if (failed) {
+        status.textContent = `${succeeded.length} saved, ${failed} failed.`;
+        status.style.color = 'var(--warn)';
+        notify(`${failed} InclusCertif value(s) could not be saved.`, 'warn');
+        showSendingErrorOverlay(`${failed} InclusCertif value(s) could not be saved.`);
+        cfgDiagLog('err', `InclusCertif: ${failed} save failure(s) for ${_certifColumnsForm}`);
+      } else {
+        status.textContent = `${succeeded.length} field(s) saved in PI AF.`;
+        status.style.color = 'var(--ok)';
+        notify('Certif Table Columns saved.', 'ok');
+        showSendingSuccessOverlay(`${succeeded.length} Certif field(s) saved successfully.`);
+        cfgDiagLog('ok', `InclusCertif: ${succeeded.length} field(s) saved for ${_certifColumnsForm}`);
+      }
+
+      if (changes) {
+        try {
+          await saveLogs(null, APP.currentUnit || '', _certifColumnsForm, APP.username || '', 'Edit', `InclusCertif has been modified: ${changes}`);
+        } catch (error) {
+          cfgDiagLog('warn', `InclusCertif logging: ${error.message}`);
+        }
+      }
+      setTimeout(() => { status.textContent = ''; }, 4000);
+    }
+
     function nav(pid, el) {
       if (pid === 'config' && !ROLES[APP.role]?.isAdmin) {
          notify('Configuration restreinte — accès administrateur requis.', 'warn');
@@ -10521,7 +10618,14 @@ async function loadFormStructure(formWebId) {
       document.getElementById('page-' + pid).classList.add('active');
       document.getElementById('bc').textContent = PAGE_LABELS[pid];
       if (pid === 'history') renderHistory();
-      if (pid === 'config') {cfgLoadAFTree(); cfgInitFormulasTab(); cfgInitLimitsTab(); cfgInitRequiredTab();}
+      if (pid === 'config') {
+        cfgLoadAFTree();
+        cfgInitFormulasTab();
+        cfgInitLimitsTab();
+        cfgInitRequiredTab();
+        initHistoTableColumnsPage();
+        initCertifTableColumnsPage();
+      }
     }
 
     /* ══════════════════════════════════════════════════════
@@ -10961,25 +11065,7 @@ async function loadFormStructure(formWebId) {
 
       }
 
-      // if(!valid){
-      //   console.log("not valid")
-      //   el.classList.add('err');
-      //   errEl.classList.add('show');
-      //   row.classList.add('lmt-exceed')
-
-      // }
-
-
-      // if(key!='refraction' && key!='densite' ){
-
-      //   const calcEl = document.getElementById('lt-calc-' + key);
-      //   const calcElval = calcEl.value
-      //   const validval = calcElval === '' || (!isNaN(parseFloat(calcElval)) && parseFloat(calcElval) >= cfg.min && parseFloat(calcElval) <= cfg.max);
-      //   console.log('lt-calc-' + key +": "+calcElval,validval)
-
-      //   // el.classList.toggle('err', calcElval !== '' && !validval);
-      //   // if (errEl) errEl.classList.toggle('show', calcElval !== '' && !validval);
-      // }
+      
 
 
 
@@ -12043,7 +12129,7 @@ async function loadFormStructure(formWebId) {
                 tr.classList.add(css);
 
             tr.innerHTML = `
-                <td>${hasdescription ? parameter + ' (' + cfg.tip + ')' : parameter}</td>
+                <td>${APP.NamesInCertificate[APP.currentForm]?.[parameter]}</td>
                 <td>${value}</td>
                 <td>${cfg?.uom ?? "—"}</td>
                 <td>${cfg?.loLoValue} - ${cfg?.hiHiValue ?? "—"}</td>
@@ -12254,6 +12340,7 @@ async function loadFormStructure(formWebId) {
       if (id === 'limits')   cfgInitLimitsTab();
       if (id === 'required') cfgInitRequiredTab();
       if (id === 'histo-columns') initHistoTableColumnsPage();
+      if (id === 'certif-columns') initCertifTableColumnsPage();
       if (id === 'diag')     cfgRunDiagnostics();
     }
 
@@ -12634,98 +12721,7 @@ async function loadFormStructure(formWebId) {
       return cls.uoms;
     }
 
-    /* ── First select: list of Unit Classes ─────────────────────── */
-    /* ── Single <select> with <optgroup> per Unit Class ─────────────
-       Built once the cache is fully loaded (all classes + all units).
-       value = unit abbreviation, e.g. "mg/L"
-    ─────────────────────────────────────────────────────────────── 
-    function cfgUomPickerHtml(cardId, f) {
-      if (!f.uomField) return '';
-      const currentAbbr = f._uomValue || '';
-
-      // Cache not loaded yet
-      if (!_piUomCache || _piUomCache.length === 0) {
-        return `<select class="fml-select"
-          style="width:100%;min-width:0;box-sizing:border-box;font-size:11px;margin-top:6px"
-          id="fml-uom-unit-${cardId}" disabled>
-          <option>⏳ Chargement des unités…</option>
-        </select>`;
-      }
-
-      const groups = _piUomCache
-        .filter(c => c.uoms && c.uoms.length > 0)
-        .map(c => `
-          <optgroup label="${esc(c.name)}">
-            ${c.uoms.map(u =>
-              `<option value="${esc(u.abbr)}" ${u.abbr === currentAbbr ? 'selected' : ''}>
-                ${esc(u.abbr)} — ${esc(u.name)}
-              </option>`
-            ).join('')}
-          </optgroup>`
-        ).join('');
-
-      return `
-        <div style="margin-top:6px">
-          <select class="fml-select"
-            style="width:100%;min-width:0;box-sizing:border-box;font-size:11px"
-            id="fml-uom-unit-${cardId}"
-            onchange="cfgUomUnitChanged('${cardId}',this.value)">
-            <option value="">— Choisir une unité —</option>
-            ${groups || '<option disabled>Aucune unité disponible</option>'}
-          </select>
-          ${currentAbbr
-            ? `<div style="margin-top:4px;font-size:10px;color:var(--ok)">
-                ✓ Unité : <strong>${esc(currentAbbr)}</strong>
-               </div>`
-            : ''}
-        </div>`;
-    }
-
-    function cfgUomUnitChanged(cardId, abbr) {
-      const f = _formulaCards.find(f => f.id === cardId); if (!f) return;
-      f._uomValue = abbr;
-      if (f._fromPI) f._dirty = true;
-
-      const wrap = document.getElementById('fml-uom-unit-' + cardId)?.closest('div');
-      if (!wrap) return;
-      let confirmDiv = wrap.querySelector('[data-uom-confirm]');
-      if (abbr) {
-        if (!confirmDiv) {
-          confirmDiv = document.createElement('div');
-          confirmDiv.setAttribute('data-uom-confirm', '1');
-          confirmDiv.style.cssText = 'margin-top:4px;font-size:10px;color:var(--ok)';
-          wrap.appendChild(confirmDiv);
-        }
-        confirmDiv.innerHTML = `✓ Unité : <strong>${esc(abbr)}</strong>`;
-      } else if (confirmDiv) {
-        confirmDiv.remove();
-      }
-    }*/
-   /*function cfgUomPickerHtml(cardId, f) {
-  if (!f.uomField) return '';
-  const currentAbbr = f._uomValue || '';
-
-  return `
-    <div style="margin-top:6px;position:relative" id="uom-wrap-${cardId}">
-      <input
-        type="text"
-        class="fml-input"
-        id="uom-input-${cardId}"
-        style="width:100%;box-sizing:border-box"
-        placeholder="Taper une unité ou abréviation… (ex: mg/L, ppm)"
-        value="${esc(currentAbbr)}"
-        autocomplete="off"
-        oninput="cfgUomSearch('${cardId}', this.value)"
-        onfocus="cfgUomSearch('${cardId}', this.value)"
-      >
-      <div id="uom-results-${cardId}"
-        style="display:none;position:absolute;top:100%;left:0;right:0;
-               background:var(--bg-card);border:1px solid var(--border);
-               border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);
-               max-height:220px;overflow-y:auto;z-index:9999;font-size:12px">
-      </div>
-    </div>`;
-}*/
+    
 
 function cfgUomSearch(cardId, query) {
   const resultsEl = document.getElementById('uom-results-' + cardId);
@@ -12872,33 +12868,7 @@ document.addEventListener('click', e => {
     }
 
 
-    /* ── Dropdown 1: which PI AF attribute stores the UOM (UOM/UOM1/UOM2) 
-    function cfgGetPIUomOptions(paramName, selectedValue) {
-      const formModel = APP.pageNametoData && APP.pageNametoData[_currentForm];
-      if (!formModel || !paramName) {
-        return `<option value="">— Choisir une cible d'abord —</option>`;
-      }
-      let foundParam = null;
-      formModel.sections.forEach(s => s.parameters.forEach(p => {
-        if (p.name === paramName) foundParam = p;
-      }));
-      if (!foundParam || !foundParam.formulas) {
-        return `<option value="">— Aucun attribut UOM disponible —</option>`;
-      }
-      let opts = `<option value="">— Aucune (ne pas écrire l'UOM) —</option>`;
-      ['UOM','UOM1','UOM2'].forEach(k => {
-        const a = foundParam.formulas[k];
-        if (!a || !a.attributeWebId) return;
-        const value = `${paramName}::${k}`;
-        const cur   = a.value != null && a.value !== '' ? String(a.value) : '(vide)';
-        opts += `<option value="${esc(value)}"
-          data-attr-webid="${esc(a.attributeWebId)}"
-          ${value === selectedValue ? 'selected' : ''}>
-          ${esc(k)} — actuel : ${esc(cur)}
-        </option>`;
-      });
-      return opts;
-    }*/
+    
 
     
 /* Ferme les résultats UOM au clic extérieur */
@@ -13022,57 +12992,6 @@ async function cfgEnsureUomCache(cardId) {
   if (!_piUomCache || _piUomCache.length === 0) await piLoadUomClasses();
   await Promise.all((_piUomCache || []).map(c => piLoadUomUnits(c.unitsUrl)));
 }
-
-    /*function cfgGetPIUomOptions(paramName, selectedValue) {
-  const formModel = APP.pageNametoData && APP.pageNametoData[_currentForm];
-  if (!formModel || !paramName)
-    return `<option value="">— Choisir une cible d'abord —</option>`;
-  let foundParam = null;
-  formModel.sections.forEach(s => s.parameters.forEach(p => {
-    if (p.name === paramName) foundParam = p;
-  }));
-  if (!foundParam || !foundParam.formulas)
-    return `<option value="">— Aucun attribut UOM disponible —</option>`;
-  let opts = `<option value="">— Aucune (ne pas écrire l'UOM) —</option>`;
-  ['UOM','UOM1','UOM2'].forEach(k => {
-    const a = foundParam.formulas[k];
-    if (!a || !a.attributeWebId) return;
-    const value = `${paramName}::${k}`;
-    const cur   = a.value != null && a.value !== '' ? String(a.value) : '(vide)';
-    opts += `<option value="${esc(value)}"
-      data-attr-webid="${esc(a.attributeWebId)}"
-      ${value === selectedValue ? 'selected' : ''}>
-      ${esc(k)} — actuel : ${esc(cur)}
-    </option>`;
-  });
-  return opts;
-}*/
-
-    /* ── Attribute UOM target selected by user ───────────────────── 
-    function cfgUpdateFormulaUom(id, selectEl) {
-      const f = _formulaCards.find(f => f.id === id); if (!f) return;
-      const opt = selectEl.options[selectEl.selectedIndex];
-
-      f.uomField      = selectEl.value;               // "Al::UOM1" or ''
-      f._uomAttrWebId = opt?.dataset.attrWebid || '';
-      f._uomClass     = '';                            // reset class/unit on attribute change
-      f._uomValue     = '';
-      if (f._fromPI) f._dirty = true;
-
-      // Show / hide the UOM picker below
-      const pickerEl = document.getElementById('fml-uom-picker-' + id);
-      if (!pickerEl) return;
-
-      if (!f.uomField) {
-        pickerEl.innerHTML = '';
-        return;
-      }
-
-      // Load UOM classes if needed, then render picker
-      piLoadUomClasses().then(() => {
-        pickerEl.innerHTML = cfgUomPickerHtml(id, f);
-      });
-    }*/
 
 
     function formulaAutocomplete(textarea){
@@ -13278,9 +13197,7 @@ async function cfgEnsureUomCache(cardId) {
       const t = document.querySelector(`#fml-${id} .fml-card-title`);
       if (t && !f._fromPI) t.textContent = f._targetParam ? `${f._targetParam} VC${(f._targetAttrKey||'').replace(/\D/g,'')}` : 'New formula';
 
-      /*// Le choix de cible change le paramètre → reconstruire le select UOM
-      const uomSel = document.getElementById('fml-uom-'+id);
-      if (uomSel) uomSel.innerHTML = cfgGetPIUomOptions(f._targetParam, f.uomField);*/
+      
 
       cfgPreviewFormula(id);
     }

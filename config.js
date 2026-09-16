@@ -10,7 +10,7 @@ const CONFIG = {
 
   RootElementPath:'\\\\EC2AMAZ-4F8UROL\\Yara Laboratory\\Data Lab 2',
   //Level1_Template:"UniteTemplate",
-
+  PI_VISION_URL: 'https://sekkai-consulting-pivision.com/pivision/#/Displays/New'
   //Level2_Template:"DataEntryTemplate"
 
 //   REFRESH_SEC: 10,
