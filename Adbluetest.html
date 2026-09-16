@@ -3634,6 +3634,435 @@
   text-align:center;
 }
     
+  /* ═══════ COUCHE RESPONSIVE ═══════ */
+
+    /* 100vw inclut la scrollbar → 100% suit le viewport réel.
+       vw viewport ici et vh c'est viewport height */
+    #app {
+      width: 100%;
+      max-width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    
+    #main,
+    #content {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .fg2>*, .fg3>*, .entry-cols>*, .dash-lower>*,
+    .cfg-af-layout>*, .fml-row>*, .hist-toolbar-left>*, .card>* {
+      min-width: 0;
+    }
+
+    /* Le scroll reste DANS le tableau */
+    .lmt-table-wrap,
+    .hist-tbl-outer {
+      max-width: 100%;
+      -webkit-overflow-scrolling: touch; /*  plutôt pour iOS */
+    }
+
+    .lmt-table-wrap { overflow-x: auto; }
+
+    .pg-hdr { flex-wrap: wrap; gap: 10px; }
+    .btn-row { flex-wrap: wrap; }
+
+    
+    #toast {
+      white-space: normal;
+      max-width: min(90vw, 460px);
+      text-align: center;
+    }
+
+    
+    .tip-btn::before {
+      width: min(220px, 62vw);
+      left: auto; right: 0; transform: none;
+    }
+    .tip-btn::after {
+      left: auto; right: 8px; transform: none;
+    }
+
+    .uom-dropdown { max-width: calc(100vw - 32px); }
+
+     #sb-toggle {
+      display: none;              /* desktop : absent grand ecran */
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      margin-left: -6px;
+      margin-right: 2px;
+      border-radius: var(--radius-sm);
+      color: var(--text-h);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+      transition: background .15s, border-color .15s;
+    }
+    #sb-toggle:hover  { background: var(--bg-row-hover); border-color: var(--border-hi); }
+    #sb-toggle:active { transform: scale(.96); }
+    #sb-toggle svg    { width: 20px; height: 20px; pointer-events: none; }
+
+    #sb-backdrop {
+      display: none;              /* desktop : absent grand ecran */
+      position: fixed;
+      inset: 0;
+      background: var(--bg-overlay);
+      z-index: 49;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .22s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    @media screen and (max-width: 1366px) { /* adapté à la tablette de yara et aussi les petits pcs */
+
+      .entry-cols {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 14px;
+      }
+      .entry-right {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: stretch;
+      }
+      .entry-right>* { flex: 1 1 320px; min-width: 0; }
+
+    
+      .cfg-af-layout {
+        grid-template-columns: minmax(0, 1fr);
+        min-height: 0;
+      }
+      .cfg-tree-panel { max-height: 320px; }
+
+      #content { padding: 20px 20px; }
+    }
+  
+    @media screen and (max-width: 1023px) {
+
+      
+      #sidebar {
+        position: fixed;
+        top: 0; left: 0; bottom: 0;
+        width: min(280px, 82vw);
+        min-width: 0;
+        max-width: 280px;
+        z-index: 60;
+        overflow-y: auto;
+        overflow-x: hidden;
+        overscroll-behavior: contain;
+        transform: translateX(-100%);   /* hors écran */
+        visibility: hidden;             /* pas visible */
+        transition: transform .24s ease, visibility .24s step-end;
+        box-shadow: none;
+      }
+      body.sb-open #sidebar {
+        transform: translateX(0);
+        visibility: visible;
+        transition: transform .24s ease, visibility 0s;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, .35);
+      }
+
+      #main { width: 100%; }            /* contenu pleine largeur */
+
+      #sb-toggle   { display: inline-flex; }
+      #sb-backdrop { display: block; }
+      body.sb-open #sb-backdrop { opacity: 1; pointer-events: auto; }
+
+      #sidebar .nav-lbl,
+      #sidebar .sb-logo-text { display: block; }
+      .nav-item { padding: 12px 18px; }
+
+      #content { padding: 18px 16px; }
+      .card    { padding: 16px 16px; }
+
+      .dash-kpi   { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .dash-lower { grid-template-columns: minmax(0, 1fr); }
+      .fg3        { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .fml-row    { grid-template-columns: minmax(0, 1fr); }
+      .entry-right>* { flex: 1 1 100%; }
+
+      #cfg-diag>div[style*="repeat(3"] {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      }
+
+      .hist-toolbar-left,
+      .hist-toolbar-right { flex-wrap: wrap; width: 100%; }
+      .hist-toolbar-right { justify-content: flex-start; }
+
+      .hist-tbl-outer { max-height: calc(100dvh - 300px); }
+
+      .lmt { min-width: 720px; }
+
+      /* les onglets de configuration. */
+      .cfg-tabs { width: 100%; }
+      .cfg-tab  { flex: 1 1 auto; justify-content: center; }
+    }
+
+    @media screen and (max-width: 640px) {  /* Les petits écrans tél par exemple...*/
+      #content { padding: 14px 12px; }
+      .card    { padding: 14px 13px; border-radius: var(--radius); }
+      .card+.card { margin-top: 12px; }
+
+      
+      .fg2, .fg3, .dash-kpi, .dash-lower,
+      .entry-cols, .cfg-af-layout, .fml-row {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 14px;
+      }
+      #cfg-diag>div[style*="grid-template-columns"] {
+        grid-template-columns: minmax(0, 1fr) !important;
+      }
+
+      #cfg-formula-cards>div[style*="grid-template-columns"] {
+        grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+      }
+
+      .fg-row { flex-wrap: wrap; row-gap: 2px; }
+
+      .hist-toolbar { gap: 8px; }
+      .hist-toolbar-left>*,
+      .hist-toolbar-right>* { width: 100%; flex: 1 1 100%; }
+
+      .hist-filter,
+      select.hist-filter { width: 100% !important; }
+
+      .hist-record-count { text-align: center; }
+      .btn-export,
+      .btn-row .btn { width: 100%; justify-content: center; }
+      .btn-hint { margin-left: 0; width: 100%; }
+
+      .pg-h1 { font-size: 16px; }
+      .pg-hdr .pi-lbl { margin-top: 2px; }
+
+      #topbar {
+        height: auto;
+        min-height: var(--topbar-h);
+        padding: 8px 12px;
+        flex-wrap: wrap;
+        row-gap: 6px;
+      }
+      .tb-right   { margin-left: auto; flex-wrap: wrap; gap: 8px; }
+      .tb-refresh { order: 3; }
+
+      .hist-tbl-outer { max-height: calc(100dvh - 340px); }
+      .lmt { min-width: 640px; }
+
+      .cfg-tree-panel { max-height: 260px; }
+      .cfg-kv     { flex-direction: column; gap: 3px; }
+      .cfg-kv-key { min-width: 0; }
+
+      .uom-col-classes { width: 45%; min-width: 110px; }
+
+      .overlay-card { max-width: calc(100vw - 32px); }
+      .denied-box   { padding: 28px 20px; max-width: calc(100vw - 32px); }
+      .overlay-buttons { flex-wrap: wrap; }
+      .overlay-buttons button { width: 100% !important; min-width: 0 !important; }
+
+      #cert-doc { padding: 24px 18px !important; }
+    }
+
+    @media (pointer: coarse) {
+
+      .fc, .hist-filter, .fml-input, .fml-select,
+      .cfg-tree-search input {
+        min-height: 44px;
+        font-size: 14px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+      }
+      textarea.fc  { min-height: 96px; }
+      .lmt-fc      { min-height: 42px; font-size: 13px; }
+      .uom-trigger { height: 44px; font-size: 13px; }
+
+      .btn, .btn-export, .cfg-btn-sm, .cfg-tab {
+        min-height: 44px;
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+      .btn-row, .hist-toolbar,
+      .hist-toolbar-left, .hist-toolbar-right { gap: 12px; }
+
+      .cb-box { width: 24px; height: 24px; }
+      .radio-chip-lbl,
+      .valid-chip-lbl { padding: 11px 18px; font-size: 12px; }
+      .q-chip { min-height: 44px; min-width: 56px; }
+
+      .nav-item { padding-top: 13px; padding-bottom: 13px; }
+      .entry-item, .history-item,
+      .entry-unit-header, .history-unit-header,
+      .cfg-tree-node, .uom-class-item, .uom-unit-item {
+        min-height: 42px;
+        display: flex;
+        align-items: center;
+      }
+      .role-sel { min-height: 40px; }
+
+      .lmt-table-wrap, .hist-tbl-outer,
+      .cfg-tree, .cfg-diag-log { overscroll-behavior: contain; }
+
+      .tip-btn::before,
+      .tip-btn::after { display: none; }
+    }
+
+    @media screen and (orientation: landscape) and (max-height: 820px) {
+      .hist-tbl-outer { max-height: calc(100dvh - 240px); }
+      .cfg-tree-panel { max-height: 46dvh; }
+      .cfg-diag-log   { max-height: 200px; }
+    }
+
+    @media screen and (max-width: 1023px) and (max-height: 620px) {
+      #sidebar { padding-bottom: 8px; }
+      .sb-foot { margin-top: 24px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #sidebar, #sb-backdrop { transition: none !important; }
+    }
+
+    @media print {
+      #sb-toggle, #sb-backdrop { display: none !important; }
+    }
+
+    .nav-main {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .nav-main .nav-lbl {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .nav-item>.dropdown-chevron {
+      flex-shrink: 0;
+    }
+
+    .cfg-panel.active {
+      overflow-x: visible;
+    }
+
+    .tbl-scroll-wrap {
+      overflow-x: auto;
+      overflow-y: hidden;
+      max-width: 100%;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-x: contain;
+      border-radius: var(--radius-sm);
+    }
+
+    /* Largeur mini : sans elle le tableau se tasse au lieu de défiler. */
+    .tbl-scroll-wrap>.dt {
+      min-width: 820px;
+    }
+
+    /* 3. TOPBAR : badges sur une seule ligne. */
+    .tb-badge {
+      white-space: nowrap;
+    }
+
+    @media screen and (max-width: 640px) {
+
+      /* PI Vision : on ne garde que la flèche. */
+      .tb-badge-txt {
+        display: none;
+      }
+
+      #pi-vision-link .tb-badge {
+        padding: 3px 8px;
+        font-size: 12px;
+        line-height: 1;
+      }
+
+      /* L'horloge passe à la ligne plutôt que d'écraser les badges. */
+      .tb-clock {
+        flex-basis: 100%;
+        order: 4;
+      }
+
+      /* Tableaux de config : largeur mini réduite sur petit écran. */
+      .tbl-scroll-wrap>.dt {
+        min-width: 680px;
+      }
+    }
+
+    #content {
+      touch-action: auto;
+      overscroll-behavior-y: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .lmt-table-wrap,
+    .tbl-scroll-wrap {
+      touch-action: pan-x pan-y pinch-zoom;
+      overscroll-behavior-x: contain;
+      overscroll-behavior-y: auto;
+    }
+
+    .hist-tbl-outer,
+    .cfg-tree,
+    .cfg-diag-log,
+    .uom-col-classes,
+    .uom-col-units {
+      touch-action: pan-x pan-y pinch-zoom;
+      overscroll-behavior-x: contain;
+      overscroll-behavior-y: auto;
+    }
+
+    .fc, .lmt-fc, .hist-filter,
+    .fml-input, .fml-select, .fml-textarea,
+    .btn, .btn-export, .cfg-btn-sm, .cfg-tab,
+    .radio-chip-lbl, .valid-chip-lbl, .q-chip,
+    .cb-box, .uom-trigger {
+      touch-action: manipulation;
+    }
+
+    .kpi-card, .card-hdr, .pg-hdr,
+    .fg-lbl, .fg-tag, .fg-hint, .sec-hdr,
+    .sum-chip, .lmt-prop, .hist-legend, .cfg-kv-key {
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    /* alignement des menus déroulantes */
+
+        .entry-unit-header,
+    .history-unit-header {
+      justify-content: flex-start;
+      gap: 8px;
+    }
+
+    .entry-unit-header>.dropdown-chevron1,
+    .history-unit-header>.dropdown-chevron1 {
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    /* L'icône porte un margin-right:6px inline : neutralisé, le gap suffit. */
+    .entry-unit-header>svg:first-child,
+    .history-unit-header>svg:first-child {
+      margin-right: 0 !important;
+      flex-shrink: 0;
+    }
+
+    .entry-unit-name,
+    .history-unit-name {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
   </style>
 </head>
 
@@ -3894,9 +4323,21 @@
       </div>
     </nav>
 
+    <!-- Overlay du tiroir : clic extérieur = fermeture -->
+    <div id="sb-backdrop"></div>
+
     <!-- ══════ MAIN ══════ -->
     <div id="main">
       <div id="topbar">
+        <!-- Bouton hamburger : visible uniquement ≤1023px (cf. couche responsive) -->
+        <button id="sb-toggle" type="button" aria-label="Ouvrir la navigation"
+          aria-controls="sidebar" aria-expanded="false" onclick="toggleSidebar()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
         <div class="tb-bc"><span>AVEVA PI</span><span>›</span><span
             class="bc-cur" id="bc">Tableau de bord</span></div>
         <div class="tb-right">
@@ -3904,7 +4345,7 @@
             <div class="spin-sm"></div><span id="ref-cd">Actualisation: 10s</span>
           </div>
           <a id="pi-vision-link" target="_blank" rel="noopener" style="text-decoration: none;cursor: pointer" onclick="window.open(CONFIG.PI_VISION_URL, '_blank')">
-            <span class="tb-badge bdg-blue" style="cursor:pointer" title="Ouvrir PI Vision">PI Vision ↗</span></a>
+            <span class="tb-badge bdg-blue" style="cursor:pointer" title="Ouvrir PI Vision"><span class="tb-badge-txt">PI Vision</span> ↗</span></a>
           <span class="tb-badge bdg-green" id="live-badge">● EN DIRECT</span>
           <span class="tb-clock" id="clock">--:--:-- UTC</span>
         </div>
@@ -6012,7 +6453,7 @@ async function GetSecurityAccess() {
      <polyline points="14 2 14 8 20 8"/>
    </svg>
 
-                                - ${form.Name}
+                                ${form.Name}
 
                             </div>
                         `).join("")}
@@ -6083,7 +6524,7 @@ async function GetSecurityAccess() {
      <polyline points="14 2 14 8 20 8"/>
    </svg>
 
-                                - ${form.Name}
+                                ${form.Name}
 
       </div>
                         `).join("")}
@@ -13733,6 +14174,59 @@ if (row._alertFieldAttrWebId) {
 
     // Apply stored formulas to PI_CONFIG on load
     document.addEventListener('DOMContentLoaded', cfgApplyFormulasToApp);
+    /*responsivness */
+    const SB_DRAWER_MQ = window.matchMedia('(max-width: 1023px)');
+
+    function isSidebarDrawer() { return SB_DRAWER_MQ.matches; }
+
+    function openSidebar() {
+      if (!isSidebarDrawer()) return;
+      document.body.classList.add('sb-open');
+      document.getElementById('sb-toggle')?.setAttribute('aria-expanded', 'true');
+      document.getElementById('sb-backdrop')?.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeSidebar() {
+      if (!document.body.classList.contains('sb-open')) return;
+      document.body.classList.remove('sb-open');
+      document.getElementById('sb-toggle')?.setAttribute('aria-expanded', 'false');
+      document.getElementById('sb-backdrop')?.setAttribute('aria-hidden', 'true');
+      closeAllDropdowns();
+    }
+
+    function toggleSidebar() {
+      document.body.classList.contains('sb-open') ? closeSidebar() : openSidebar();
+    }
+
+    /* Clic sur l'overlay = fermeture */
+    document.getElementById('sb-backdrop')?.addEventListener('click', closeSidebar);
+
+    /* Clic n'importe où en dehors du tiroir */
+    document.addEventListener('click', (e) => {
+      if (!document.body.classList.contains('sb-open')) return;
+      if (e.target.closest('#sidebar') || e.target.closest('#sb-toggle')) return;
+      closeSidebar();
+    });
+
+    /* Échap ferme le tiroir */
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeSidebar();
+    });
+
+    /* Naviguer ferme le tiroir — délégation */
+    document.getElementById('sidebar')?.addEventListener('click', (e) => {
+      if (!isSidebarDrawer()) return;
+      const t = e.target;
+      if (t.closest('.entry-item') || t.closest('.history-item') ||
+          (t.closest('.nav-item') && !t.closest('.nav-dropdown'))) {
+        setTimeout(closeSidebar, 120);
+      }
+    });
+
+    /* Retour desktop : on nettoie l'état pour ne pas laisser un overlay actif */
+    SB_DRAWER_MQ.addEventListener('change', (ev) => {
+      if (!ev.matches) closeSidebar();
+    });
 
 
   </script>
