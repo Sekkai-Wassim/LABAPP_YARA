@@ -2488,6 +2488,7 @@
 
     /* ── History table wrapper ── */
     .hist-tbl-outer {
+      position: relative;
       overflow-x: auto;
       overflow-y: auto;
       max-height: calc(100vh - 280px);
@@ -2495,6 +2496,29 @@
       box-shadow: var(--shadow-sm);
       background: var(--bg-card);
       border: 1px solid var(--border);
+    }
+
+    .history-table-loading {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: rgba(240, 244, 248, .82);
+      backdrop-filter: blur(2px);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .history-table-loading.show { display: flex; }
+
+    .history-table-loading .lo-ring {
+      width: 28px;
+      height: 28px;
+      border-width: 2px;
     }
 
     /* Sticky header */
@@ -4911,11 +4935,11 @@
           <!-- Toolbar -->
           <div class="hist-toolbar">
             <div class="hist-toolbar-left">
-              <input class="hist-filter" type="date" id="hist-filter-date-from" onchange="refreshHistory(this)"
+              <input class="hist-filter" type="date" id="hist-filter-date-from" 
                 title="Date début">
-              <input class="hist-filter" type="date" id="hist-filter-date-to" onchange="refreshHistory(this)"
+              <input class="hist-filter" type="date" id="hist-filter-date-to" 
                 title="Date fin">
-              <select class="hist-filter" id="hist-filter-valid" onchange="refreshHistory(this)" style="width:140px">
+              <select class="hist-filter" id="hist-filter-valid" style="width:140px">
                 <option value="">Toutes validations</option>
                 <option value=1>Conforme</option>
                 <option value=0>Non Conforme</option>
@@ -5502,7 +5526,7 @@
 }
 
 
-    async function mapPIToRecords(unitName, formName) {
+    async function mapPIToRecords(unitName, formName, startTime = "*-2y", endTime = "*") {
 
     //----------------------------------------
     // Get form model
@@ -5653,8 +5677,8 @@
             Method: "GET",
 
             Resource:
-                histoValue.Links.RecordedData +
-                "?startTime=*-2y"
+                `${histoValue.Links.RecordedData}?startTime=${encodeURIComponent(startTime)}` +
+                `&endTime=${encodeURIComponent(endTime)}`
 
         };
 
@@ -5668,7 +5692,9 @@
 
         recordedBatch[requestId] = {
             Method: "GET",
-            Resource: `${attributeInfo.recordedDataUrl}?startTime=*-2y`
+            Resource:
+                `${attributeInfo.recordedDataUrl}?startTime=${encodeURIComponent(startTime)}` +
+                `&endTime=${encodeURIComponent(endTime)}`
         };
 
         recordedRequestMap[requestId] = {
@@ -6680,6 +6706,11 @@ async function GetSecurityAccess() {
 
                 newPage.className = "page";
                 newPage.id = `page-${form.Name}`;
+                // Keep the rendered page tied to its source form.  Parameter
+                // names are not globally unique (for example, both AdBlue and
+                // NoxCare can have the same attribute name).
+                newPage.dataset.unit = unitName;
+                newPage.dataset.form = form.Name;
 
         // Clone header
         if (pagehdr) {
@@ -6725,6 +6756,17 @@ async function GetSecurityAccess() {
     const pagehdr = templatePage.querySelector(".pg-hdr");
     const histtoolbar = templatePage.querySelector(".hist-toolbar");
     const histLegend = templatePage.querySelector(".hist-legend");
+    const today = new Date();
+    const twoYearsAgo = new Date(today);
+    twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+    const toDateInputValue = date => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+    };
+    const todayValue = toDateInputValue(today);
+    const twoYearsAgoValue = toDateInputValue(twoYearsAgo);
 
     if (!APP.Forms) {
         console.warn("APP.Forms is empty");
@@ -6759,7 +6801,10 @@ async function GetSecurityAccess() {
             }
 
             if (histtoolbar) {
-                page.appendChild(histtoolbar.cloneNode(true));
+                const toolbarClone = histtoolbar.cloneNode(true);
+                toolbarClone.querySelector("#hist-filter-date-from").value = twoYearsAgoValue;
+                toolbarClone.querySelector("#hist-filter-date-to").value = todayValue;
+                page.appendChild(toolbarClone);
             }
 
             if (histLegend) {
@@ -6801,6 +6846,11 @@ async function GetSecurityAccess() {
 
             const tableWrapper = document.createElement("div");
             tableWrapper.className = "hist-tbl-outer";
+            tableWrapper.innerHTML = `
+              <div class="history-table-loading" aria-live="polite" aria-busy="true">
+                <div class="lo-ring"></div>
+                <span>Chargement des données…</span>
+              </div>`;
 
             const table = document.createElement("table");
             table.className = "hist-tbl";
@@ -6853,7 +6903,7 @@ async function GetSecurityAccess() {
             cols.forEach(col => {
                 console.log(`Adding header column: ${col}`);
                 const th = document.createElement("th");
-                const alert = APP.alertConfigs.find(alert => alert.parameterName === col);
+                const alert = APP.alertConfigs.find(alert => alert.parameterName === col && alert.formname === form.Name && alert.unitName === unitName);
                 if (alert) {
                     th.innerHTML = `${col}<br> <span class="th-lim">Min:${alert.loLoValue}</span><span class="th-lim">Max:${alert.hiHiValue}</span>`;
                 } else {
@@ -6979,6 +7029,7 @@ async function GetSecurityAccess() {
         //----------------------------------------
         // Multi-color mode
         //----------------------------------------
+        //console.log("Value:",v,"ParameterName:" ,cfg.parameterName, "Thresholds:", { maxV, hiHi, loLo, hi, target }, "Multi-color mode:", isMultiColors);
 
         if (isMultiColors) {
 
@@ -7003,7 +7054,6 @@ async function GetSecurityAccess() {
            return "cell-ok";
 
         }
-
         //----------------------------------------
         // Two-color mode
         //----------------------------------------
@@ -7195,17 +7245,33 @@ async function GetSecurityAccess() {
             td = document.createElement("td");
             td.classList.add("hc-val");
 
-            const rawValue = record.values[parameter];
+            let rawValue = record.values[parameter];
 
             if (rawValue == null || rawValue === "") {
                 td.textContent = "-";
                 tr.appendChild(td);
                 return;
             }
+            
+            // Cas des valeurs PI retournées sous forme d'objet
+            if (typeof rawValue === "object" && rawValue !== null) {
+
+                // PI indique explicitement qu'il n'y a pas de donnée
+                if (rawValue.Name === "No Data") {
+                    td.textContent = "-";
+                    tr.appendChild(td);
+                    return;
+                }
+
+                // Pour les autres objets contenant une vraie valeur
+                if (Object.prototype.hasOwnProperty.call(rawValue, "Value")) {
+                    rawValue = rawValue.Value;
+                }
+            }
 
             // Find the alert thresholds for this parameter in this unit.
             const cfg = APP.alertConfigs.find(
-                c => c.parameterName === parameter && c.unitName === unitName
+                c => c.parameterName === parameter && c.unitName === unitName && c.formname === formName
             );
 
             // 1-4) Colour the cell according to the thresholds.
@@ -7359,7 +7425,7 @@ async function GetSecurityAccess() {
         );
 
         const endDate = new Date(
-            date.getTime() + 10 * 60 * 1000
+            date.getTime() 
         );
 
 
@@ -7582,7 +7648,9 @@ async function GetSecurityAccess() {
 </html>`);
 
         win.document.querySelectorAll('input[attributeName]').forEach(el => {
-        if (el.disabled) return;
+        // Validation is a user decision in the edit window; do not run the
+        // alert refresh immediately after its radio button is clicked.
+        if (el.disabled || el.getAttribute('attributeName') === 'validation') return;
         el.addEventListener('input', () => {
           //recalculateAllFormulas(win.document);
           refreshAll(win.document);
@@ -7621,10 +7689,12 @@ async function GetSecurityAccess() {
       if (submitBtn) {
         submitBtn.onclick = () => {
 
+        if (!validateEditedRecordRequiredFields(win, formName)) return;
+
         EditConfirmationQst(win, timestamp, async () => {
 
         const saveSuccess =
-          await submitEditedRecord(win, timestamp);
+          await submitEditedRecord(win, timestamp, formName);
           
 
         // ============================================================
@@ -7686,26 +7756,51 @@ async function GetSecurityAccess() {
 async function filleditpagefields(win, timestamp) {
     
   const doc = win.document;
+
   const sub = doc.querySelector('.eo-bar div div:nth-child(2)');
   if (sub) sub.textContent = 'Chargement des données...';
 
    const fields = [...doc.querySelectorAll('input[id], select[id]')]
         .filter(el => /^F1/.test(el.id) && el.id.length > 20);
 
+  /*
+   * Timestamp demandé converti en millisecondes.
+   * Cela permet de comparer correctement :
+   * 2026-05-11T11:52:14Z
+   * avec un timestamp PI équivalent ayant éventuellement
+   * une représentation différente.
+   */
+  const requestedTime = new Date(timestamp).getTime();
+
+  if (isNaN(requestedTime)) {
+    console.error(
+      'Timestamp invalide dans filleditpagefields :',
+      timestamp
+    );
+    return;
+  }
+
       const batch = {};
+
       fields.forEach((el, i) => {
+
         batch[`i${i}`] = {
-          Method:   'GET',
-          Resource: `${CONFIG.WEBAPIURL}/streams/${el.id}/value`
-                  + `?time=${encodeURIComponent(timestamp)}`
+      Method: 'GET',
+      Resource:
+        `${CONFIG.WEBAPIURL}/streams/${el.id}/recorded` +
+        `?startTime=${encodeURIComponent(timestamp)}` +
+        `&endTime=${encodeURIComponent(timestamp)}`
         };
+
       });
 
+  try {
+
       const res = await fetch(`${CONFIG.WEBAPIURL}/batch`, {
-        method:      'POST',
+      method: 'POST',
         credentials: 'include',
         headers: {
-          'Content-Type':     'application/json',
+        'Content-Type': 'application/json',
           'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify(batch)
@@ -7713,53 +7808,227 @@ async function filleditpagefields(win, timestamp) {
 
       const data = await res.json();
 
-      fields.forEach((el, i) => {
-        const item = data[`i${i}`];
-        if (!item  || item.Content?.Value === undefined) return;
-        
-          if (el.type === 'radio') return;
-        
-       const v = item.Content.Value;
-       if (el.type === 'checkbox') {
-         el.checked = (v === true || v === 'true' || v === 1 || v === '1');
-       } else {
-         el.value = (v ?? '');
-       }
-      });
-    
+    console.log(
+      'Timestamp demandé :',
+      timestamp
+    );
 
-     console.log('timestamp reçu dans filleditpagefields :', timestamp);
+      fields.forEach((el, i) => {
+
+        const item = data[`i${i}`];
+
+      /*
+       * La requête PI a échoué pour ce champ.
+       */
+      if (
+        !item ||
+        item.Status < 200 ||
+        item.Status >= 300
+      ) {
+        console.warn(
+          `Impossible de récupérer le champ ${el.id}`,
+          item
+        );
+        return;
+      }
+
+      const values = item.Content?.Items || [];
+
+      /*
+       * Cherche UNIQUEMENT un événement enregistré
+       * exactement au timestamp demandé.
+       *
+       * Une valeur précédente ou suivante est ignorée.
+       */
+      const exactValue = values.find(event => {
+
+        const eventTime =
+          new Date(event.Timestamp).getTime();
+
+        return eventTime === requestedTime;
+
+      });
+
+      /*
+       * Aucun événement exactement à ce timestamp.
+       *
+       * On laisse donc le champ vide.
+       */
+      if (!exactValue) {
+
+        console.log(
+          `Aucune valeur exacte pour ${el.id} à ${timestamp}`
+        );
+
+       if (el.type === 'checkbox') {
+
+          el.checked = false;
+
+        } else if (el.type !== 'radio') {
+
+          el.value = '';
+
+        }
+
+        return;
+      }
+
+      /*
+       * Un événement exact a été trouvé.
+       */
+      const v = exactValue.Value;
+
+      console.log(
+        `Valeur exacte trouvée pour ${el.id} :`,
+        exactValue.Timestamp,
+        v
+      );
+
+      /*
+       * Les radios de validation sont traités
+       * séparément plus bas.
+       */
+      if (el.type === 'radio')
+        return;
+
+      if (el.type === 'checkbox') {
+
+        el.checked =
+          v === true ||
+          v === 'true' ||
+          v === 1 ||
+          v === '1';
+
+       } else {
+
+        el.value = v ?? '';
+
+      }
+
+    });
+
+
+    /*
+     * Affichage de la date et de l'heure de l'enregistrement.
+     */
+    console.log(
+      'Timestamp reçu dans filleditpagefields :',
+      timestamp
+    );
+
      const dateEl = doc.getElementById('f-date');
      const timeEl = doc.getElementById('f-time');
 
-    if(dateEl) {
+    if (dateEl) {
+
       dateEl.value = timestamp.split('T')[0];
+
       dateEl.disabled = true;
       dateEl.style.background = '#f1f5f9';
-      dateEl.style.color      = '#64748b';
+      dateEl.style.color = '#64748b';
+
     }
-    if(timeEl) {
-      timeEl.value = timestamp.split('T')[1]?.substring(0, 8);
+
+    if (timeEl) {
+
+      timeEl.value =
+        timestamp.split('T')[1]?.substring(0, 8);
+
       timeEl.readOnly = true;
       timeEl.disabled = true;
       timeEl.style.background = '#f1f5f9';
+
     }
   
 
-    const validationEl = doc.querySelector('input[type="radio"][name^="validation_"]')?.id;
+    /*
+     * Validation
+     *
+     * La validation est elle aussi récupérée
+     * uniquement si un événement existe exactement
+     * au timestamp sélectionné.
+     */
+    const validationEl =
+      doc.querySelector(
+        'input[type="radio"][name^="validation_"]'
+      )?.id;
 
     if (validationEl) {
-      const batchKey = Object.keys(batch).find(key => batch[key].Resource.includes(validationEl));
-      const validationItem = batchKey ? data[batchKey] : null;
-      const val = validationItem?.Content?.Value;  
+
+      const batchKey =
+        Object.keys(batch).find(
+          key =>
+            batch[key].Resource.includes(validationEl)
+        );
+
+      const validationItem =
+        batchKey ? data[batchKey] : null;
+
+      const validationValues =
+        validationItem?.Content?.Items || [];
+
+      const exactValidation =
+        validationValues.find(event => {
+
+          const eventTime =
+            new Date(event.Timestamp).getTime();
+
+          return eventTime === requestedTime;
+
+        });
+
+      const val =
+        exactValidation?.Value;
 
       if (val !== undefined) {
-        doc.querySelectorAll(`input[type="radio"][name^="validation_"]`).forEach(radio => {
-          radio.checked = (String(radio.value) === String(val));
-        });
+
+        doc
+          .querySelectorAll(
+            'input[type="radio"][name^="validation_"]'
+          )
+          .forEach(radio => {
+
+            radio.checked =
+              String(radio.value) === String(val);
+
+          });
+
+      } else {
+
+        /*
+         * Aucun événement de validation exactement
+         * à ce timestamp.
+         *
+         * Aucun bouton n'est sélectionné.
+         */
+        doc
+          .querySelectorAll(
+            'input[type="radio"][name^="validation_"]'
+          )
+          .forEach(radio => {
+
+            radio.checked = false;
+
+          });
+
       }
-   }
+
+    }
+
+    /*
+     * Recalcule l'affichage / les alertes après
+     * avoir chargé les valeurs exactes.
+     */
    refreshAll(win.document);
+
+  } catch (error) {
+
+    console.error(
+      'Erreur lors du chargement de l’enregistrement :',
+      error
+    );
+
+  }
   }
   function EditConfirmationQst(win, timestamp, onConfirm) {
 
@@ -7781,81 +8050,134 @@ async function filleditpagefields(win, timestamp) {
 
       overlay.classList.add('show');
     }
-  async function submitEditedRecord(win, timestamp){
+  function validateEditedRecordRequiredFields(win, formName) {
     const doc = win.document;
-    doc.getElementById('sending-overlay')?.classList.add('show');
-    const fields = [...doc.querySelectorAll('input[id], select[id]')]
+    const requiredFields = APP.ParametreObligatoire[formName] || {};
+    const controls = [...doc.querySelectorAll('input[id], select[id]')]
         .filter(el => /^F1/.test(el.id) && el.id.length > 20);
-    
-    if (!fields.length) {
-      console.warn('Aucun champ à soumettre.');
+    const radioGroups = new Map();
+    const invalid = [];
+
+    controls.forEach(el => {
+      el.classList.remove('err');
+      const name = el.getAttribute('attributename') || el.id;
+      if (!requiredFields[name]) return;
+
+      if (el.type === 'radio') {
+        if (!radioGroups.has(name)) radioGroups.set(name, []);
+        radioGroups.get(name).push(el);
       return;
     }
-    const batch={};
-    const seen = new Set();
-    fields.forEach((el, i) => {
-      if (el.type === 'radio' && !el.checked) return;
-      if (seen.has(el.id)) return;
-      seen.add(el.id);
-      let value;
-      if (el.type === 'checkbox') {
-        value = el.checked ? true : false;
-      } else {
-        value = el.value;
+
+      // A checkbox represents a Boolean value; unchecked is still a value.
+      if (el.type === 'checkbox') return;
+
+      if (el.value === '' || el.value === null || el.value === undefined) {
+        el.classList.add('err');
+        invalid.push(el);
       }
-      batch[`i${i}`] = {
-        Method:   'POST',
-        Resource: `${CONFIG.WEBAPIURL}/streams/${el.id}/value`,
-        Content:  JSON.stringify({ 
-                       Value: 
-                       typeof value === 'boolean' ? value 
-                       : (isNaN(value) ? value : parseFloat(value)), 
-                       Timestamp: timestamp })
+    });
+
+    radioGroups.forEach(group => {
+      if (group.some(el => el.checked)) return;
+      group.forEach(el => el.classList.add('err'));
+      invalid.push(group[0]);
+    });
+
+    if (!invalid.length) return true;
+
+    invalid[0].focus();
+    win.alert('Veuillez remplir tous les champs obligatoires');
+    return false;
+  }
+  async function submitEditedRecord(win, timestamp, formName = APP.currentForm){
+    const doc = win.document;
+    const container = doc.querySelector('.eo-body');
+    const values = Getformdata(container, doc, formName);
+    doc.getElementById('sending-overlay')?.classList.add('show');
+
+    if (!Object.keys(values).length) {
+      doc.getElementById('sending-overlay')?.classList.remove('show');
+      console.warn('No fields to submit.');
+      return false;
+    }
+
+    const batch = {};
+    Object.entries(values).forEach(([name, data], index) => {
+      const webId = data.WebId || data.WebdId;
+      let value = data.value;
+      if (typeof value === 'boolean') value = value ? 1 : 0;
+      if (!webId || webId === 'f-date' || webId === 'f-time') return;
+
+      batch[`i${index}`] = {
+        Method: 'POST',
+        Resource: `${CONFIG.WEBAPIURL}/streams/${webId || name}/value`,
+        Content: JSON.stringify({
+          Value: isNaN(value) ? value : parseFloat(value),
+          Timestamp: timestamp
+        })
       };
     });
-    console.log("Batch d'édition :", batch);
 
+    if (!Object.keys(batch).length) {
+      doc.getElementById('sending-overlay')?.classList.remove('show');
+      console.warn('No fields to submit.');
+      return false;
+    }
+
+    console.log("Edit batch:", batch);
+
+    try {
       const res = await fetch(`${CONFIG.WEBAPIURL}/batch`, {
-        method:      "POST",
-        credentials: "include",
+        method: 'POST',
+        credentials: 'include',
         headers: {
-          "Content-Type":     "application/json",
-          "X-Requested-With": "XMLHttpRequest"
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify(batch)
       });
 
+      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
       const result = await res.json();
-      console.log("Réponse PI :", result);
-
+      console.log('PI response:', result);
 
       const total = Object.keys(batch).length;
       const ok = Object.values(result)
         .filter(r => r.Status >= 200 && r.Status < 300).length;
 
             doc.getElementById('sending-overlay')?.classList.remove('show');
-
+      console.log(`Save completed: OK ${ok}, Total ${total}`);
       const success = doc.getElementById('sending-success-overlay');
       if (success) {
         doc.getElementById('sending-success-message').textContent =
           (ok === total)
-            ? `Les nouvelles valeurs ont remplacé l'enregistrement du `
-              + `${timestamp.replace('T', ' ').substring(0, 19)}.`
-            : `${ok} valeur(s) enregistrée(s) sur ${total}. Consultez la console.`;
+            ? `New values replaced the record from ${timestamp.replace('T', ' ').substring(0, 19)}.`
+            : `${ok} value(s) saved out of ${total}. See the console for details.`;
         success.classList.add('show');
 
-        await saveLogs(timestamp,APP.currentUnit,APP.currentForm,APP.username,"Edit",`Formulaire modifié : ${ok}/${total} valeur(s) enregistrée.s`);
+        await saveLogs(timestamp, APP.currentUnit, formName, APP.username, 'Edit',
+          `Form edited: ${ok}/${total} value(s) saved`);
       }
 
       return ok === total;
-
+    } catch (error) {
+      doc.getElementById('sending-overlay')?.classList.remove('show');
+      console.error('Erreur lors de la modification :', error);
+      win.alert('Une erreur est survenue pendant l\'enregistrement de la modification.');
+      return false;
+    }
 }
 
    /* Refresh button on a history page.
       The toolbar is cloned onto every history page, so the filter inputs share
       the same ids across pages. To read the correct ones we scope our lookups
       to the page that actually contains the clicked button. */
-   function refreshHistory(triggerEl) {
+   function setHistoryTableLoading(page, isLoading) {
+    page.querySelector(".history-table-loading")?.classList.toggle("show", isLoading);
+   }
+
+   async function refreshHistory(triggerEl) {
 
     const page = triggerEl.closest(".page");
     if (!page)
@@ -7875,8 +8197,24 @@ async function filleditpagefields(win, timestamp) {
     const rawStatus = page.querySelector("#hist-filter-valid")?.value ?? "";
     const status = rawStatus === "—" ? "—" : (rawStatus !== "" ? Number(rawStatus) : "");
 
-    // Re-render the table with only the records inside the chosen range.
+    triggerEl.disabled = true;
+    setHistoryTableLoading(page, true);
+
+    try {
+      // An older start date retrieves data beyond the initial two-year load.
+      // A date-only end bound is expanded to the end of that selected day.
+      const startTime = fromDate || "*-2y";
+      const endTime = toDate ? `${toDate}T23:59:59Z` : "*";
+
+      await mapPIToRecords(unitName, formName, startTime, endTime);
     renderHistoryTable(unitName, formName, fromDate, toDate, status);
+    } catch (error) {
+      console.error(`Unable to refresh history for ${unitName} / ${formName}:`, error);
+      notify("Unable to refresh history. Please try again.");
+    } finally {
+      setHistoryTableLoading(page, false);
+      triggerEl.disabled = false;
+    }
 
 }
 
@@ -7895,7 +8233,14 @@ async function filleditpagefields(win, timestamp) {
     if (to)   to.value = "";
     if (valid) valid.value = "";
 
-    refreshHistory(triggerEl);
+    const unitName = page.dataset.unit;
+    const formName = page.dataset.form;
+    if (!unitName || !formName)
+        return;
+
+    // Reset only changes the local view. It must not request all PI history
+    // merely because both date inputs have been cleared.
+    renderHistoryTable(unitName, formName);
 
 }
 
@@ -7963,6 +8308,7 @@ async function filleditpagefields(win, timestamp) {
 
     async function getAttributesofSectionparent(formwebId) {
 
+      try {
       const response = await fetch(
         `https://sekkai-consulting-pivision.com/PIWEBAPI/elements/${formwebId}/attributes?selectedFields=Items.Name;Items.WebId;Items.Type;Items.Links&searchFullHierarchy=true`,
         {
@@ -7970,10 +8316,23 @@ async function filleditpagefields(win, timestamp) {
         }
       );
 
+
       const data = await response.json();
 
       return data.Items
     }
+
+    catch (error) {
+
+        console.error(
+            "Erreur lors de la récupération des attributs :",
+            error
+        );
+
+        return [];
+
+    }
+  }
     async function getSections(formWebId) {
 
       const response = await fetch(
@@ -8836,7 +9195,7 @@ async function loadFormStructure(formWebId) {
                 id="${tag?.pointWebId || ''}"
                 data-url="${tag?.valueUrl || ''}"
                 attributename="${parameter.name}"
-                oninput="refreshAll()"
+                oninput="refreshAll(this.closest('.page'))"
                 >
             `;
         }
@@ -8903,7 +9262,7 @@ async function loadFormStructure(formWebId) {
 
       }
 
-      refreshAll(scope);
+      refreshAll(scope === document ? checkbox.closest('.page') : scope);
 }
     async function renderForm2() {
 
@@ -9280,7 +9639,7 @@ async function loadFormStructure(formWebId) {
                       ${loLoValue != null ? `min="${loLoValue}"` : ""}
                       ${hiHiValue != null ? `max="${hiHiValue}"` : ""}
                       
-                      oninput="refreshAll()"
+                      oninput="refreshAll(this.closest('.page'))"
                       >
                       <span>${uom?.value || '-'}</span>
                       
@@ -9512,15 +9871,15 @@ async function loadFormStructure(formWebId) {
 
       const ISMulticolors = APP.Forms?.[unitName]?.find(f => f.Name === formName)?.Attributes?.Multicolors_histo ?? true;
 
-      console.log("Input changed:", alertFieldValue, loLoValue, hiHiValue);
+      console.log("Input changed:", unitName, formName, alertFieldValue, loLoValue, hiHiValue);
       try {
       const field = scope.querySelector(`input[attributeName="${alertFieldValue}"]`);
         if (!field) {
           console.warn(`No input field found for attributeName="${alertFieldValue}"`);
           return;
         }
-      console.log("alert Field found:", field);
-      console.log("alert Field value:", field.value);
+      //console.log("alert Field found:", field);
+      //console.log("alert Field value:", field.value);
 
 
       const row = field.closest('tr');
@@ -9532,6 +9891,7 @@ async function loadFormStructure(formWebId) {
         }
 
         const rawValue = field.value;
+        console.log("Raw value:", rawValue);
         if (rawValue === '') {
         row.classList.remove('lmt-exceed');
           lmtDiv.className = 'lmt-ind';
@@ -9545,7 +9905,8 @@ async function loadFormStructure(formWebId) {
           return;
         }
 
-        const cfg = APP.alertConfigs.find(c => c.alertFieldValue === alertFieldValue);
+        const cfg = APP.alertConfigs.find(c => c.unitName === unitName && c.formname === formName && c.alertFieldValue === alertFieldValue);
+        console.log("Alert config found:", cfg);
         const maxV = Number(cfg?.MaximumValue);
         const hiHi = Number(cfg?.hiHiValue);
         const loLo = Number(cfg?.loLoValue);
@@ -9584,6 +9945,20 @@ async function loadFormStructure(formWebId) {
           row.classList.remove('lmt-exceed');
         }
         console.log("This is the APP:", APP)
+
+        // Set the validation from the combined alert state of this form.
+        const hasAlert = Object.values(APP.PagefieldAlert[formName] || {}).some(
+          isAlert => isAlert === true
+        );
+        const validationRadios = scope.querySelectorAll(
+          `input[name="validation_${formName}"][attributeName="validation"]`
+        );
+
+        validationRadios.forEach(radio => {
+          radio.checked = hasAlert
+            ? radio.value === "0" // Non Conforme
+            : radio.value === "1"; // Conforme
+        });
       } catch (error) {
         console.error("Error finding input field:", error);
         return;
@@ -9670,7 +10045,17 @@ async function loadFormStructure(formWebId) {
 
     function refreshAllAlerts(scope = document) {
 
-      APP.alertConfigs.forEach(cfg => {
+      // A page refresh must only apply the thresholds that belong to this
+      // page.  Without this filter, changing NoxCare also runs AdBlue's
+      // alerts, and duplicate attribute names resolve to the wrong input.
+      const unitName = scope?.dataset?.unit ?? APP.editContext?.unitName;
+      const formName = scope?.dataset?.form ?? APP.editContext?.formName;
+      const alertConfigs = unitName && formName
+        ? APP.alertConfigs.filter(cfg =>
+            cfg.unitName === unitName && cfg.formname === formName)
+        : APP.alertConfigs;
+
+      alertConfigs.forEach(cfg => {
 
         handleInputChange(
           cfg.unitName,
@@ -9936,15 +10321,20 @@ async function loadFormStructure(formWebId) {
 }
 
 
-        function Getformdata(pagename) {
-      const container = document.getElementById(pagename);
+      function Getformdata(pagename, scope = document, formName = APP.currentForm) {
+      
+      const container = pagename && typeof pagename.querySelectorAll === 'function'
+        ? pagename
+        : scope.getElementById(pagename);
+      const requiredFields = APP.ParametreObligatoire[formName] || {};
+      if (!container) return [];
 
       const values = [];
 
       container.querySelectorAll('input, select').forEach(el => {
 
         const key = el.getAttribute('attributeName') || el.getAttribute('id');
-        if((key && APP.ParametreObligatoire[APP.currentForm][key]) || (!APP.ParametreObligatoire[APP.currentForm][key] && el.value !== "" && el.value !== null && el.value !== undefined)){
+        if((key && requiredFields[key]) || (!requiredFields[key] && el.value !== "" && el.value !== null && el.value !== undefined)){
         if (el.type === 'checkbox') {
                  values[key]= { value: el.checked, WebId: el.getAttribute('id'),element:el };}
 
@@ -9968,8 +10358,6 @@ async function loadFormStructure(formWebId) {
 
         }
         
-
-
       });
       return values
     }
@@ -10150,6 +10538,7 @@ async function loadFormStructure(formWebId) {
 
       });
       console.log("Batch to send:", batch);
+      try {
       const response = await fetch(
         `${CONFIG.WEBAPIURL}/batch`,
         {
@@ -10161,6 +10550,10 @@ async function loadFormStructure(formWebId) {
           body: JSON.stringify(batch)
         }
       );
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status} ${response.statusText}`);
+      }
 
       const result = await response.json();
 
@@ -10178,7 +10571,6 @@ async function loadFormStructure(formWebId) {
           }
         });
 
-        hideSendingOverlay();
         if (allSuccess) {
           document.getElementById('form-ok').classList.add('show');
           
@@ -10191,6 +10583,12 @@ async function loadFormStructure(formWebId) {
           //alert("Certaines valeurs n'ont pas pu être envoyées avec succès au DATA ARCHIVE");
 
         }
+      } catch (error) {
+        console.error("Erreur lors de l'envoi des valeurs :", error);
+        showSendingErrorOverlay("Impossible d'envoyer les données. Vérifiez votre connexion puis réessayez.");
+      } finally {
+        hideSendingOverlay();
+      }
     }
 
 
@@ -12072,7 +12470,8 @@ async function loadFormStructure(formWebId) {
 
             const cfg = APP.alertConfigs.find(c =>
             c.parameterName === parameter &&
-            c.unitName === APP.currentUnit);
+            c.unitName === APP.currentUnit &&
+            c.formname === APP.currentForm);
             const page = document.getElementById(`page-${APP.currentForm}`);
             const VC2 = page?.querySelector(`input[attributeName="VC2 ${parameter}"]`);
             const VC1 = page?.querySelector(`input[attributeName="VC1 ${parameter}"]`);
