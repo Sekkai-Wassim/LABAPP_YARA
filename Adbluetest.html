@@ -604,6 +604,14 @@
       border: 1px solid #bbf7d0;
     }
 
+    .pill-encours{
+      background: #91b7f0;
+      color: #5963d9;
+      border: 1px solid #5963d9;
+    }
+
+
+
     .pill-warn {
       background: #fffbeb;
       color: #d97706;
@@ -1426,6 +1434,13 @@
       box-shadow: 0 0 0 3px rgba(220, 38, 38, .12);
     }
 
+    .valid-chip.encours input:checked+.valid-chip-lbl {
+      background: #91b7f0;
+      border-color: #5963d9;
+      color: #5963d9;
+      box-shadow: 0 0 0 3px rgba(12, 26, 224, .12);
+    }
+
     .valid-chips {
       display: flex;
       gap: 8px;
@@ -2214,6 +2229,41 @@
       margin-top: 10px;
     }
 
+    #sending-partial-success-overlay{
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      background: rgba(240, 244, 248, .92);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    #sending-partial-success-overlay.show {
+      display: flex;
+      text-align: center;
+    }
+
+    #sending-partial-success-overlay svg {
+      width: 200px;
+      height: 200px;
+    }
+
+    #sending-partial-success-overlay.show h3 {
+      font-size: 25px;
+    }
+
+    #sending-partial-success-overlay.show p {
+      font-size: 20px;
+    }
+
+    #sending-partial-success-overlay.show button {
+      margin-top: 10px;
+    }
+
     #confirm-send-overlay{
       position: fixed;
       inset: 0;
@@ -2250,6 +2300,46 @@
     }
 
     #confirm-send-overlay.show button.btn-secondary{
+    background-color: #dc2626;
+    color: white;
+    }
+
+    #confirm-empty-values-overlay{
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      background: rgba(240, 244, 248, .92);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    #confirm-empty-values-overlay.show {
+      display: flex;
+      text-align: center;
+    }
+
+    #confirm-empty-values-overlay svg {
+      width: 200px;
+      height: 200px;
+    }
+
+    #confirm-empty-values-overlay.show h3 {
+      font-size: 25px;
+    }
+
+    #confirm-empty-values-overlay.show p {
+      font-size: 20px;
+    }
+
+    #confirm-empty-values-overlay.show button {
+      margin-top: 10px;
+    }
+
+    #confirm-empty-values-overlay.show button.btn-secondary {
     background-color: #dc2626;
     color: white;
     }
@@ -4192,6 +4282,19 @@
     </div>
   </div>
 
+  <div id="sending-partial-success-overlay" role="dialog" aria-modal="true" aria-labelledby="sending-partial-success-title">
+    <div class="overlay-card">
+      <div class="warning-icon">
+        <svg viewBox="0 0 640 640" aria-hidden="true">
+          <path d="M320 576C178.6 576 64 461.4 64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576zM320 384C302.3 384 288 398.3 288 416C288 433.7 302.3 448 320 448C337.7 448 352 433.7 352 416C352 398.3 337.7 384 320 384zM320 192C301.8 192 287.3 207.5 288.6 225.7L296 329.7C296.9 342.3 307.4 352 319.9 352C332.5 352 342.9 342.3 343.8 329.7L351.2 225.7C352.5 207.5 338.1 192 319.8 192z" fill="#d97706" />
+        </svg>
+      </div>
+      <h3 id="sending-partial-success-title">Attention, Saisie incomplète sauvegardée!</h3>
+      <p>Pensez à compléter les valeurs manquantes plus tard dans la table Historique</p>
+      <button type="button" class="btn btn-primary" onclick="hidePartialSuccessOverlay()">Fermer</button>
+    </div>
+  </div>
+
   <div id="confirm-send-overlay" class="">
 
     <div class="overlay-card">
@@ -4220,6 +4323,20 @@
 
     </div>
 
+</div>
+
+  <div id="confirm-empty-values-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-empty-values-title">
+    <div class="overlay-card">
+      <div class="overlay-icon">
+        <svg viewBox="0 0 640 640" aria-hidden="true"><path d="M320 64C334.7 64 348.2 72.1 355.2 85L571.2 485C577.9 497.4 577.6 512.4 570.4 524.5C563.2 536.6 550.1 544 536 544L104 544C89.9 544 76.8 536.6 69.6 524.5C62.4 512.4 62.1 497.4 68.8 485L284.8 85C291.8 72.1 305.3 64 320 64zM320 416C302.3 416 288 430.3 288 448C288 465.7 302.3 480 320 480C337.7 480 352 465.7 352 448C352 430.3 337.7 416 320 416zM320 224C301.8 224 287.3 239.5 288.6 257.7L296 361.7C296.9 374.2 307.4 384 319.9 384C332.5 384 342.9 374.3 343.8 361.7L351.2 257.7C352.5 239.5 338.1 224 319.8 224z"/></svg>
+      </div>
+      <h3 id="confirm-empty-values-title">Confirmation</h3>
+      <p>Plusieurs cases sont vide. Voulez vous vraiment enregistrer cette saisie ?</p>
+      <div class="overlay-buttons">
+        <button type="button" class="btn btn-primary" onclick="ConfirmSendWithEmptyValues()">Yes</button>
+        <button type="button" class="btn btn-secondary" onclick="HideConfirmEmptyValuesOverlay()">No</button>
+      </div>
+    </div>
 </div>
 
   <div id="confirm-duplicatesend-overlay" class="">
@@ -4859,9 +4976,15 @@
                     <input type="radio" name="validation" value=1 id="v-conf" checked>
                     <span class="valid-chip-lbl">✔ Conforme</span>
                   </label>
+
                   <label class="valid-chip nonconf">
                     <input type="radio" name="validation" value=0 id="v-conf">
                     <span class="valid-chip-lbl">✖ Non Conforme</span>
+                  </label>
+
+                  <label class="valid-chip encours">
+                    <input type="radio" name="validation" value=2 id="v-conf">
+                    <span class="valid-chip-lbl">⏳ En Cours</span>
                   </label>
                 </div>
               </div>
@@ -4981,6 +5104,7 @@
                 <option value="">Toutes validations</option>
                 <option value=1>Conforme</option>
                 <option value=0>Non Conforme</option>
+                <option value=2>En Cours</option>
                 <option value="—">Non renseigné</option>
               </select>
               <button class="btn btn-primary"
@@ -5349,6 +5473,7 @@
                   onchange="cfgToggleAllLimits(this.checked)">
               </th>
               <th>Paramètre</th>
+              
               <th style="width:150px">LoLo</th>
               <th style="width:150px">HiHi</th>
               <th style="width:150px">Target</th>
@@ -5562,7 +5687,51 @@
     }
 
 }
+    document.addEventListener("wheel", function (event) {
 
+    if (
+        event.target.matches('input[type="number"]') &&
+        document.activeElement === event.target
+    ) {
+        event.preventDefault();
+    }
+
+}, { passive: false });
+
+
+
+    document.addEventListener("keydown", function (event) {
+
+    if (event.key !== "Enter") return;
+
+    const currentInput = event.target;
+
+    // Apply only to data-entry fields
+    if (!currentInput.matches("input.fc")) return;
+
+    event.preventDefault();
+
+    // Get enabled and visible entry fields in the same page
+    const fields = [
+        ...currentInput.closest(".page")
+            .querySelectorAll("input.fc:not(:disabled)")
+    ].filter(field =>
+        field.offsetParent !== null &&
+        field.type !== "checkbox" &&
+        field.type !== "radio"
+    );
+
+    const currentIndex = fields.indexOf(currentInput);
+
+    if (currentIndex === -1) return;
+
+    // Move to the next field
+    const nextInput = fields[currentIndex + 1];
+
+    if (nextInput) {
+        nextInput.focus();
+        nextInput.select();
+    }});
 
     async function mapPIToRecords(unitName, formName, startTime = "*-2y", endTime = "*") {
 
@@ -5795,16 +5964,43 @@
         items.forEach(item => {
 
             const ts = item.Timestamp;
+            // Convert UTC timestamp to Paris local time
+          const parisDate = new Date(ts);
+
+          const date = new Intl.DateTimeFormat("en-CA", {
+              timeZone: "Europe/Paris",
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit"
+          }).format(parisDate);
+
+          const time = new Intl.DateTimeFormat("en-GB", {
+              timeZone: "Europe/Paris",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+              hourCycle: "h23"
+          }).format(parisDate);
+
+          console.log(
+              "inside mapPIToRecords",
+              ts,
+              "Paris local time:",
+              date,
+              time,
+              unitName,
+              formName,
+              item.Value,
+              parameterInfo.parameterName
+          );
             console.log('inside mapPIToRecords', ts, unitName,formName,item.Value, parameterInfo.parameterName);
             if (!recordsMap[ts] && typeof item.Value !== 'object') {
 
                 recordsMap[ts] = {
 
                     timestamp: ts,
-
-                    date: ts.split("T")[0],
-
-                    time: ts.split("T")[1].substring(0, 8),
+                    date: date,
+                    time: time,
 
                     unitName,
 
@@ -5834,9 +6030,9 @@
     //----------------------------------------
     // Convert to array
     //----------------------------------------
-
+    console.log('recordsbefore filter', recordsMap);
     const records = Object.values(recordsMap)
-    .filter(record => Object.keys(record.values || {}).length > 3);
+    .filter(record => record.validation ==2 || Object.keys(record.values || {}).length > 3);
 
     records.sort((a, b) =>
     new Date(b.timestamp) - new Date(a.timestamp));
@@ -5975,6 +6171,14 @@ async function GetSecurityAccess() {
 
     function hideSendingSuccessOverlay() {
         document.getElementById("sending-success-overlay").classList.remove("show");
+    }
+
+    function showPartialSuccessOverlay() {
+        document.getElementById("sending-partial-success-overlay").classList.add("show");
+    }
+
+    function hidePartialSuccessOverlay() {
+        document.getElementById("sending-partial-success-overlay").classList.remove("show");
     }
 
     function showSendingOverlay() {
@@ -7370,7 +7574,11 @@ async function GetSecurityAccess() {
             td.innerHTML = '<span class="pill pill-ok">Conforme</span>';
         } else if (validationValue === 0 || validationValue === '0' || validationValue === false) {
             td.innerHTML = '<span class="pill pill-err">Non Conforme</span>';
-        } else {
+        } 
+          else if (validationValue === 2 || validationValue === "2") {
+            td.innerHTML = '<span class="pill pill-encours">En Cours</span>';
+          }
+        else {
             td.textContent = "-";
         }
 
@@ -7479,19 +7687,24 @@ async function GetSecurityAccess() {
         );
 
 
-        function formatAnalysisDate(d) {
+        function formatAnalysisDate(date) {
 
-            return [
-                d.getUTCFullYear(),
-                String(d.getUTCMonth() + 1).padStart(2, "0"),
-                String(d.getUTCDate()).padStart(2, "0")
-            ].join("-")
-            + " "
-            + [
-                String(d.getUTCHours()).padStart(2, "0"),
-                String(d.getUTCMinutes()).padStart(2, "0"),
-                String(d.getUTCSeconds()).padStart(2, "0")
-            ].join(":");
+            const parts = new Intl.DateTimeFormat("en-GB", {
+                timeZone: "Europe/Paris",
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                hourCycle: "h23"
+            }).formatToParts(date);
+
+            const p = Object.fromEntries(
+                parts.map(part => [part.type, part.value])
+            );
+
+            return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}:${p.second}`;
         }
 
 
@@ -7589,7 +7802,35 @@ async function GetSecurityAccess() {
     }
 } 
 
+    function getParisDateTime(timestamp) {
+      const date = new Date(timestamp);
+      if (Number.isNaN(date.getTime())) return null;
+
+      const parts = Object.fromEntries(
+        new Intl.DateTimeFormat('fr-FR', {
+          timeZone: 'Europe/Paris',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hourCycle: 'h23'
+        }).formatToParts(date)
+          .filter(part => part.type !== 'literal')
+          .map(part => [part.type, part.value])
+      );
+
+      return {
+        date: `${parts.year}-${parts.month}-${parts.day}`,
+        time: `${parts.hour}:${parts.minute}:${parts.second}`,
+        display: `${parts.day}/${parts.month}/${parts.year} ${parts.hour}:${parts.minute}:${parts.second}`
+      };
+} 
+
     async function editHistoryRecord(unitName, formName, timestamp) {
+
+      console.log(`Editing history record for unit "${unitName}", form "${formName}", timestamp "${timestamp}"`);
 
       if (!APP.hasWriteAccess){
         document.getElementById("access-denied").classList.add("show");
@@ -7616,6 +7857,9 @@ async function GetSecurityAccess() {
       
       const win = window.open('', '_blank', 'width=1100,height=800');
       if (!win) { notify("La fenêtre a été bloquée par le navigateur.", "warn"); return; }
+
+      const parisDateTime = getParisDateTime(timestamp);
+      const displayedTimestamp = parisDateTime?.display || timestamp.replace('T', ' ').substring(0, 19);
 
       win.document.write(`<!DOCTYPE html>
 <html lang="fr">
@@ -7647,7 +7891,7 @@ async function GetSecurityAccess() {
   <div class="eo-bar">
     <div>
       <div style="font-size:13px;font-weight:700">Modification d'une saisie</div>
-      <div style="font-size:12px;opacity:.85">${formName} — ${timestamp.replace('T', ' ').substring(0, 19)}</div>
+      <div style="font-size:12px;opacity:.85">${formName} — ${displayedTimestamp}</div>
     </div>
     <button class="eo-btn" id="eo-close">Fermer</button>
   </div>
@@ -7663,6 +7907,19 @@ async function GetSecurityAccess() {
       <div class="overlay-buttons">
         <button id="ce-yes" class="btn btn-primary">Confirmer</button>
         <button id="ce-no"  class="btn btn-secondary">Annuler</button>
+      </div>
+    </div>
+  </div>
+  <div id="confirm-empty-values-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-empty-values-title">
+    <div class="overlay-card">
+      <div class="overlay-icon">
+        <svg viewBox="0 0 640 640" aria-hidden="true"><path d="M320 64C334.7 64 348.2 72.1 355.2 85L571.2 485C577.9 497.4 577.6 512.4 570.4 524.5C563.2 536.6 550.1 544 536 544L104 544C89.9 544 76.8 536.6 69.6 524.5C62.4 512.4 62.1 497.4 68.8 485L284.8 85C291.8 72.1 305.3 64 320 64zM320 416C302.3 416 288 430.3 288 448C288 465.7 302.3 480 320 480C337.7 480 352 465.7 352 448C352 430.3 337.7 416 320 416zM320 224C301.8 224 287.3 239.5 288.6 257.7L296 361.7C296.9 374.2 307.4 384 319.9 384C332.5 384 342.9 374.3 343.8 361.7L351.2 257.7C352.5 239.5 338.1 224 319.8 224z"/></svg>
+      </div>
+      <h3 id="confirm-empty-values-title">Confirmation</h3>
+      <p>Plusieurs cases sont vides. Voulez vous vraiment enregistrer cette saisie ?</p>
+      <div class="overlay-buttons">
+        <button id="confirm-empty-values-yes" class="btn btn-primary">Yes</button>
+        <button id="confirm-empty-values-no" class="btn btn-secondary">No</button>
       </div>
     </div>
   </div>
@@ -7697,14 +7954,16 @@ async function GetSecurityAccess() {
 </body>
 </html>`);
 
-        win.document.querySelectorAll('input[attributeName]').forEach(el => {
+      win.document.querySelectorAll('input[attributeName], select[attributeName], textarea[attributeName]').forEach(el => {
         // Validation is a user decision in the edit window; do not run the
         // alert refresh immediately after its radio button is clicked.
         if (el.disabled || el.getAttribute('attributeName') === 'validation') return;
-        el.addEventListener('input', () => {
+        const refreshEditForm = () => {
           //recalculateAllFormulas(win.document);
           refreshAll(win.document);
-        });
+        };
+        el.addEventListener('input', refreshEditForm);
+        el.addEventListener('change', refreshEditForm);
       });
 
       win.document.querySelectorAll('input[type="checkbox"][attributename^="Seuil "]')
@@ -7739,9 +7998,16 @@ async function GetSecurityAccess() {
       if (submitBtn) {
         submitBtn.onclick = () => {
 
-        if (!validateEditedRecordRequiredFields(win, formName)) return;
+        const container = win.document.querySelector('.eo-body');
+        const values = Getformdata(container, win.document, formName);
+        const validationValue = values.validation?.value;
+        const hasEmptyValues = [...container.querySelectorAll('input[id], select[id]')]
+          .some(el => /^F1/.test(el.id) && el.id.length > 20 && !el.disabled &&
+            el.type !== 'checkbox' && el.type !== 'radio' &&
+            (el.value === '' || el.value === null || el.value === undefined));
+        const emptyValuesOverlay = win.document.getElementById('confirm-empty-values-overlay');
 
-        EditConfirmationQst(win, timestamp, async () => {
+        const saveEditedRecord = async () => {
 
         const saveSuccess =
           await submitEditedRecord(win, timestamp, formName);
@@ -7794,7 +8060,24 @@ async function GetSecurityAccess() {
             );
         }
 
-    });
+        };
+        const confirmAndSave = () =>
+          EditConfirmationQst(win, timestamp, saveEditedRecord);
+
+        if (String(validationValue) === '2' && hasEmptyValues) {
+          const yesButton = emptyValuesOverlay.querySelector('#confirm-empty-values-yes');
+          const noButton = emptyValuesOverlay.querySelector('#confirm-empty-values-no');
+          yesButton.onclick = () => {
+            emptyValuesOverlay.classList.remove('show');
+            saveEditedRecord();
+          };
+          noButton.onclick = () => emptyValuesOverlay.classList.remove('show');
+          emptyValuesOverlay.classList.add('show');
+          return;
+        }
+
+        if (!validateEditedRecordRequiredFields(win, formName)) return;
+        confirmAndSave();
 
         };
       }
@@ -7968,10 +8251,11 @@ async function filleditpagefields(win, timestamp) {
 
      const dateEl = doc.getElementById('f-date');
      const timeEl = doc.getElementById('f-time');
+     const parisDateTime = getParisDateTime(timestamp);
 
     if (dateEl) {
 
-      dateEl.value = timestamp.split('T')[0];
+      dateEl.value = parisDateTime?.date || timestamp.split('T')[0];
 
       dateEl.disabled = true;
       dateEl.style.background = '#f1f5f9';
@@ -7981,8 +8265,7 @@ async function filleditpagefields(win, timestamp) {
 
     if (timeEl) {
 
-      timeEl.value =
-        timestamp.split('T')[1]?.substring(0, 8);
+      timeEl.value = parisDateTime?.time || timestamp.split('T')[1]?.substring(0, 8);
 
       timeEl.readOnly = true;
       timeEl.disabled = true;
@@ -8086,9 +8369,11 @@ async function filleditpagefields(win, timestamp) {
       const overlay = doc.getElementById('confirm-send-overlay');
       if (!overlay) { onConfirm(); return; }
 
+      const displayedTimestamp = getParisDateTime(timestamp)?.display ||
+        timestamp.replace('T', ' ').substring(0, 19);
       doc.getElementById('ce-message').textContent =
         `Vous allez modifier l'enregistrement du `
-        + `${timestamp.replace('T', ' ').substring(0, 19)}. `;
+        + `${displayedTimestamp}. `;
 
       doc.getElementById('ce-yes').onclick = () => {
         overlay.classList.remove('show');
@@ -8156,6 +8441,10 @@ async function filleditpagefields(win, timestamp) {
     Object.entries(values).forEach(([name, data], index) => {
       const webId = data.WebId || data.WebdId;
       let value = data.value;
+      if (value === '' || value === null || value === undefined) {
+        console.log('Empty edit value for:', name, '— skipping');
+        return;
+      }
       if (typeof value === 'boolean') value = value ? 1 : 0;
       if (!webId || webId === 'f-date' || webId === 'f-time') return;
 
@@ -8200,9 +8489,11 @@ async function filleditpagefields(win, timestamp) {
       console.log(`Save completed: OK ${ok}, Total ${total}`);
       const success = doc.getElementById('sending-success-overlay');
       if (success) {
+        const displayedTimestamp = getParisDateTime(timestamp)?.display ||
+          timestamp.replace('T', ' ').substring(0, 19);
         doc.getElementById('sending-success-message').textContent =
           (ok === total)
-            ? `New values replaced the record from ${timestamp.replace('T', ' ').substring(0, 19)}.`
+            ? `New values replaced the record from ${displayedTimestamp}.`
             : `${ok} value(s) saved out of ${total}. See the console for details.`;
         success.classList.add('show');
 
@@ -9910,12 +10201,17 @@ async function loadFormStructure(formWebId) {
                 <div class="fg-lbl" style="margin-bottom:9px;font-size:10px">Résultat d'analyse</div>
                 <div class="valid-chips">
                   <label class="valid-chip conf">
-                    <input type="radio" name="validation_${pageName}" attributeName="validation" value=1 id="${validationWebId}" checked>
+                    <input type="radio" name="validation_${pageName}" attributeName="validation" value=1 id="${validationWebId}">
                     <span class="valid-chip-lbl">✔ Conforme</span>
                   </label>
                   <label class="valid-chip nonconf">
                     <input type="radio" name="validation_${pageName}" attributeName="validation" value=0 id="${validationWebId}">
                     <span class="valid-chip-lbl">✖ Non Conforme</span>
+                  </label>
+
+                  <label class="valid-chip encours">
+                    <input type="radio" name="validation_${pageName}" attributeName="validation" value=2 id="${validationWebId}" checked>
+                    <span class="valid-chip-lbl">⏳ En Cours</span>
                   </label>
           </div>
           `
@@ -10055,9 +10351,54 @@ async function loadFormStructure(formWebId) {
         .trim();
     }
 
+    function updateValidationStatus(scope = document, formName = null) {
+      if (!scope?.querySelectorAll) return;
+
+      formName = formName || scope.dataset?.form || APP.editContext?.formName;
+      if (!formName) return;
+
+      const requiredFields = APP.ParametreObligatoire[formName] || {};
+      const controls = [...scope.querySelectorAll('input[id], select[id], textarea[id]')];
+      let allRequiredFieldsFilled = true;
+
+      Object.entries(requiredFields).forEach(([requiredName, isRequired]) => {
+        if (!isRequired) return;
+
+        const matchingControls = controls.filter(el =>
+          (el.getAttribute('attributeName') || el.id) === requiredName
+        );
+        if (!matchingControls.length) return;
+
+        if (matchingControls.some(el => el.type === 'radio')) {
+          if (!matchingControls.some(el => el.type === 'radio' && el.checked)) {
+            allRequiredFieldsFilled = false;
+          }
+          return;
+        }
+
+        matchingControls.forEach(el => {
+          // An unchecked checkbox is still a valid Boolean value.
+          if (el.type !== 'checkbox' &&
+              (el.value === '' || el.value === null || el.value === undefined)) {
+            allRequiredFieldsFilled = false;
+          }
+        });
+      });
+
+      const hasAlert = Object.values(APP.PagefieldAlert[formName] || {})
+        .some(isAlert => isAlert === true);
+      const targetValue = !allRequiredFieldsFilled ? '2' : hasAlert ? '0' : '1';
+
+      scope.querySelectorAll('input[type="radio"][attributeName="validation"]')
+        .forEach(radio => {
+          radio.checked = radio.value === targetValue;
+        });
+    }
+
     function handleInputChange(unitName, formName, alertFieldValue, loLoValue, hiHiValue, scope = document) {
 
       const ISMulticolors = APP.Forms?.[unitName]?.find(f => f.Name === formName)?.Attributes?.Multicolors_histo ?? true;
+      APP.PagefieldAlert[formName] ||= {};
 
       console.log("Input changed:", unitName, formName, alertFieldValue, loLoValue, hiHiValue);
       try {
@@ -10083,6 +10424,7 @@ async function loadFormStructure(formWebId) {
         if (rawValue === '') {
         row.classList.remove('lmt-exceed');
           lmtDiv.className = 'lmt-ind';
+          APP.PagefieldAlert[formName][alertFieldValue] = false;
         return;
         }
 
@@ -10090,6 +10432,7 @@ async function loadFormStructure(formWebId) {
         if (Number.isNaN(numericValue)) {
           row.classList.remove('lmt-exceed');
           lmtDiv.className = 'lmt-ind';
+          APP.PagefieldAlert[formName][alertFieldValue] = false;
           return;
         }
 
@@ -10134,19 +10477,6 @@ async function loadFormStructure(formWebId) {
         }
         console.log("This is the APP:", APP)
 
-        // Set the validation from the combined alert state of this form.
-        const hasAlert = Object.values(APP.PagefieldAlert[formName] || {}).some(
-          isAlert => isAlert === true
-        );
-        const validationRadios = scope.querySelectorAll(
-          `input[name="validation_${formName}"][attributeName="validation"]`
-        );
-
-        validationRadios.forEach(radio => {
-          radio.checked = hasAlert
-            ? radio.value === "0" // Non Conforme
-            : radio.value === "1"; // Conforme
-        });
       } catch (error) {
         console.error("Error finding input field:", error);
         return;
@@ -10264,7 +10594,21 @@ async function loadFormStructure(formWebId) {
 
       refreshAllAlerts(scope);
 
+      const formName = scope?.dataset?.form || APP.editContext?.formName;
+      updateValidationStatus(scope, formName);
+
     }
+
+    // Re-evaluate required-field completion for every entry field, including
+    // controls that do not have an inline refreshAll handler.
+    const refreshEntryValidation = event => {
+      const page = event.target.closest?.('.page');
+      if (!page || !event.target.matches('input, select, textarea') ||
+          event.target.getAttribute('attributeName') === 'validation') return;
+      refreshAll(page);
+    };
+    document.addEventListener('input', refreshEntryValidation);
+    document.addEventListener('change', refreshEntryValidation);
 
     
     async function fillWithLastStoredValue(button) {
@@ -10503,17 +10847,20 @@ async function loadFormStructure(formWebId) {
         console.log(err)
       }
     }
-    function buildTimestamp(dateValue, timeValue) {
+    /* function buildTimestamp(dateValue, timeValue) {
 
       if (!dateValue || !timeValue) return null;
 
+    // Keep the local date and time as entered
+    return `${dateValue}T${timeValue}`;
+    } */
+
+    function buildTimestamp(dateValue, timeValue) { 
+      if (!dateValue || !timeValue) return null;
       // Combine date + time
       const localDateTime = `${dateValue}T${timeValue}`;
-
       // Convert to ISO string (UTC)
-      const isoString = new Date(localDateTime).toISOString();
-
-      return isoString;
+    const isoString = new Date(localDateTime).toISOString(); return isoString; 
     }
 
     async function sendAllValuesBatch() {
@@ -10834,6 +11181,15 @@ async function loadFormStructure(formWebId) {
       sendAllValuesBatch2(`page-${APP.currentForm}`);
     }
 
+    function HideConfirmEmptyValuesOverlay() {
+      document.getElementById("confirm-empty-values-overlay").classList.remove("show");
+    }
+
+    async function ConfirmSendWithEmptyValues() {
+      HideConfirmEmptyValuesOverlay();
+      await YesSend();
+    }
+
     async function preSend() {
         console.log("preSend has been called");
 
@@ -10841,6 +11197,17 @@ async function loadFormStructure(formWebId) {
         const values = Getformdata(`page-${APP.currentForm}`);
         APP.FormData[APP.currentForm] = values; // Store the form data
         console.log("See the APP from presend:", APP);
+        const validationValue = values.validation?.value;
+        const hasEmptyValues = Object.entries(values).some(([key, data]) =>
+          key !== "validation" &&
+          (data.value === "" || data.value === null || data.value === undefined)
+        );
+
+        if (String(validationValue) === "2" && hasEmptyValues) {
+          document.getElementById("confirm-empty-values-overlay").classList.add("show");
+          return;
+        }
+
         if (!validateValues(values)) {
         alert('Certains champs sont vides');
         return;}
@@ -10881,6 +11248,12 @@ async function loadFormStructure(formWebId) {
 
         const webId = data.WebId || data.WebdId;
         let value = data.value;
+
+        // Empty fields are intentionally omitted from the PI batch.
+        if (value === "" || value === null || value === undefined) {
+          console.log("Empty value for:", name, "— skipping");
+          return;
+        }
         
         if(typeof value === 'boolean'){
           value = value ? 1 : 0;
@@ -10890,8 +11263,6 @@ async function loadFormStructure(formWebId) {
           console.log("No WebId for:", name, " — skipping");
           return;
         } 
-        //if (value === '' || value === null || value === undefined) return;
-
         batch[`item${index}`] = {
           Method: "POST",
           Resource: `${CONFIG.WEBAPIURL}/streams/${webId? webId:name}/value`,
@@ -10937,8 +11308,21 @@ async function loadFormStructure(formWebId) {
 
         if (allSuccess) {
           document.getElementById('form-ok').classList.add('show');
-          
+          const hasEmptyValues = Object.entries(values).some(([name, data]) =>
+            name !== 'validation' &&
+            (data.value === '' || data.value === null || data.value === undefined)
+          );
+          const isPartialSend = String(values.validation?.value) === '2' && hasEmptyValues;
+
+          if (isPartialSend) {
+            const successMessage = document.getElementById('form-ok-msg');
+            if (successMessage) {
+              successMessage.textContent = 'Les valeurs renseignées ont été enregistrées; les valeurs vides n’ont pas été envoyées.';
+            }
+            showPartialSuccessOverlay();
+          } else {
           showSendingSuccessOverlay();
+          }
           
           await saveLogs(timestamp,APP.currentUnit, APP.currentForm, APP.username,"Add" ,"Formulaire envoyé avec succès");
           //alert("Toutes les valeurs ont été envoyées avec succès au DATA ARCHIVE");
@@ -10969,10 +11353,38 @@ async function loadFormStructure(formWebId) {
     /* ══════════════════════════════════════════════════════
        CLOCK
     ══════════════════════════════════════════════════════ */
-    function tickClock() { document.getElementById('clock').textContent = new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC'; }
-    setInterval(tickClock, 1000); tickClock();
+    function getParisLocalTime() {
+    const now = new Date();
 
-    function nowIso() { return new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC'; }
+    const parts = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Europe/Paris",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hourCycle: "h23"
+    }).formatToParts(now);
+
+    const p = Object.fromEntries(
+        parts.map(part => [part.type, part.value])
+    );
+
+    return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}:${p.second}`;
+}
+    /* function tickClock() { document.getElementById('clock').textContent = new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC'; } */
+    function tickClock() {
+    document.getElementById("clock").textContent =
+        getParisLocalTime() + " Paris";
+      }
+    /* setInterval(tickClock, 1000); tickClock(); */
+    setInterval(tickClock, 1000);tickClock();
+
+    /* function nowIso() { return new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC'; } */
+    function nowIso() {
+    return getParisLocalTime();
+    }
 
     /* ══════════════════════════════════════════════════════
        DATE UTILITIES
