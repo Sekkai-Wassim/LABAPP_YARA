@@ -2620,6 +2620,46 @@
 
     .history-table-loading.show { display: flex; }
 
+    .history-page-loading {
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: rgba(240, 244, 248, .86);
+      backdrop-filter: blur(2px);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .history-page-loading.show { display: flex; }
+
+    .history-page-loading .lo-ring {
+      width: 28px;
+      height: 28px;
+      border-width: 2px;
+    }
+
+    .entry-form-loading {
+      position: absolute;
+      inset: 54px 0 0;
+      z-index: 20;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: rgba(240, 244, 248, .82);
+      backdrop-filter: blur(2px);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .entry-form-loading.show { display: flex; }
+
     .history-table-loading .lo-ring {
       width: 28px;
       height: 28px;
@@ -4331,7 +4371,7 @@
         <svg viewBox="0 0 640 640" aria-hidden="true"><path d="M320 64C334.7 64 348.2 72.1 355.2 85L571.2 485C577.9 497.4 577.6 512.4 570.4 524.5C563.2 536.6 550.1 544 536 544L104 544C89.9 544 76.8 536.6 69.6 524.5C62.4 512.4 62.1 497.4 68.8 485L284.8 85C291.8 72.1 305.3 64 320 64zM320 416C302.3 416 288 430.3 288 448C288 465.7 302.3 480 320 480C337.7 480 352 465.7 352 448C352 430.3 337.7 416 320 416zM320 224C301.8 224 287.3 239.5 288.6 257.7L296 361.7C296.9 374.2 307.4 384 319.9 384C332.5 384 342.9 374.3 343.8 361.7L351.2 257.7C352.5 239.5 338.1 224 319.8 224z"/></svg>
       </div>
       <h3 id="confirm-empty-values-title">Confirmation</h3>
-      <p>Plusieurs cases sont vide. Voulez vous vraiment enregistrer cette saisie ?</p>
+      <p>Plusieurs cases sont vides. Voulez-vous vraiment enregistrer cette saisie ?</p>
       <div class="overlay-buttons">
         <button type="button" class="btn btn-primary" onclick="ConfirmSendWithEmptyValues()">Yes</button>
         <button type="button" class="btn btn-secondary" onclick="HideConfirmEmptyValuesOverlay()">No</button>
@@ -4400,6 +4440,7 @@
         </div>
         <div class="sb-logo-text">
           <strong>Yara France</strong>
+          
           <span>Usine du Havre</span>
 
         </div>
@@ -4479,7 +4520,7 @@
       </div>
       <div class="sb-foot">
         <div class="sb-user">
-          <div class="sb-avatar" id="sb-av">JM</div>
+          <div class="sb-avatar" id="sb-av"></div>
           <div>
             <div class="sb-user-name" id="sb-name"></div>
             <div class="sb-user-domain"></div>
@@ -4495,7 +4536,7 @@
 
         <div class="role-sel"></div>
         <div class="role-badge role-op" id="role-badge">
-          <div class="rb-dot dot-op"></div><span id="rb-text">OPÉRATEUR</span>
+          <div class="rb-dot dot-op"></div><span id="rb-text"></span>
         </div>
         <div class="sb-conn">
           <div class="conn-dot"></div>YARA LABORATORY</div> 
@@ -5473,7 +5514,7 @@
                   onchange="cfgToggleAllLimits(this.checked)">
               </th>
               <th>Paramètre</th>
-              
+              <th style="width:130px">Date</th>
               <th style="width:150px">LoLo</th>
               <th style="width:150px">HiHi</th>
               <th style="width:150px">Target</th>
@@ -6666,7 +6707,7 @@ async function GetSecurityAccess() {
 
     
 
-    function UpdateAppCurrentPage(formName, unitName,instance,source) {
+    async function UpdateAppCurrentPage(formName, unitName,instance,source) {
         // Configuration selectors need the same audit context as entry/history,
         // but must not navigate away from the Configuration page.
         if (source === 'config-limits') {
@@ -6682,10 +6723,18 @@ async function GetSecurityAccess() {
         let now = new Date();
         let page = document.getElementById(`page-${formName}`);
         if (page) {
-
           page.querySelector("#f-date").value = now.toISOString().split("T")[0];
           page.querySelector("#f-time").value = now.toTimeString().slice(0, 8);
-
+          const loading = page.querySelector(".entry-form-loading");
+          loading?.classList.add("show");
+          try {
+            await ensureFormStructureLoaded(unitName, formName);
+          } catch (error) {
+            console.error(`Unable to load entry form ${unitName} / ${formName}:`, error);
+            notify("Unable to load form data. Please try again.");
+          } finally {
+            loading?.classList.remove("show");
+          }
         }
             }
 
@@ -6697,9 +6746,70 @@ async function GetSecurityAccess() {
 
         else if (source === 'history'){
           if (APP.hasReadAccess){
+            APP.historyOpenPromises ||= {};
+            const cacheKey = `${unitName}\u0000${formName}`;
+            if (APP.historyOpenPromises[cacheKey]) return APP.historyOpenPromises[cacheKey];
+
+            const openPromise = (async () => {
+              let page;
+              try {
+                // Create and display the selected page before waiting on PI so
+                // the user sees the loading state on the first click.
+                await renderHistoryPages(unitName, formName);
+                page = document.getElementById(`page-history-${formName}`);
             nav(`history-${formName}`, instance);
             APP.currentForm = formName;
             APP.currentUnit = unitName;
+                if (page) setHistoryPageLoading(page, true);
+                if (page) setHistoryTableLoading(page, true);
+                await waitForHistoryOverlayPaint();
+
+                await ensureFormStructureLoaded(unitName, formName);
+                await renderHistoryPages(unitName, formName);
+                const completePage = document.getElementById(`page-history-${formName}`);
+                if (completePage && completePage !== page) {
+                  page = completePage;
+                  nav(`history-${formName}`, instance);
+                  setHistoryPageLoading(page, true);
+                  setHistoryTableLoading(page, true);
+                  await waitForHistoryOverlayPaint();
+                }
+
+                if (!Array.isArray(APP.records?.[unitName]?.[formName])) {
+                  APP.historyLoadPromises ||= {};
+                  let historyPromise = APP.historyLoadPromises[cacheKey];
+                  if (!historyPromise) {
+                    historyPromise = mapPIToRecords(unitName, formName);
+                    APP.historyLoadPromises[cacheKey] = historyPromise;
+                  }
+                  try {
+                    await historyPromise;
+                  } finally {
+                    if (APP.historyLoadPromises[cacheKey] === historyPromise) {
+                      delete APP.historyLoadPromises[cacheKey];
+                    }
+                  }
+                }
+                renderHistoryTable(unitName, formName);
+              } catch (error) {
+                console.error(`Unable to load history for ${unitName} / ${formName}:`, error);
+                notify("Unable to load history. Please try again.");
+              } finally {
+                if (page) {
+                  setHistoryPageLoading(page, false);
+                  setHistoryTableLoading(page, false);
+                }
+              }
+            })();
+
+            APP.historyOpenPromises[cacheKey] = openPromise;
+            try {
+              await openPromise;
+            } finally {
+              if (APP.historyOpenPromises[cacheKey] === openPromise) {
+                delete APP.historyOpenPromises[cacheKey];
+              }
+            }
             return
           }
 
@@ -6952,6 +7062,7 @@ async function GetSecurityAccess() {
 
                 newPage.className = "page";
                 newPage.id = `page-${form.Name}`;
+                newPage.style.position = "relative";
                 // Keep the rendered page tied to its source form.  Parameter
                 // names are not globally unique (for example, both AdBlue and
                 // NoxCare can have the same attribute name).
@@ -6962,6 +7073,13 @@ async function GetSecurityAccess() {
         if (pagehdr) {
                     newPage.appendChild(pagehdr.cloneNode(true));
         }
+
+        const loading = document.createElement("div");
+        loading.className = "entry-form-loading";
+        loading.setAttribute("aria-live", "polite");
+        loading.setAttribute("aria-busy", "true");
+        loading.innerHTML = '<div class="lo-ring"></div><span>Chargement du formulaire…</span>';
+        newPage.appendChild(loading);
 
         // Clone card
                 newPage.appendChild(card.cloneNode(true));
@@ -6986,7 +7104,7 @@ async function GetSecurityAccess() {
         console.log("PAGE_LABELS:", PAGE_LABELS);
     }
 
-   async function renderHistoryPages() {
+   async function renderHistoryPages(targetUnitName, targetFormName) {
 
     console.log("Rendering history pages...");
 
@@ -7020,8 +7138,15 @@ async function GetSecurityAccess() {
     }
 
     Object.entries(APP.Forms).forEach(([unitName, forms]) => {
+      if (targetUnitName && unitName !== targetUnitName) return;
 
         forms.forEach(form => {
+            if (targetFormName && form.Name !== targetFormName) return;
+            const existingPage = document.getElementById(`page-history-${form.Name}`);
+            if (existingPage) {
+              if (existingPage.querySelector(`#history-body-${unitName}-${form.Name}`)) return;
+              existingPage.remove();
+            }
 
             console.log("Creating history page for:", form.Name);
 
@@ -7032,6 +7157,14 @@ async function GetSecurityAccess() {
             const page = document.createElement("div");
             page.className = "page";
             page.id = `page-history-${form.Name}`;
+            page.style.position = "relative";
+
+            const pageLoading = document.createElement("div");
+            pageLoading.className = "history-page-loading";
+            pageLoading.setAttribute("aria-live", "polite");
+            pageLoading.setAttribute("aria-busy", "true");
+            pageLoading.innerHTML = '<div class="lo-ring"></div><span>Chargement des données...</span>';
+            page.appendChild(pageLoading);
 
             // Remember which unit/form this page shows, so the Refresh button
             // (which is cloned onto every page) knows what to re-render.
@@ -7977,6 +8110,45 @@ async function GetSecurityAccess() {
       win.document.close();
       win.focus();
 
+      win.document.addEventListener("wheel", function (event) {
+        if (
+          event.target.matches('input[type="number"]') &&
+          win.document.activeElement === event.target
+        ) {
+          event.preventDefault();
+        }
+      }, { passive: false });
+
+      win.document.addEventListener("keydown", function (event) {
+        if (event.key !== "Enter") return;
+
+        const currentInput = event.target;
+        if (!(currentInput instanceof win.HTMLInputElement) ||
+            !currentInput.matches("input.fc")) return;
+
+        const page = currentInput.closest(".page") ||
+          win.document.querySelector(".eo-body");
+        if (!page) return;
+
+        event.preventDefault();
+
+        const fields = [...page.querySelectorAll("input.fc:not(:disabled)")]
+          .filter(field =>
+            field.getClientRects().length > 0 &&
+            field.type !== "checkbox" &&
+            field.type !== "radio"
+          );
+
+        const currentIndex = fields.indexOf(currentInput);
+        if (currentIndex === -1) return;
+
+        const nextInput = fields[currentIndex + 1];
+        if (nextInput) {
+          nextInput.focus();
+          nextInput.select();
+        }
+      }, true);
+
       win.document.getElementById('eo-close').onclick = () => win.close();
 
       const successOverlay = win.document.getElementById('sending-success-overlay');
@@ -8518,6 +8690,14 @@ async function filleditpagefields(win, timestamp) {
     page.querySelector(".history-table-loading")?.classList.toggle("show", isLoading);
    }
 
+   function setHistoryPageLoading(page, isLoading) {
+    page.querySelector(".history-page-loading")?.classList.toggle("show", isLoading);
+   }
+
+   function waitForHistoryOverlayPaint() {
+     return new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+   }
+
    async function refreshHistory(triggerEl) {
 
     const page = triggerEl.closest(".page");
@@ -8586,19 +8766,27 @@ async function filleditpagefields(win, timestamp) {
 }
 
       async function renderAllHistoryTables() {
+        console.time("TIMER TOTAL: renderAllHistoryTables");
 
+        try {
           for (const [unitName, forms] of Object.entries(APP.Forms)) {
 
               for (const form of forms) {
+                    const formName = `${unitName} - ${form.Name}`;
 
+                    console.time(`TIMER LOAD: ${formName}`);
                   await mapPIToRecords(unitName, form.Name);
+                    console.timeEnd(`TIMER LOAD: ${formName}`);
 
+                    console.time(`TIMER RENDER: ${formName}`);
                   renderHistoryTable(unitName, form.Name);
-
+                    console.timeEnd(`TIMER RENDER: ${formName}`);
               }
 
           }
-
+        } finally {
+            console.timeEnd("TIMER TOTAL: renderAllHistoryTables");
+        }
       }
 
 
@@ -9382,92 +9570,71 @@ async function loadFormStructure(formWebId) {
   });
 }
 
-      function fillLastRecord(event, unitName, formName) {
-
-    const records = APP.records?.[unitName]?.[formName];
-
-    if (!records || !records.length) {
-        console.warn(
-            `Aucun historique trouvé pour ${unitName} / ${formName}`
-        );
-        return;
-    }
-
-    // APP.records est déjà trié du plus récent au plus ancien
-    const lastRecord = records[0];
-
-    console.log("Dernière saisie :", lastRecord);
-
-    // Le bouton est dans la card Meta Data
+      async function fillLastRecord(event, unitName, formName) {
     const card = event.currentTarget.closest(".card");
-
     if (!card) {
         console.warn("Impossible de trouver la card Meta Data.");
         return;
     }
 
-    // Chercher uniquement les champs de cette card
-    const fields = card.querySelectorAll(
-        'input[attributeName], select[attributeName]'
-    );
+    // Each field id is its configured PI Web API WebId.
+    const fields = Array.from(card.querySelectorAll(
+        'input[attributeName], select[attributeName], textarea[attributeName]'
+    )).filter(field => field.id);
 
-    fields.forEach(field => {
-
-        const attributeName =
-            field.getAttribute("attributeName");
-
-        if (!attributeName) {
+    if (!fields.length) {
+        console.warn("Aucun champ configuré avec un WebId dans cette card.");
             return;
         }
 
-        let value =
-            lastRecord.values?.[attributeName];
+    const results = await Promise.allSettled(fields.map(async field => {
+        const response = await fetch(
+            `${CONFIG.WEBAPIURL}/streams/${encodeURIComponent(field.id)}/end`,
+            { method: "GET", credentials: "include", headers: { "X-Requested-With": "XMLHttpRequest" } }
+        );
+        if (!response.ok) throw new Error(`HTTP ${response.status} pour ${field.id}`);
+        return { field, data: await response.json() };
+    }));
 
-        // Aucune valeur dans le dernier enregistrement
-        if (value === undefined || value === null) {
+    const available = [];
+    results.forEach((result, index) => {
+        if (result.status === "rejected") {
+            console.warn(`Impossible de récupérer la dernière valeur pour ${fields[index].id}:`, result.reason);
             return;
         }
 
-        // Valeur PI retournée sous forme d'objet
-        if (typeof value === "object" && value !== null) {
-
-            if (value.Name === "No Data") {
-                return;
-            }
-
-            if (
-                Object.prototype.hasOwnProperty.call(
-                    value,
-                    "Value"
-                )
-            ) {
+        const { field, data } = result.value;
+        let value = data?.Value;
+        if (value === undefined || value === null || value?.Name === "No Data") return;
+        if (typeof value === "object" && Object.prototype.hasOwnProperty.call(value, "Value")) {
                 value = value.Value;
             }
-        }
-
-        if (field.type === "checkbox") {
-
-            field.checked =
-                value === true ||
-                value === "true" ||
-                value === 1 ||
-                value === "1";
-
-        } else {
-
-            field.value = value;
-        }
+        if (value === undefined || value === null || !data?.Timestamp) return;
+        available.push({ field, value, timestamp: data.Timestamp });
     });
 
-    // Garder le comportement actuel de refreshAll()
-    // en lui donnant la page complète
-    if (typeof refreshAll === "function") {
-        refreshAll(card.closest(".page"));
-    }
+    if (!available.length) return;
 
-    console.log(
-        `Meta Data remplie avec la dernière saisie : ${lastRecord.timestamp}`
-    );
+    // Select the timestamp shared by the most fields; break ties using the newest timestamp.
+    const timestampCounts = new Map();
+    available.forEach(item => timestampCounts.set(
+        item.timestamp,
+        (timestampCounts.get(item.timestamp) || 0) + 1
+    ));
+    const selectedTimestamp = [...timestampCounts.entries()]
+        .sort((a, b) => b[1] - a[1] || Date.parse(b[0]) - Date.parse(a[0]))[0][0];
+
+    available.filter(item => item.timestamp === selectedTimestamp).forEach(({ field, value }) => {
+        if (field.type === "checkbox") {
+            field.checked = value === true || value === "true" || value === 1 || value === "1";
+        } else {
+            field.value = value;
+        }
+        field.dispatchEvent(new Event("input", { bubbles: true }));
+        field.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    if (typeof refreshAll === "function") refreshAll(card.closest(".page"));
 }
 
       function renderMetadataSection(unitName, pageName, section, parent) {
@@ -9668,7 +9835,7 @@ async function loadFormStructure(formWebId) {
 
     }
 
-    function handleSeuilChange(checkbox, paramName, scope=document) {
+    /*function handleSeuilChange(checkbox, paramName, scope=document) {
 
       const row = checkbox.closest('tr');
 
@@ -9695,8 +9862,47 @@ async function loadFormStructure(formWebId) {
       }
 
       refreshAll(scope === document ? checkbox.closest('.page') : scope);
+}*/
+    function handleSeuilChange(checkbox, paramName, scope = document) {
+
+        const row = checkbox.closest('tr');
+        if (!row) return;
+
+        const inputs = row.querySelectorAll('input[type="number"]');
+
+        // Select the "Valeur saisie" field for this parameter
+        const valeurSaisie = row.querySelector(
+            `input[attributeName="${paramName}"]`
+        );
+
+        if (checkbox.checked) {
+
+            if (valeurSaisie) {
+                const configuredMin = valeurSaisie.getAttribute('min');
+
+                if (configuredMin !== null) {
+                    valeurSaisie.value = configuredMin;
+                }
+            }
+
+            inputs.forEach(input => {
+                input.disabled = true;
+            });
+
+        } else {
+
+            inputs.forEach(input => {
+                // Don't re-enable calculated fields
+                if (!input.hasAttribute('data-formula')) {
+                    input.disabled = false;
+                }
+            });
+
+        }
+
+        refreshAll(scope === document ? checkbox.closest('.page') : scope);
 }
-    async function renderForm2() {
+    function renderForm2(targetUnitName, targetFormName) {
 
       // -----------------------------------
       // TEMPLATE PAGE
@@ -9712,9 +9918,11 @@ async function loadFormStructure(formWebId) {
       // -----------------------------------
       let validationWebId = null;
       Object.entries(APP.pageNametoData).forEach(([unitName, forms]) => {
+        if (targetUnitName && unitName !== targetUnitName) return;
 
         Object.entries(forms)
         .forEach(([pageName, formModel]) => {
+          if (targetFormName && pageName !== targetFormName) return;
           validationWebId = formModel.validationwebid;
           console.log("Rendering page:", pageName, "with validationWebId:", validationWebId);
 
@@ -9801,7 +10009,7 @@ async function loadFormStructure(formWebId) {
                   </th>
 
                   <th>
-                    Valeur Saisie
+                    Valeur lue
                   </th>
 
                   <th>
@@ -9814,7 +10022,7 @@ async function loadFormStructure(formWebId) {
 
                   <th style="
               text-align:center">
-                    Alertes
+                    Spécifications
                   </th>
 
                   <th style="
@@ -9928,7 +10136,7 @@ async function loadFormStructure(formWebId) {
                   a => a.name === "NameInCertificate"
                 );
 
-              if (seuil){
+              if (seuil && Obligatoire.value === true) {
                   APP.ParametreObligatoire[pageName]["Seuil " +parameter.name] = true;
               }
 
@@ -10009,12 +10217,17 @@ async function loadFormStructure(formWebId) {
               if (calc1){
                 
                 APP.Formfields[pageName].push("VC1 " + parameter.name);
+                if (Obligatoire.value === true){
                 APP.ParametreObligatoire[pageName]["VC1 " + parameter.name] = true;
+                }
+                
               }
 
               if (calc2){
                 APP.Formfields[pageName].push("VC2 " + parameter.name);
+                if (Obligatoire.value === true){
                 APP.ParametreObligatoire[pageName]["VC2 " + parameter.name] = true;
+                }  
               }
               
 
@@ -10243,10 +10456,6 @@ async function loadFormStructure(formWebId) {
         pageNametoData[unitName] = {};
 
         for (const form of forms) {
-
-            const data = await loadFormStructure(form.WebId);
-
-            pageNametoData[unitName][form.Name] = data;
             APP.HistoTableCols[form.Name] = []; // Initialize the HistoTableCols for this form
             APP.CertifTableRows[form.Name] = []; // Initialize the CertifTableRows for this form
             APP.PagefieldAlert[form.Name] = {}; // Initialize the PagefieldAlert for this form
@@ -10264,6 +10473,49 @@ async function loadFormStructure(formWebId) {
     APP.pageNametoData = pageNametoData;
 
       console.log(pageNametoData);
+    }
+
+    async function ensureFormStructureLoaded(unitName, formName) {
+      const form = APP.Forms?.[unitName]?.find(item => item.Name === formName);
+      if (!form) throw new Error(`Form not found: ${unitName} / ${formName}`);
+
+      APP.pageNametoData ||= {};
+      APP.pageNametoData[unitName] ||= {};
+      let formModel = APP.pageNametoData[unitName][formName];
+
+      if (!formModel) {
+        APP.formStructurePromises ||= {};
+        const cacheKey = `${unitName}\u0000${formName}`;
+        let pending = APP.formStructurePromises[cacheKey];
+        if (!pending) {
+          pending = loadFormStructure(form.WebId);
+          APP.formStructurePromises[cacheKey] = pending;
+        }
+
+        try {
+          formModel = await pending;
+          APP.pageNametoData[unitName][formName] = formModel;
+        } finally {
+          if (APP.formStructurePromises[cacheKey] === pending) {
+            delete APP.formStructurePromises[cacheKey];
+          }
+        }
+      }
+
+      if (!Array.isArray(APP.HistoTableCols[formName])) APP.HistoTableCols[formName] = [];
+      if (!Array.isArray(APP.CertifTableRows[formName])) APP.CertifTableRows[formName] = [];
+      APP.PagefieldAlert[formName] ||= {};
+      APP.FormData[formName] ||= [];
+      APP.ParametreObligatoire[formName] ||= {};
+      APP.NamesInCertificate[formName] ||= {};
+
+      const entryPage = document.getElementById(`page-${formName}`);
+      if (entryPage && entryPage.dataset.formRendered !== "true") {
+        renderForm2(unitName, formName);
+        entryPage.dataset.formRendered = "true";
+      }
+
+      return formModel;
     }
 
     function getFormModel(formName) {
@@ -10795,10 +11047,7 @@ async function loadFormStructure(formWebId) {
       await renderEntryDropdown()
       await renderHistoryDropdown();
       await LoadDataForEachForm()
-      await renderForm2() 
-      await renderHistoryPages()
       
-      await renderAllHistoryTables();
       await GetSecurityAccess();
       //const values = getAttributeValues();
       //const formula = "[Concentration]-[Biuret]"
@@ -11422,7 +11671,7 @@ async function loadFormStructure(formWebId) {
       }
     }
 
-    function selectHistoTableColumnsForm(formName) {
+    async function selectHistoTableColumnsForm(formName) {
       const pageSection = document.getElementById('histo-columns-section');
       if (!formName) {
         _histoColumnsForm = null;
@@ -11432,6 +11681,16 @@ async function loadFormStructure(formWebId) {
       }
       _histoColumnsForm = formName;
       _histoColumnRows = [];
+      const entryPage = (APP.entryPages || []).find(page => page.Name === formName);
+      if (entryPage) {
+        try {
+          await ensureFormStructureLoaded(entryPage.GroupName, formName);
+        } catch (error) {
+          console.error(`Unable to load form data for ${formName}:`, error);
+          notify('Unable to load form data. Please try again.');
+          return;
+        }
+      }
       const formModel = getFormModel(formName);
 
       // Exclude legacy fields that do not have an Histo AF attribute.
@@ -11594,7 +11853,7 @@ async function loadFormStructure(formWebId) {
       }
     }
 
-    function selectCertifTableColumnsForm(formName) {
+    async function selectCertifTableColumnsForm(formName) {
       const pageSection = document.getElementById('certif-columns-section');
       if (!formName) {
         _certifColumnsForm = null;
@@ -11605,6 +11864,16 @@ async function loadFormStructure(formWebId) {
 
       _certifColumnsForm = formName;
       _certifColumnRows = [];
+      const entryPage = (APP.entryPages || []).find(page => page.Name === formName);
+      if (entryPage) {
+        try {
+          await ensureFormStructureLoaded(entryPage.GroupName, formName);
+        } catch (error) {
+          console.error(`Unable to load form data for ${formName}:`, error);
+          notify('Unable to load form data. Please try again.');
+          return;
+        }
+      }
       const formModel = getFormModel(formName);
 
       // Only fields that actually expose an InclusCertif AF attribute are editable here.
@@ -12740,8 +13009,32 @@ async function loadFormStructure(formWebId) {
       document.getElementById('rbar-info').textContent = `Actualisation dans ${APP.refreshRem}s`;
       document.getElementById('ref-cd').textContent = `Actualisation: ${APP.refreshRem}s`;
     }
+    function formatParisDateTime(ts) {
+          if (!ts) return "";
 
-    function displayLogs(){
+          // Treat timestamps without a timezone indicator as UTC.
+          let value = String(ts).replace(" ", "T");
+
+          if (!/(Z|[+-]\d{2}:\d{2})$/i.test(value)) {
+              value += "Z";
+          }
+
+          const date = new Date(value);
+
+          if (Number.isNaN(date.getTime())) return ts;
+
+          return new Intl.DateTimeFormat("fr-FR", {
+              timeZone: "Europe/Paris",
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+              hourCycle: "h23"
+          }).format(date);
+      }
+   /* function displayLogs(){
       if (!APP.logs || !APP.logs.length) {
         addEvent("info", "Aucun événement enregistré.", nowIso());
         return;
@@ -12756,12 +13049,59 @@ async function loadFormStructure(formWebId) {
         
         
       });
+    }*/
+
+    function displayLogs() {
+          if (!APP.logs || !APP.logs.length) {
+              addEvent("info", "Aucun événement enregistré.", nowIso());
+              return;
+          }
+
+          APP.logs.reverse().forEach(log => {
+              const formDateTime = formatParisDateTime(log.FormDateTime);
+
+              if (log.Action === "Add") {
+                  addEvent(
+                      "Add",
+                      `Nouvelle saisie de formulaire: ${log.Unit}-${log.Form}-[${formDateTime}]`,
+                      log.LogDateTime,
+                      log.User
+                  );
+              } else if (log.Action === "Edit") {
+                  addEvent(
+                      "Edit",
+                      `Modification d'une saisie: ${log.Unit}-${log.Form}-[${formDateTime}]`,
+                      log.LogDateTime,
+                      log.User
+                  );
+              }
+      });
     }
 
     /* ══════════════════════════════════════════════════════
        EVENT LOG
     ══════════════════════════════════════════════════════ */
     function addEvent(type, msg, ts,user="Loading...") {
+      // API timestamps are UTC; show them in the lab's Paris time zone.
+      console.log('[addEvent] adding event —', { type, msg, ts, user });
+      if (ts) {
+          // The API returns UTC timestamps without a timezone indicator.
+          const utcTimestamp = String(ts).replace(" ", "T") + "Z";
+          const parsedTs = new Date(utcTimestamp);
+
+          if (!Number.isNaN(parsedTs.getTime())) {
+              ts = new Intl.DateTimeFormat("fr-FR", {
+                  timeZone: "Europe/Paris",
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                  hourCycle: "h23"
+              }).format(parsedTs) ;
+          }
+      }
       const list = document.getElementById('ev-list');
       const li = document.createElement('li'); li.className = 'event-item';
       if (type === "Add"){
@@ -13720,6 +14060,16 @@ async function loadFormStructure(formWebId) {
       document.getElementById('cfg-form-desc').textContent  = 'Chargement des attributs PI AF...';
       document.getElementById('cfg-formulas-section').style.display = 'block';
 
+      const entryPage = (APP.entryPages || []).find(page => page.WebId === webId);
+      if (entryPage) {
+        try {
+          await ensureFormStructureLoaded(entryPage.GroupName, entryPage.Name);
+        } catch (e) {
+          notify('Unable to load form data. Please try again.');
+          return;
+        }
+      }
+
       // Charge les attributs PI AF pour les tokens cliquables
       try {
         const d = await piFetch(`${PI.base}/elements/${webId}/attributes?selectedFields=Items.WebId;Items.Name;Items.Type;Items.DataReferencePlugIn`);
@@ -14641,7 +14991,7 @@ async function cfgEnsureUomCache(cardId) {
       }
     }
 
-    function cfgSelectRequiredForm(formName) {
+    async function cfgSelectRequiredForm(formName) {
       const section = document.getElementById('cfg-required-section');
       if (!formName) {
         if (section) section.style.display = 'none';
@@ -14655,6 +15005,16 @@ async function cfgEnsureUomCache(cardId) {
       APP.currentForm = formName;
       APP.currentUnit = page?.GroupName || APP.currentUnit;
       _requiredRows = [];
+
+      if (page) {
+        try {
+          await ensureFormStructureLoaded(page.GroupName, formName);
+        } catch (error) {
+          console.error(`Unable to load form data for ${formName}:`, error);
+          notify('Unable to load form data. Please try again.');
+          return;
+        }
+      }
 
       const formModel = getFormModel(formName);
       if (formModel && Array.isArray(formModel.sections)) {
@@ -14824,7 +15184,7 @@ async function cfgEnsureUomCache(cardId) {
     }
 
     /* Construit _limitRows depuis APP.pageNametoData[formName] */
-    function cfgSelectLimitsForm(formName) {
+    async function cfgSelectLimitsForm(formName) {
       const section = document.getElementById('cfg-limits-section');
       if (!formName) { if (section) section.style.display = 'none'; _currentLimitsForm = null; return; }
 
@@ -14833,6 +15193,15 @@ async function cfgEnsureUomCache(cardId) {
       const limitsUnit = limitsPage?.GroupName ||
         Object.entries(APP.pageNametoData || {}).find(([, forms]) => forms?.[formName])?.[0] || null;
       UpdateAppCurrentPage(formName, limitsUnit, null, 'config-limits');
+      if (limitsPage) {
+        try {
+          await ensureFormStructureLoaded(limitsPage.GroupName, formName);
+        } catch (error) {
+          console.error(`Unable to load form data for ${formName}:`, error);
+          notify('Unable to load form data. Please try again.');
+          return;
+        }
+      }
       //const formModel = APP.pageNametoData && APP.pageNametoData[formName];
       const formModel = getFormModel(formName);
       _limitRows = [];
@@ -14848,6 +15217,7 @@ async function cfgEnsureUomCache(cardId) {
             _limitRows.push({
               paramName:     param.name,
               sectionName:   sec.name,
+              date:          (() => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`; })(),
               lolo:          f.LoLo && f.LoLo.value != null ? f.LoLo.value : '',
               hihi:          f.HiHi && f.HiHi.value != null ? f.HiHi.value : '',
               target:        f.Target && f.Target.value != null ? f.Target.value : '',
@@ -14907,7 +15277,7 @@ async function cfgEnsureUomCache(cardId) {
       if (cnt) cnt.textContent = `${_limitRows.length} paramètre(s) · ${selected} sélectionné(s)`;
 
       if (_limitRows.length === 0) {
-        body.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-faint);padding:20px">Aucun seuil HiHi/LoLo trouvé pour ce formulaire.</td></tr>`;
+        body.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-faint);padding:20px">Aucun seuil HiHi/LoLo trouvé pour ce formulaire.</td></tr>`;
         return;
       }
 
@@ -14921,7 +15291,7 @@ async function cfgEnsureUomCache(cardId) {
       body.innerHTML = Object.entries(sections).map(([secName, entries]) => {
         const secHeader = `
           <tr style="background:var(--surface-2,#f1f5f9)">
-            <td colspan="6" style="font-size:10px;font-weight:700;text-transform:uppercase;
+            <td colspan="7" style="font-size:10px;font-weight:700;text-transform:uppercase;
                 letter-spacing:1.2px;color:var(--cyan);padding:8px 10px;
                 border-bottom:1px solid var(--border)">
               ${esc(secName)}
@@ -14940,6 +15310,11 @@ async function cfgEnsureUomCache(cardId) {
               ${row._dirty ? `<span style="font-size:9px;font-weight:700;background:#fef3c7;
                 color:#92400e;border:1px solid #fcd34d;border-radius:3px;
                 padding:1px 5px;margin-left:4px">modifié</span>` : ''}
+            </td>
+            <td>
+              <input class="fc" type="date" value="${esc(row.date || '')}"
+                style="font-size:12px;height:32px;width:120px"
+                onchange="cfgUpdateLimitField(${idx},'date',this.value)">
             </td>
             <td>
               <input class="fc" type="text" inputmode="decimal"
@@ -15153,14 +15528,24 @@ if (row._alertFieldAttrWebId) {
 
       st.textContent = '⏳ Sauvegarde en cours…';
       st.style.color = 'var(--text-muted)';
-      const timestamp = new Date().toISOString();
+      const missingDate = toSave.find(row => !row.date);
+      if (missingDate) {
+        notify(`Veuillez sélectionner une date pour ${missingDate.paramName}.`, 'warn');
+        return;
+      }
+
       const toNumberOrNull = value => {
         const number = Number.parseFloat(String(value ?? '').trim().replace(',', '.'));
         return Number.isFinite(number) ? number : null;
       };
       const results = await Promise.all(toSave.map(async row => {
         const record = {
-          Timestamp: timestamp,
+          Timestamp: (() => {
+            const [year, month, day] = row.date.split('-').map(Number);
+            const selectedDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
+            return selectedDate.toISOString();
+          })(),
+          Date: row.date,
           Formulaire: _currentLimitsForm,
           Element: row.paramName,
           LoLo: toNumberOrNull(row.lolo),
